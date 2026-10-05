@@ -1,0 +1,55 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/lesson/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1309",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 Database Thiết kế bả\" @ x0 y56 375x1253",
+      "    nav.crumbs \"Lớp của tôi basic01 Database Thiết kế bả\" @ x16 y80 343x92",
+      "    div.viewer \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x16 y225 343x1020",
+      "      div.card \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x16 y225 343x719",
+      "      aside.card \"Database v1 Giới thiệu SQL Thiết kế bảng\" @ x16 y968 343x277"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "3 controls smaller than 44px; e.g. a.brand; a \"basic01\"; a \"Database\""
+      }
+    ],
+    "height": 1309
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/lesson/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x1091",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "  main#main.main \"Lớp của tôi basic01 Database Thiết kế bả\" @ x0 y59 768x1032",
+      "    div.viewer \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x24 y175 720x852",
+      "      div.card \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x24 y175 720x559",
+      "      aside.card \"Database v1 Giới thiệu SQL Thiết kế bảng\" @ x24 y759 720x269"
+    ],
+    "findings": [],
+    "height": 1091
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/lesson/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x799",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp của tôi basic01 Database Thiết kế bả\" @ x135 y59 1170x740",
+      "    div.viewer \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x159 y175 1122x559",
+      "      div.card \"Thiết kế bảng và khóa Một bảng tốt có kh\" @ x159 y175 778x559",
+      "      aside.card \"Database v1 Giới thiệu SQL Thiết kế bảng\" @ x961 y175 320x269"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]

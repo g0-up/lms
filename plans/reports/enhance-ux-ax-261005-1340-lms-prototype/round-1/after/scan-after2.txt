@@ -1,0 +1,23 @@
+Discovery surfaces for http://127.0.0.1:8766: 0 URL(s) in sitemap, 1 page(s) checked
+
+ERROR (4)
+- [robots] http://127.0.0.1:8766/robots.txt: robots.txt disallows the whole site for all crawlers
+- [ai-crawlers] http://127.0.0.1:8766/robots.txt: blocks AI search crawlers, so AI answers cannot cite the site: OAI-SearchBot, Claude-SearchBot, PerplexityBot
+- [sitemap] http://127.0.0.1:8766/sitemap.xml: sitemap missing or not XML (status 404)
+- [open-graph] http://127.0.0.1:8766/: missing og:image
+
+WARN (9)
+- [robots] http://127.0.0.1:8766/robots.txt: robots.txt has no Sitemap: line
+- [llms-txt] http://127.0.0.1:8766/llms.txt: llms.txt missing (status 404)
+- [llms-full-txt] http://127.0.0.1:8766/llms-full.txt: llms-full.txt missing (status 404); expected when the site has docs or long-form content
+- [canonical] http://127.0.0.1:8766/: missing canonical link
+- [open-graph] http://127.0.0.1:8766/: missing og:url
+- [twitter-card] http://127.0.0.1:8766/: missing twitter:card
+- [json-ld] http://127.0.0.1:8766/: no JSON-LD structured data
+- [server-render] http://127.0.0.1:8766/: server HTML has under 200 characters of text; crawlers that skip JavaScript see an empty page
+- [markdown-variant] http://127.0.0.1:8766/index.html.md: markdown twin missing (tried http://127.0.0.1:8766/index.html.md, http://127.0.0.1:8766/index.md; status 404)
+
+INFO (3)
+- [ai-crawlers] http://127.0.0.1:8766/robots.txt: blocks training/user-fetch tokens: ChatGPT-User, Claude-User, Perplexity-User, GPTBot, ClaudeBot, CCBot, Google-Extended, Applebot-Extended
+- [markdown-alternate] http://127.0.0.1:8766/: no <link rel="alternate" type="text/markdown">
+- [content-negotiation] http://127.0.0.1:8766/: no markdown for Accept: text/markdown (optional)

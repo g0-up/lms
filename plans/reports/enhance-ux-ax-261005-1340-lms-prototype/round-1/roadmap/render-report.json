@@ -1,0 +1,59 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/roadmap/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x2132",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x0 y56 375x2076",
+      "    nav.crumbs \"Lớp của tôi basic01\" @ x16 y80 343x44",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x16 y124 343x85",
+      "      div \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x16 y124 343x85",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x16 y233 343x1834",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x16 y233 343x144",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x16 y401 343x1666"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "17 controls smaller than 44px; e.g. a.brand; input; input; input"
+      }
+    ],
+    "height": 2132
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/roadmap/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x1901",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x0 y59 768x1842",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x24 y123 720x55",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x24 y202 720x1635",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x24 y202 720x125",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x24 y350 720x1486"
+    ],
+    "findings": [],
+    "height": 1901
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/roadmap/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x1862",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x135 y59 1170x1803",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x159 y123 1122x55",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x159 y202 1122x1596",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 10/14 học liệu bắt buộ\" @ x159 y202 1122x86",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x159 y311 1122x1486"
+    ],
+    "findings": [],
+    "height": 1862
+  }
+]

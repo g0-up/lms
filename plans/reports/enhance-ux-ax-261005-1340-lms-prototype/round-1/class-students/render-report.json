@@ -1,0 +1,62 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-students/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1568",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x0 y56 375x1512",
+      "    nav.crumbs \"Lớp học basic01\" @ x16 y80 343x44",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x204",
+      "      div \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x137",
+      "      div.actions \"KẾT THÚC LỚP\" @ x16 y277 343x51",
+      "    div.tabs \"Học viên 7 Tiến độ Cài đặt\" @ x16 y352 343x50",
+      "    div.card \"Học viên trong lớp MỜI HỌC VIÊN HỌC VIÊN\" @ x16 y425 343x1079",
+      "      div.card-head \"Học viên trong lớp MỜI HỌC VIÊN\" @ x16 y425 343x77",
+      "      div.table-wrap \"HỌC VIÊN TÀI KHOẢN LỜI MỜI TIẾN ĐỘ THAO \" @ x16 y502 343x1002"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "1 controls smaller than 44px; e.g. a.brand"
+      }
+    ],
+    "height": 1568
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-students/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x1226",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x0 y59 768x1167",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x24 y123 720x55",
+      "    div.tabs \"Học viên 7 Tiến độ Cài đặt\" @ x24 y202 720x46",
+      "    div.card \"Học viên trong lớp MỜI HỌC VIÊN HỌC VIÊN\" @ x24 y271 720x891",
+      "      div.card-head \"Học viên trong lớp MỜI HỌC VIÊN\" @ x24 y271 720x69",
+      "      div.table-wrap \"HỌC VIÊN TÀI KHOẢN LỜI MỜI TIẾN ĐỘ THAO \" @ x24 y340 720x822"
+    ],
+    "findings": [],
+    "height": 1226
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-students/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x964",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x135 y59 1170x905",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x159 y123 1122x55",
+      "    div.card \"Học viên trong lớp MỜI HỌC VIÊN HỌC VIÊN\" @ x159 y271 1122x629",
+      "      div.card-head \"Học viên trong lớp MỜI HỌC VIÊN\" @ x159 y271 1122x69",
+      "      div.table-wrap \"HỌC VIÊN TÀI KHOẢN LỜI MỜI TIẾN ĐỘ THAO \" @ x159 y340 1122x560"
+    ],
+    "findings": [],
+    "height": 964
+  }
+]

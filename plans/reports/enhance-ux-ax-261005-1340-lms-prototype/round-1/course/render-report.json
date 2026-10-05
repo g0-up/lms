@@ -1,0 +1,63 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/course/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1338",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Khóa học Lập trình cơ bản Lập trình cơ b\" @ x0 y56 375x1282",
+      "    nav.crumbs \"Khóa học Lập trình cơ bản\" @ x16 y80 343x44",
+      "    div.page-head \"Lập trình cơ bản BASIC Nhân bản khóa học\" @ x16 y124 343x100",
+      "      div \"Lập trình cơ bản BASIC Nhân bản khóa học\" @ x16 y124 343x100",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47 \" @ x16 y248 343x1026",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47\" @ x16 y248 343x76",
+      "      section.card \"Chặng trong v1 Đã phát hành Không sửa đư\" @ x16 y348 343x609",
+      "      section.card \"Lớp gắn với v1 basic01 · Lập trình cơ bả\" @ x16 y981 343x293"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "10 controls smaller than 44px; e.g. a.brand; a.vpill.is-published \"v1\"; a.title \"Database\"; a.title \"Data structure\""
+      }
+    ],
+    "height": 1338
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/course/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x1178",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "  main#main.main \"Khóa học Lập trình cơ bản Lập trình cơ b\" @ x0 y59 768x1119",
+      "    div.page-head \"Lập trình cơ bản BASIC Nhân bản khóa học\" @ x24 y123 720x78",
+      "      div \"Lập trình cơ bản BASIC Nhân bản khóa học\" @ x24 y123 534x78",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47 \" @ x24 y224 720x890",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47\" @ x24 y224 720x76",
+      "      section.card \"Chặng trong v1 Đã phát hành Không sửa đư\" @ x24 y324 720x518",
+      "      section.card \"Lớp gắn với v1 basic01 · Lập trình cơ bả\" @ x24 y866 720x248"
+    ],
+    "findings": [],
+    "height": 1178
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/course/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x1146",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x135 y0 1170x59",
+      "  main#main.main \"Khóa học Lập trình cơ bản Lập trình cơ b\" @ x135 y59 1170x1087",
+      "    div.page-head \"Lập trình cơ bản BASIC Nhân bản khóa học\" @ x159 y123 1122x78",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47 \" @ x159 y224 1122x858",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 06/08/2026 13:47\" @ x159 y224 1122x76",
+      "      section.card \"Chặng trong v1 Đã phát hành Không sửa đư\" @ x159 y324 1122x486",
+      "      section.card \"Lớp gắn với v1 basic01 · Lập trình cơ bả\" @ x159 y834 1122x248"
+    ],
+    "findings": [],
+    "height": 1146
+  }
+]

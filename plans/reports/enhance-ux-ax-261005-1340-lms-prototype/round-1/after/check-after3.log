@@ -1,0 +1,65 @@
+PASS stage page shows v1 published
+PASS clone creates draft and navigates — #/admin/stages/st-db?v=sv-lcescg8
+PASS draft v2 copies 3 lessons with same keys
+PASS second clone is blocked (one draft max)
+PASS lesson added to draft — {"id":"l-bxbym1f","key":"k-nnvasi6","title":"JOIN và subquery","type":"video","required":true,"video":"db-04-join.mp4","duration":"12:40"}
+PASS published v1 untouched
+PASS v2 published
+PASS FR-18 warning lists Lập trình cơ bản v1 on stage page
+PASS dashboard shows outdated warning — Database v2 · Trần Minh Quân
+PASS apply modal explains atomic transaction — Áp dụng Database v2 cho Lập trình cơ bản Trong một giao dịch, hệ thống sẽ: Nhân bản Lập trình cơ bản v1 thành v2. Thay Database v1 bằng v2, giữ nguyên thứ tự và 4 chặng còn lại. Phát hành v2. Các lớp đang chạy trên v1 (basic01, basic02, basic03) không bị ảnh hưởng. Lớp mới hoặc lớp nháp mới gắn được
+PASS course v2 created and published
+PASS course v2 uses Database v2, other stages unchanged
+PASS course v1 still published and unchanged
+PASS basic01/02/03 remain on course v1 — basic01:cv-basic-1 basic02:cv-basic-1 basic03:cv-basic-1
+PASS warning disappears after apply
+PASS dashboard warning gone
+PASS course page lists v1 and v2
+PASS student roadmap renders with an unfinished lesson — course 71% first open lesson #/learn/classes/cl-basic01/lessons/l13
+PASS opening lesson records firstOpenedAt — {"firstOpenedAt":"2026-10-05T02:59:41.671Z","completedAt":null}
+PASS tick records completedAt — {"firstOpenedAt":"2026-10-05T02:59:41.671Z","completedAt":"2026-10-05T07:04:36.950Z"}
+PASS lesson page shows done state — Đã tích 05/10/2026 14:04 | BỎ TÍCH
+PASS course % increases after tick — 71% -> 79%
+PASS untick restores % — 71%
+PASS report filter below 30% narrows rows — 7 -> 4
+PASS report sort changes order — desc first: Lê Văn Cường | asc first: Phạm Minh Dũng
+PASS notlogged filter shows only never-logged students — Phạm Minh Dũng
+PASS inactive>10 days filter — Phạm Minh Dũng, Vũ Đức Khang
+PASS filter form writes query to hash — #/admin/classes/cl-basic01?tab=report&below=50&sort=name
+PASS teacher sees class report
+PASS teacher cannot open admin route — #/teach
+PASS inviting existing member is refused — Học viên đã có trong lớp.
+PASS new email creates invited account with temp password — {"id":"u-c9fr2yf","role":"student","name":"Học Viên Mới","email":"moi.hocvien@gmail.com","status":"invited","mustChangePassword":true,"lastLoginAt":null,"lastActiveAt":null,"tempPasswordExpiresAt":"2026-10-08T07:04:45.916Z"}
+PASS invitation email transitions queued -> sent — {"id":"inv-xuc107l","classId":"cl-basic01","userId":"u-c9fr2yf","sentBy":"u-admin","status":"sent","attempts":1,"lastError":null,"createdAt":"2026-10-05T07:04:45.916Z","kind":"invite"}
+PASS bounce address ends as failed — {"id":"inv-hb8gh9g","classId":"cl-basic01","userId":"u-uxymc4z","sentBy":"u-admin","status":"failed","attempts":3,"lastError":"Mailbox không tồn tại (550 5.1.1)","createdAt":"2026-10-05T07:04:48.384Z","kind":"invite"}
+PASS temp-password login forces first-login page — #/first-login
+PASS short password rejected
+PASS valid new password lands on learn home — #/learn
+PASS expired temp password login refused
+PASS disabled account login refused
+PASS reset restores seed
+PASS 320px reflow #/login — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/admin — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/admin/stages/st-db — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/admin/courses/co-basic — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/admin/classes/cl-basic01 — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/admin/classes/cl-basic01 — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/teach — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/learn — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/learn/classes/cl-basic01 — innerWidth 320, scrollWidth 320
+PASS 320px reflow #/learn/classes/cl-basic01/lessons/db-intro — innerWidth 320, scrollWidth 320
+PASS reduced motion removes transitions
+PASS route change is announced once
+PASS dashboard has the guided scenario with deep links
+PASS guide opens with Enter on its summary
+PASS class tabs are a labelled nav, not an ARIA tablist
+PASS modal has a resolvable accessible name
+PASS Escape closes the modal
+PASS toast has a focusable close button
+PASS close button removes the toast
+PASS seed restored after probes
+PASS draft class shows no inactivity warning
+
+console issues: none
+
+61/61 checks passed

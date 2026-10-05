@@ -1,0 +1,60 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/admin/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1933",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x0 y56 375x1877",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x16 y80 343x55",
+      "      div \"Tổng quan Tình trạng các lớp đang chạy v\" @ x16 y80 325x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x16 y159 343x1710",
+      "      div.stack-sm \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x16 y159 343x65",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x16 y248 343x529",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x16 y801 343x1068"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "2 controls smaller than 44px; e.g. a.brand; a.title \"basic03 · Lập trình cơ bản – khóa 3\""
+      }
+    ],
+    "height": 1933
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/admin/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x1174",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x0 y59 768x1115",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x24 y91 720x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x24 y170 720x939",
+      "      div.stack-sm \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x24 y170 720x46",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x24 y240 720x252",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x24 y516 720x594"
+    ],
+    "findings": [],
+    "height": 1174
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/admin/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x1017",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x135 y0 1170x59",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x135 y59 1170x958",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x159 y91 1122x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x159 y170 1122x783",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x159 y240 1122x114",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x159 y378 1122x576"
+    ],
+    "findings": [],
+    "height": 1017
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/stage/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1152",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Chặng Database Database DB Phiên bản đã \" @ x0 y56 375x1096",
+      "    nav.crumbs \"Chặng Database\" @ x16 y80 343x44",
+      "    div.page-head \"Database DB Phiên bản đã phát hành là bấ\" @ x16 y124 343x100",
+      "      div \"Database DB Phiên bản đã phát hành là bấ\" @ x16 y124 343x100",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47 \" @ x16 y248 343x840",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47\" @ x16 y248 343x76",
+      "      section.card \"Học liệu của v1 Đã phát hành Không sửa đ\" @ x16 y348 343x510",
+      "      div.alert.alert-ok \"Mọi khóa học đã phát hành đều dùng phiên @ x16 y882 343x65",
+      "      section.card \"Đang được dùng ở Lập trình cơ bản v1 Đã \" @ x16 y971 343x117"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "4 controls smaller than 44px; e.g. a.brand; a \"Chặng\"; a.vpill.is-published \"v1\"; a.title \"Lập trình cơ bản v1\""
+      }
+    ],
+    "height": 1152
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/stage/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x965",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "  main#main.main \"Chặng Database Database DB Phiên bản đã \" @ x0 y59 768x906",
+      "    div.page-head \"Database DB Phiên bản đã phát hành là bấ\" @ x24 y123 720x78",
+      "      div \"Database DB Phiên bản đã phát hành là bấ\" @ x24 y123 534x78",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47 \" @ x24 y224 720x677",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47\" @ x24 y224 720x76",
+      "      section.card \"Học liệu của v1 Đã phát hành Không sửa đ\" @ x24 y324 720x367",
+      "      div.alert.alert-ok \"Mọi khóa học đã phát hành đều dùng phiên @ x24 y715 720x46",
+      "      section.card \"Đang được dùng ở Lập trình cơ bản v1 Đã \" @ x24 y784 720x117"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/stage/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x934",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x135 y0 1170x59",
+      "  main#main.main \"Chặng Database Database DB Phiên bản đã \" @ x135 y59 1170x875",
+      "    div.page-head \"Database DB Phiên bản đã phát hành là bấ\" @ x159 y123 1122x78",
+      "    div.stack \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47 \" @ x159 y224 1122x646",
+      "      div.card.card-pad \"PHIÊN BẢN v1 Phát hành 27/07/2026 13:47\" @ x159 y224 1122x76",
+      "      section.card \"Học liệu của v1 Đã phát hành Không sửa đ\" @ x159 y324 1122x335",
+      "      section.card \"Đang được dùng ở Lập trình cơ bản v1 Đã \" @ x159 y753 1122x117"
+    ],
+    "findings": [],
+    "height": 934
+  }
+]

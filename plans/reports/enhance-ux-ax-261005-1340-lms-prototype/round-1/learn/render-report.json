@@ -1,0 +1,54 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/learn/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x471",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Xin chào, An Các lớp bạn đang tham gia. \" @ x0 y56 375x415",
+      "    div.page-head \"Xin chào, An Các lớp bạn đang tham gia.\" @ x16 y80 343x55",
+      "    div.grid-2 \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x16 y159 343x248",
+      "      div.card.card-pad \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x16 y159 343x248"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "1 controls smaller than 44px; e.g. a.brand"
+      }
+    ],
+    "height": 812
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/learn/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x482",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "  main#main.main \"Xin chào, An Các lớp bạn đang tham gia. \" @ x0 y59 768x423",
+      "    div.page-head \"Xin chào, An Các lớp bạn đang tham gia.\" @ x24 y91 720x55",
+      "    div.grid-2 \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x24 y170 720x248",
+      "      div.card.card-pad \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x24 y170 348x248"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/learn/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x463",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x135 y0 1170x59",
+      "  main#main.main \"Xin chào, An Các lớp bạn đang tham gia. \" @ x135 y59 1170x404",
+      "    div.page-head \"Xin chào, An Các lớp bạn đang tham gia.\" @ x159 y91 1122x55",
+      "    div.grid-2 \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x159 y170 1122x228",
+      "      div.card.card-pad \"Lập trình cơ bản – khóa 1 Đang chạy basi\" @ x159 y170 549x228"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]

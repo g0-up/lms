@@ -1,0 +1,63 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-report/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1347",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x0 y56 375x1291",
+      "    nav.crumbs \"Lớp học basic01\" @ x16 y80 343x44",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x204",
+      "      div \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x137",
+      "      div.actions \"KẾT THÚC LỚP\" @ x16 y277 343x51",
+      "    div.tabs \"Học viên 7 Tiến độ Cài đặt\" @ x16 y352 343x50",
+      "    div.card \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x16 y425 343x858",
+      "      form.filter-bar \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x16 y425 343x275",
+      "      div.card-head \"7/7 học viên · Bấm vào một dòng để xem t\" @ x16 y700 343x89",
+      "      div.table-wrap \"HỌC VIÊN LỜI MỜI DB DS GO RE WEB TOÀN KH\" @ x16 y789 343x494"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "2 controls smaller than 44px; e.g. a.brand; input"
+      }
+    ],
+    "height": 1347
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-report/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x1027",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 768x59",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x0 y59 768x968",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x24 y123 720x55",
+      "    div.tabs \"Học viên 7 Tiến độ Cài đặt\" @ x24 y202 720x46",
+      "    div.card \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x24 y271 720x692",
+      "      form.filter-bar \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x24 y271 720x160",
+      "      div.table-wrap \"HỌC VIÊN LỜI MỜI DB DS GO RE WEB TOÀN KH\" @ x24 y469 720x494"
+    ],
+    "findings": [],
+    "height": 1027
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/class-report/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x955",
+      "  header.topbar \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP H\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp học basic01 basic01 · Lập trình cơ b\" @ x135 y59 1170x896",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x159 y123 1122x55",
+      "    div.card \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x159 y271 1122x620",
+      "      form.filter-bar \"Chưa đăng nhập Không hoạt động quá (ngày\" @ x159 y271 1122x89",
+      "      div.table-wrap \"HỌC VIÊN LỜI MỜI DB DS GO RE WEB TOÀN KH\" @ x159 y398 1122x494"
+    ],
+    "findings": [],
+    "height": 955
+  }
+]

@@ -1,0 +1,31 @@
+render-check: file:///Users/thuocnguyen/Documents/upnext-workspace/lms/prototype/index.html#/login
+
+[375x812] page height 1252px, screenshot /Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/after/login/375x812.png
+  outline:
+    div#app "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 375x1252
+      main.auth-main "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 375x1252
+        div.card.auth-card "UpNext LMS Nền tảng học nội bộ của UpNex @ x16 y64 343x1124
+          p.lede "Dùng email và mật khẩu trong thư mời của" @ x40 y236 295x45
+          form.stack-sm "Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ" @ x40 y305 295x212
+          div.demo-accounts "TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần" @ x40 y541 295x564
+  no findings
+
+[768x1024] page height 1234px, screenshot /Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/after/login/768x1024.png
+  outline:
+    div#app "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 768x1234
+      main.auth-main "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 768x1234
+        div.card.auth-card "UpNext LMS Nền tảng học nội bộ của UpNex @ x164 y64 440x1106
+          form.stack-sm "Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ" @ x196 y290 376x200
+          div.demo-accounts "TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần" @ x196 y514 376x564
+  no findings
+
+[1440x900] page height 1234px, screenshot /Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/after/login/1440x900.png
+  outline:
+    div#app "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 1440x1234
+      main.auth-main "UpNext LMS Nền tảng học nội bộ của UpNex" @ x0 y0 1440x1234
+        div.card.auth-card "UpNext LMS Nền tảng học nội bộ của UpNex @ x500 y64 440x1106
+          form.stack-sm "Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ" @ x532 y290 376x200
+          div.demo-accounts "TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần" @ x532 y514 376x564
+  no findings
+
+Summary: 0 errors, 0 warnings. Fix errors first, re-run, then review the screenshots.

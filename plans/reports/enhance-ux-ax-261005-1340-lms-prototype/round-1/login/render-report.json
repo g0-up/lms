@@ -1,0 +1,42 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/login/375x812.png",
+    "outline": [
+      "div#app \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 375x1224",
+      "  main.auth-main \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 375x1224",
+      "    div.card.auth-card \"UpNext LMS Đăng nhập Dùng email và mật k @ x16 y64 343x1096",
+      "      p.lede \"Dùng email và mật khẩu trong thư mời của\" @ x40 y189 295x45",
+      "      form.stack-sm \"Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ\" @ x40 y258 295x208",
+      "      div.demo-accounts \"TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần\" @ x40 y490 295x586"
+    ],
+    "findings": [],
+    "height": 1224
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/login/768x1024.png",
+    "outline": [
+      "div#app \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 768x1187",
+      "  main.auth-main \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 768x1187",
+      "    div.card.auth-card \"UpNext LMS Đăng nhập Dùng email và mật k @ x164 y64 440x1059",
+      "      form.stack-sm \"Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ\" @ x196 y243 376x200",
+      "      div.demo-accounts \"TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần\" @ x196 y467 376x564"
+    ],
+    "findings": [],
+    "height": 1187
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/login/1440x900.png",
+    "outline": [
+      "div#app \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 1440x1187",
+      "  main.auth-main \"UpNext LMS Đăng nhập Dùng email và mật k\" @ x0 y0 1440x1187",
+      "    div.card.auth-card \"UpNext LMS Đăng nhập Dùng email và mật k @ x500 y64 440x1059",
+      "      form.stack-sm \"Email* Mật khẩu* Quên mật khẩu? ĐĂNG NHẬ\" @ x532 y243 376x200",
+      "      div.demo-accounts \"TÀI KHOẢN MẪU CỦA BẢN THỬ NGHIỆM MQ Trần\" @ x532 y467 376x564"
+    ],
+    "findings": [],
+    "height": 1187
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/teach/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x594",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x0 y56 375x538",
+      "    div.page-head \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x16 y80 343x78",
+      "      div \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x16 y80 343x78",
+      "    div.grid-3 \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x16 y182 343x348",
+      "      a.card.card-pad \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x16 y182 343x162",
+      "      a.card.card-pad \"basic03 Nháp Lập trình cơ bản – khóa 3 ·\" @ x16 y368 343x162"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "1 controls smaller than 44px; e.g. a.brand"
+      }
+    ],
+    "height": 812
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/teach/768x1024.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x396",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Admin · Trần Minh \" @ x0 y0 768x59",
+      "  main#main.main \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x0 y59 768x337",
+      "    div.page-head \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x24 y91 720x55",
+      "    div.grid-3 \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x24 y170 720x162",
+      "      a.card.card-pad \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x24 y170 348x162",
+      "      a.card.card-pad \"basic03 Nháp Lập trình cơ bản – khóa 3 ·\" @ x396 y170 348x162"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/Users/thuocnguyen/Documents/upnext-workspace/lms/plans/reports/enhance-ux-ax-261005-1340-lms-prototype/round-1/teach/1440x900.png",
+    "outline": [
+      "div#app \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x396",
+      "  header.topbar \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"UpNextLMS LỚP CỦA TÔI Xem với vai trò Ad\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x135 y59 1170x337",
+      "    div.page-head \"Lớp của tôi Các lớp bạn phụ trách. Vào l\" @ x159 y91 1122x55",
+      "    div.grid-3 \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x159 y170 1122x162",
+      "      a.card.card-pad \"basic01 Đang chạy Lập trình cơ bản – khó\" @ x159 y170 358x162",
+      "      a.card.card-pad \"basic03 Nháp Lập trình cơ bản – khóa 3 ·\" @ x541 y170 358x162"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]
