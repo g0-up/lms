@@ -25,6 +25,12 @@ Read `docs/prototype.md` first (how it runs, accounts, routes), then `docs/desig
 - Styles: tokens only, one new rule block per component, mobile rules inside the
   existing `@media` blocks in `styles.css`.
 - Do not add markdown files outside `plans/` or `docs/`.
+- Status chips go through `stBadge({ tone, label })` so lessons, submissions and quiz
+  results share one vocabulary; icons go through `icon(name)` (SVG, never emoji).
+- A row that opens something: make the title a link and stretch it over the row
+  (see `.attempt-list`) instead of adding a second button.
+- Tables with many columns get a `min-width` class and live in `.table-wrap`, so they
+  scroll on phones while the page does not.
 
 ## Before finishing
 

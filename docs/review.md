@@ -12,6 +12,19 @@ Run before calling a prototype change done. Every line is observable.
   warnings.
 - Render-check screenshots at 1440×900, 768×1024 and 375×812 of every changed route
   report 0 errors (`.claude/skills/ak-frontend-design/scripts/render-check.mjs`).
+  Pass deep links as `index.html#/route?as=<userId>`; the `?as=` must sit inside the
+  hash, otherwise the capture shows the login page. Accepted warnings: inline text
+  links inside a sentence, and checkboxes whose 44px `.check` label is the real target.
+- Redirect check-flows output to a file instead of piping it into `head`; a closed
+  pipe leaves its headless Chrome running.
+
+## Assessment flows (quiz, homework, grading)
+
+- Learner: quiz intro states the rules (timer, autosave) before the start button; past
+  attempts show score and Đạt/Chưa đạt; results deep-link with `?result=<attemptId>`.
+- Teacher: the grading queue, a superseded submission (`sub4`) and the class summary
+  matrix each render at three viewports without the page scrolling sideways.
+- Admin dashboard: the backlog and the email outbox stack in one column at 768px.
 
 ## Manual (vision)
 
