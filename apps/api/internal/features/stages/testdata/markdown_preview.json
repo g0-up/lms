@@ -1,0 +1,3 @@
+{
+  "html": "<h1>Thiết kế bảng và khóa</h1>\n<p>Một bảng tốt có khóa chính rõ ràng, kiểu dữ liệu đúng và ràng buộc được khai báo ở tầng database.</p>\n<h2>Khóa chính và khóa ngoại</h2>\n<ol>\n<li>Mỗi bảng có đúng một khóa chính.</li>\n<li>Khóa ngoại tham chiếu tới khóa chính của bảng khác.</li>\n<li>Dùng <code>ON DELETE RESTRICT</code> cho dữ liệu đã được tham chiếu.</li>\n</ol>\n<pre><code class=\"language-sql\">CREATE TABLE class_members (\n  id         bigserial PRIMARY KEY,\n  class_id   bigint NOT NULL REFERENCES classes(id) ON DELETE RESTRICT,\n  user_id    bigint NOT NULL REFERENCES users(id),\n  UNIQUE (class_id, user_id)\n);\n</code></pre>\n"
+}

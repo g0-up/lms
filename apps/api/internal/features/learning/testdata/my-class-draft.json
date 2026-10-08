@@ -1,0 +1,83 @@
+{
+  "class": {
+    "code": "basic03",
+    "courseName": "Lập trình cơ bản",
+    "courseVersionNo": 1,
+    "endDate": "2026-10-05",
+    "id": "01990000-0000-7000-8000-000000000952",
+    "name": "Lập trình cơ bản – khóa 3",
+    "startDate": "2026-10-05",
+    "status": "draft",
+    "teacherName": "Lê Thu Hương"
+  },
+  "percent": 0,
+  "readOnly": true,
+  "readOnlyReason": "draft",
+  "requiredDone": 0,
+  "requiredTotal": 5,
+  "selfReported": true,
+  "stages": [
+    {
+      "id": "01990000-0000-7000-8000-000000000101",
+      "lessons": [
+        {
+          "durationSeconds": 1104,
+          "id": "01990000-0000-7000-8000-000000000991",
+          "position": 1,
+          "required": true,
+          "title": "Giới thiệu SQL",
+          "type": "video"
+        },
+        {
+          "durationSeconds": 720,
+          "id": "01990000-0000-7000-8000-000000000121",
+          "position": 2,
+          "required": true,
+          "title": "Thiết kế bảng và khóa",
+          "type": "markdown"
+        },
+        {
+          "durationSeconds": 300,
+          "id": "01990000-0000-7000-8000-000000000122",
+          "position": 3,
+          "required": false,
+          "title": "Đọc thêm: chỉ mục",
+          "type": "markdown"
+        }
+      ],
+      "name": "Database",
+      "position": 1
+    },
+    {
+      "id": "01990000-0000-7000-8000-000000000921",
+      "lessons": [
+        {
+          "durationSeconds": 1330,
+          "id": "01990000-0000-7000-8000-000000000923",
+          "position": 1,
+          "required": true,
+          "title": "Mảng và danh sách liên kết",
+          "type": "video"
+        },
+        {
+          "durationSeconds": 900,
+          "id": "01990000-0000-7000-8000-000000000924",
+          "position": 2,
+          "required": true,
+          "title": "Stack và Queue",
+          "type": "markdown"
+        },
+        {
+          "durationSeconds": 1005,
+          "id": "01990000-0000-7000-8000-000000000925",
+          "position": 3,
+          "required": true,
+          "title": "Hash table",
+          "type": "video"
+        }
+      ],
+      "name": "Data structure",
+      "position": 2
+    }
+  ]
+}

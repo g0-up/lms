@@ -1,0 +1,52 @@
+{
+  "items": [
+    {
+      "code": "basic02",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000951",
+      "memberCount": 0,
+      "name": "Lập trình cơ bản – khóa 2",
+      "startDate": "2026-10-05",
+      "status": "active",
+      "teacherName": "Lê Thu Hương"
+    },
+    {
+      "code": "basic03",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 3,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000952",
+      "memberCount": 0,
+      "name": "Lập trình cơ bản – khóa 3 (tối)",
+      "startDate": "2026-10-05",
+      "status": "draft",
+      "teacherName": "Phạm Quốc Bảo"
+    },
+    {
+      "code": "basic01",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000301",
+      "memberCount": 2,
+      "name": "Lập trình cơ bản – khóa 1",
+      "startDate": "2026-10-05",
+      "status": "active",
+      "teacherName": "Lê Thu Hương"
+    },
+    {
+      "code": "basic04",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "0199ffff-0000-7000-8000-000000000001",
+      "memberCount": 0,
+      "name": "Lập trình cơ bản 04",
+      "startDate": "2026-10-05",
+      "status": "active",
+      "teacherName": "Lê Thu Hương"
+    }
+  ]
+}

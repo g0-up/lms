@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="vi">
+<body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+  <p>Chào {{.Name}},</p>
+  <p>Bạn được mời tham gia lớp <strong>{{.ClassName}}</strong> ({{.ClassCode}}) trên {{.AppName}}.</p>
+  <table style="border-collapse: collapse; margin: 12px 0;">
+    <tr><td style="padding: 4px 12px 4px 0;">Email</td><td style="padding: 4px 0;"><strong>{{.Email}}</strong></td></tr>
+    <tr><td style="padding: 4px 12px 4px 0;">Mật khẩu tạm</td><td style="padding: 4px 0;"><code style="font-size: 16px;">{{.TempPassword}}</code></td></tr>
+  </table>
+  <p><a href="{{.LoginURL}}" style="display: inline-block; padding: 10px 16px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Đăng nhập</a></p>
+  <p>Mật khẩu tạm hết hạn lúc {{vntime .ExpiresAt}}. Lần đăng nhập đầu tiên bạn cần đổi sang mật khẩu mới.</p>
+  <p style="color: #6b7280;">{{.AppName}}</p>
+</body>
+</html>

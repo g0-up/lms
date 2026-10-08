@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Bạn không có quyền thực hiện thao tác này"
+  }
+}

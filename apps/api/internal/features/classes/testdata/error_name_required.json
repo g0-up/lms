@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Nhập họ tên học viên."
+  }
+}

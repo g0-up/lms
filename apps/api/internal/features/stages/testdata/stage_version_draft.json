@@ -1,0 +1,30 @@
+{
+  "clonedFromVersionNo": 1,
+  "id": "01990000-0000-7000-8000-000000000112",
+  "lessons": [
+    {
+      "id": "01990000-0000-7000-8000-000000000131",
+      "lessonKey": "db-table",
+      "markdownSource": "# Thiết kế bảng và khóa\n\nMỗi bảng cần một khóa chính và khóa ngoại khi tham chiếu.",
+      "position": 1,
+      "required": true,
+      "title": "Thiết kế bảng và khóa",
+      "type": "markdown"
+    },
+    {
+      "id": "01990000-0000-7000-8000-000000000132",
+      "lessonKey": "db-index",
+      "markdownSource": "# Chỉ mục\n\nChỉ mục giúp truy vấn nhanh hơn.",
+      "position": 2,
+      "required": false,
+      "title": "Đọc thêm: chỉ mục",
+      "type": "markdown"
+    }
+  ],
+  "stageCode": "DB",
+  "stageId": "01990000-0000-7000-8000-000000000101",
+  "stageName": "Database",
+  "status": "draft",
+  "usedBy": [],
+  "versionNo": 2
+}

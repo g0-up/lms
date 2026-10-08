@@ -1,0 +1,159 @@
+{
+  "classes": [
+    {
+      "avgPercent": 41,
+      "code": "basic01",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "id": "0199ffff-0000-7000-8000-000000000001",
+      "memberCount": 7,
+      "name": "Lập trình cơ bản – khóa 1",
+      "status": "active"
+    },
+    {
+      "avgPercent": 14,
+      "code": "basic02",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "memberCount": 5,
+      "name": "Lập trình cơ bản – khóa 2",
+      "status": "active"
+    },
+    {
+      "avgPercent": 0,
+      "code": "basic03",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "id": "0199ffff-0000-7000-8000-000000000003",
+      "memberCount": 2,
+      "name": "Lập trình cơ bản – khóa 3",
+      "status": "draft"
+    }
+  ],
+  "hints": {
+    "draftClasses": 1,
+    "failedInvites": 1,
+    "notLoggedIn": 3,
+    "outdatedCourses": 1
+  },
+  "kpis": {
+    "classes": 2,
+    "courses": 1,
+    "stages": 5,
+    "students": 11
+  },
+  "outdated": [
+    {
+      "courseCode": "BASIC",
+      "courseId": "0199ffff-0000-7000-8000-000000000004",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000005",
+      "courseVersionNo": 1,
+      "currentVersionNo": 1,
+      "latestPublishedNo": 2,
+      "latestVersionId": "0199ffff-0000-7000-8000-000000000006",
+      "stageCode": "DB",
+      "stageId": "0199ffff-0000-7000-8000-000000000007",
+      "stageName": "Database"
+    }
+  ],
+  "recentActivity": [
+    {
+      "actionLabel": "Phát hành chặng",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000008",
+      "summary": "Database v2",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000006",
+        "label": "Database v2",
+        "type": "stage_version"
+      }
+    },
+    {
+      "actionLabel": "Nhân bản chặng",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000009",
+      "summary": "Database v1 → v2",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000006",
+        "label": "Database v2",
+        "type": "stage_version"
+      }
+    },
+    {
+      "actionLabel": "Mời học viên",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000010",
+      "summary": "basic03: mời 2 học viên",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "label": "basic03",
+        "type": "class"
+      }
+    },
+    {
+      "actionLabel": "Gửi lại lời mời",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000011",
+      "summary": "basic02: gửi lại cho quyen.ly@gmail.com",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "label": "basic02",
+        "type": "class"
+      }
+    },
+    {
+      "actionLabel": "Tạo lớp",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000012",
+      "summary": "basic03",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "label": "basic03",
+        "type": "class"
+      }
+    },
+    {
+      "actionLabel": "Mời học viên",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000013",
+      "summary": "basic01: mời phong.dang@gmail.com",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "label": "basic01",
+        "type": "class"
+      }
+    },
+    {
+      "actionLabel": "Vô hiệu hóa tài khoản",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000014",
+      "summary": "thao.vo@gmail.com",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000015",
+        "label": "thao.vo@gmail.com",
+        "type": "user"
+      }
+    },
+    {
+      "actionLabel": "Kích hoạt lớp",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000016",
+      "summary": "basic02",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "label": "basic02",
+        "type": "class"
+      }
+    }
+  ]
+}

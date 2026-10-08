@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Học liệu video bắt buộc có file video."
+  }
+}

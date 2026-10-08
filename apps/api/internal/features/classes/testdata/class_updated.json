@@ -1,0 +1,23 @@
+{
+  "activatedAt": null,
+  "code": "basic03",
+  "courseVersion": {
+    "courseId": "01990000-0000-7000-8000-000000000201",
+    "courseName": "Lập trình cơ bản",
+    "id": "01990000-0000-7000-8000-000000000962",
+    "lessonCount": 0,
+    "stageCount": 0,
+    "versionNo": 3
+  },
+  "endDate": "2026-10-05",
+  "endedAt": null,
+  "id": "01990000-0000-7000-8000-000000000952",
+  "memberCount": 0,
+  "name": "Lập trình cơ bản – khóa 3 (tối)",
+  "startDate": "2026-10-05",
+  "status": "draft",
+  "teacher": {
+    "id": "01990000-0000-7000-8000-000000000901",
+    "name": "Phạm Quốc Bảo"
+  }
+}

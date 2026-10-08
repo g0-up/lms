@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "DRAFT_EXISTS",
+    "details": {
+      "draftVersionId": "01990000-0000-7000-8000-000000000112",
+      "draftVersionNo": 2
+    },
+    "message": "Chặng đã có bản nháp v2. Phát hành hoặc xóa bản nháp trước."
+  }
+}

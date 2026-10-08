@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Học viên đã đổi mật khẩu; không cần gửi lại lời mời."
+  }
+}

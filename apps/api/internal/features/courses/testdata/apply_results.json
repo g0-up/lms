@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "courseCode": "BASIC",
+      "courseId": "01990000-0000-7000-8000-000000000201",
+      "newVersionNo": 2
+    },
+    {
+      "courseCode": "HASDRAFT",
+      "courseId": "0199ffff-0000-7000-8000-000000000001",
+      "error": {
+        "code": "DRAFT_EXISTS",
+        "message": "Khóa học đang có bản nháp v2. Phát hành hoặc xóa bản nháp trước."
+      }
+    },
+    {
+      "courseCode": "WEBONLY",
+      "courseId": "0199ffff-0000-7000-8000-000000000002",
+      "error": {
+        "code": "VALIDATION_FAILED",
+        "message": "Khóa học không chứa chặng này."
+      }
+    },
+    {
+      "courseCode": "DBV2",
+      "courseId": "0199ffff-0000-7000-8000-000000000003",
+      "error": {
+        "code": "CONFLICT",
+        "message": "Khóa học đã dùng phiên bản này."
+      }
+    }
+  ]
+}

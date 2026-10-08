@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_TRANSITION",
+    "message": "Lớp chưa bắt đầu hoặc đã kết thúc; không ghi nhận tiến độ."
+  }
+}

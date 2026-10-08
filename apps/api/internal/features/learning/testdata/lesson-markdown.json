@@ -1,0 +1,30 @@
+{
+  "content": {
+    "html": "<h1>Thiết kế bảng và khóa</h1>\n<p>Mỗi bảng cần một khóa chính.</p>\n",
+    "type": "markdown"
+  },
+  "lesson": {
+    "durationSeconds": 720,
+    "id": "01990000-0000-7000-8000-000000000121",
+    "position": 2,
+    "required": true,
+    "stage": {
+      "id": "01990000-0000-7000-8000-000000000101",
+      "name": "Database"
+    },
+    "title": "Thiết kế bảng và khóa",
+    "type": "markdown"
+  },
+  "next": {
+    "lessonId": "01990000-0000-7000-8000-000000000122",
+    "title": "Đọc thêm: chỉ mục"
+  },
+  "prev": {
+    "lessonId": "01990000-0000-7000-8000-000000000991",
+    "title": "Giới thiệu SQL"
+  },
+  "progress": {
+    "firstOpenedAt": "2026-10-05T08:00:00Z"
+  },
+  "readOnly": false
+}

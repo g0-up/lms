@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_TRANSITION",
+    "message": "Chỉ đổi phiên bản khi lớp còn nháp."
+  }
+}

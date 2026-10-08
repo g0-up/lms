@@ -1,0 +1,33 @@
+{
+  "classes": [
+    {
+      "classId": "01990000-0000-7000-8000-000000000301",
+      "code": "basic01",
+      "memberCount": 1,
+      "name": "Lập trình cơ bản – khóa 1",
+      "status": "active"
+    }
+  ],
+  "courseCode": "BASIC",
+  "courseId": "01990000-0000-7000-8000-000000000201",
+  "courseName": "Lập trình cơ bản",
+  "id": "01990000-0000-7000-8000-000000000211",
+  "newerPublished": false,
+  "publishedAt": "2026-10-05T08:00:00Z",
+  "stages": [
+    {
+      "latestPublishedNo": 2,
+      "lessonCount": 2,
+      "outdated": true,
+      "position": 1,
+      "requiredCount": 1,
+      "stageCode": "DB",
+      "stageId": "01990000-0000-7000-8000-000000000101",
+      "stageName": "Database",
+      "stageVersionId": "01990000-0000-7000-8000-000000000111",
+      "stageVersionNo": 1
+    }
+  ],
+  "status": "published",
+  "versionNo": 1
+}

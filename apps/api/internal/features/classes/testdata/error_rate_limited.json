@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "RATE_LIMITED",
+    "message": "Đã gửi lại quá nhiều lần. Thử lại sau."
+  }
+}

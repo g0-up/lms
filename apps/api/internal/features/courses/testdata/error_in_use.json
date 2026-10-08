@@ -1,0 +1,17 @@
+{
+  "error": {
+    "code": "IN_USE",
+    "details": {
+      "usedBy": [
+        {
+          "classId": "01990000-0000-7000-8000-000000000301",
+          "code": "basic01",
+          "memberCount": 1,
+          "name": "Lập trình cơ bản – khóa 1",
+          "status": "active"
+        }
+      ]
+    },
+    "message": "Đang được dùng bởi lớp basic01. Hãy lưu trữ thay vì xóa."
+  }
+}

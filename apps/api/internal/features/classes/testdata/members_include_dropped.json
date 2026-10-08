@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "accountStatus": "invited",
+      "email": "minh.bui@gmail.com",
+      "fullName": "Bùi Quang Minh",
+      "id": "0199ffff-0000-7000-8000-000000000001",
+      "inviteAttempts": 0,
+      "inviteKind": "added",
+      "inviteStatus": "sent",
+      "invitedAt": "2026-10-05T08:00:00Z",
+      "joinedAt": "2026-10-05T08:00:00Z",
+      "memberStatus": "active",
+      "tempPasswordExpiresAt": "2026-10-05T08:00:00Z",
+      "userId": "01990000-0000-7000-8000-000000000902"
+    },
+    {
+      "accountStatus": "invited",
+      "email": "moi.hoc.vien@gmail.com",
+      "fullName": "Học Viên Mới",
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "inviteAttempts": 0,
+      "inviteKind": "resend",
+      "inviteStatus": "queued",
+      "invitedAt": "2026-10-05T08:00:00Z",
+      "joinedAt": "2026-10-05T08:00:00Z",
+      "memberStatus": "active",
+      "tempPasswordExpiresAt": "2026-10-05T08:00:00Z",
+      "userId": "0199ffff-0000-7000-8000-000000000003"
+    },
+    {
+      "accountStatus": "active",
+      "droppedAt": "2026-10-05T08:00:00Z",
+      "email": "an.nguyen@gmail.com",
+      "fullName": "Nguyễn Hoàng An",
+      "id": "01990000-0000-7000-8000-000000000311",
+      "joinedAt": "2026-10-05T08:00:00Z",
+      "lastActiveAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberStatus": "dropped",
+      "userId": "01990000-0000-7000-8000-000000000003"
+    },
+    {
+      "accountStatus": "active",
+      "email": "bich.tran@gmail.com",
+      "fullName": "Trần Thị Bích",
+      "id": "0199ffff-0000-7000-8000-000000000004",
+      "inviteAttempts": 0,
+      "inviteKind": "added",
+      "inviteStatus": "sent",
+      "invitedAt": "2026-10-05T08:00:00Z",
+      "joinedAt": "2026-10-05T08:00:00Z",
+      "lastActiveAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberStatus": "active",
+      "userId": "01990000-0000-7000-8000-000000000905"
+    },
+    {
+      "accountStatus": "active",
+      "email": "khang.vu@gmail.com",
+      "fullName": "Vũ Đức Khang",
+      "id": "01990000-0000-7000-8000-000000000971",
+      "inviteAttempts": 3,
+      "inviteKind": "added",
+      "inviteLastError": "Mailbox không tồn tại (550 5.1.1)",
+      "inviteStatus": "failed",
+      "invitedAt": "2026-10-05T08:00:00Z",
+      "joinedAt": "2026-10-05T08:00:00Z",
+      "lastActiveAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberStatus": "active",
+      "userId": "01990000-0000-7000-8000-000000000904"
+    }
+  ]
+}

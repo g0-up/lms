@@ -1,0 +1,30 @@
+[
+  {
+    "key": "db-table",
+    "source": "# Thiết kế bảng và khóa\n\nMột bảng tốt có khóa chính rõ ràng, kiểu dữ liệu đúng và ràng buộc được khai báo ở tầng database.\n\n## Khóa chính và khóa ngoại\n\n1. Mỗi bảng có đúng một khóa chính.\n2. Khóa ngoại tham chiếu tới khóa chính của bảng khác.\n3. Dùng `ON DELETE RESTRICT` cho dữ liệu đã được tham chiếu.\n\n```sql\nCREATE TABLE class_members (\n  id         bigserial PRIMARY KEY,\n  class_id   bigint NOT NULL REFERENCES classes(id) ON DELETE RESTRICT,\n  user_id    bigint NOT NULL REFERENCES users(id),\n  UNIQUE (class_id, user_id)\n);\n```"
+  },
+  {
+    "key": "db-index",
+    "source": "# Đọc thêm: chỉ mục\n\nChỉ mục (index) giúp truy vấn nhanh hơn nhưng làm chậm ghi. Chỉ đánh index cho cột xuất hiện trong `WHERE`, `JOIN` hoặc `ORDER BY` thường xuyên.\n\n- B-tree: mặc định, phù hợp so sánh và sắp xếp.\n- GIN: cho mảng, JSONB, tìm kiếm toàn văn."
+  },
+  {
+    "key": "ds-stack",
+    "source": "# Stack và Queue\n\n- **Stack** (ngăn xếp): vào sau ra trước (LIFO). Dùng cho undo, duyệt cây, kiểm tra ngoặc.\n- **Queue** (hàng đợi): vào trước ra trước (FIFO). Dùng cho hàng đợi gửi email, BFS.\n\n```go\nstack := []int{}\nstack = append(stack, 1)        // push\ntop := stack[len(stack)-1]      // peek\nstack = stack[:len(stack)-1]    // pop\n```"
+  },
+  {
+    "key": "go-types",
+    "source": "# Kiểu dữ liệu và hàm trong Go\n\nGo là ngôn ngữ tĩnh kiểu. Khai báo biến bằng `var` hoặc `:=`.\n\n```go\nfunc sum(xs []int) int {\n    total := 0\n    for _, x := range xs {\n        total += x\n    }\n    return total\n}\n```\n\nHàm có thể trả về nhiều giá trị, thường là `(kết quả, error)`."
+  },
+  {
+    "key": "go-exercise",
+    "source": "# Bài tập tổng hợp Go\n\nViết chương trình đọc file CSV danh sách học viên và in ra số học viên theo từng lớp.\n\nYêu cầu:\n1. Dùng package `encoding/csv`.\n2. Xử lý lỗi khi file không tồn tại.\n3. Kết quả sắp xếp theo mã lớp."
+  },
+  {
+    "key": "re-state",
+    "source": "# State và sự kiện\n\n`useState` giữ dữ liệu thay đổi theo thời gian trong component.\n\n```jsx\nfunction Counter() {\n  const [count, setCount] = useState(0);\n  return <button onClick={() => setCount(count + 1)}>{count}</button>;\n}\n```\n\nKhi state đổi, React render lại component đó và các component con."
+  },
+  {
+    "key": "web-html",
+    "source": "# HTML ngữ nghĩa\n\nDùng đúng thẻ cho đúng ý nghĩa: `<header>`, `<nav>`, `<main>`, `<article>`, `<section>`, `<footer>`.\n\nLợi ích:\n- Trình đọc màn hình hiểu cấu trúc trang.\n- Công cụ tìm kiếm đánh giá nội dung tốt hơn.\n- CSS và JavaScript dễ bám vào hơn."
+  }
+]

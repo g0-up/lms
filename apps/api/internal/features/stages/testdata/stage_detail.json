@@ -1,0 +1,98 @@
+{
+  "code": "DB",
+  "description": "Nền tảng SQL và thiết kế bảng.",
+  "id": "01990000-0000-7000-8000-000000000101",
+  "name": "Database",
+  "outdatedCourses": [
+    {
+      "blockedReason": "Khóa học đang có bản nháp v2. Phát hành hoặc xóa bản nháp trước.",
+      "canApply": false,
+      "courseCode": "HASDRAFT",
+      "courseId": "0199ffff-0000-7000-8000-000000000001",
+      "courseName": "Khóa có nháp",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000002",
+      "courseVersionNo": 1,
+      "draftVersionId": "0199ffff-0000-7000-8000-000000000003",
+      "draftVersionNo": 2,
+      "latestVersionId": "01990000-0000-7000-8000-000000000112",
+      "latestVersionNo": 2,
+      "usingVersionNo": 1
+    },
+    {
+      "canApply": true,
+      "courseCode": "BASIC",
+      "courseId": "01990000-0000-7000-8000-000000000201",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionId": "01990000-0000-7000-8000-000000000211",
+      "courseVersionNo": 1,
+      "latestVersionId": "01990000-0000-7000-8000-000000000112",
+      "latestVersionNo": 2,
+      "usingVersionNo": 1
+    }
+  ],
+  "usedBy": [
+    {
+      "classCodes": [],
+      "courseCode": "HASDRAFT",
+      "courseId": "0199ffff-0000-7000-8000-000000000001",
+      "courseName": "Khóa có nháp",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000002",
+      "outdated": true,
+      "stageVersionNo": 1,
+      "status": "published",
+      "versionNo": 1
+    },
+    {
+      "classCodes": [],
+      "courseCode": "HASDRAFT",
+      "courseId": "0199ffff-0000-7000-8000-000000000001",
+      "courseName": "Khóa có nháp",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000003",
+      "outdated": true,
+      "stageVersionNo": 1,
+      "status": "draft",
+      "versionNo": 2
+    },
+    {
+      "classCodes": [],
+      "courseCode": "UPTODATE",
+      "courseId": "0199ffff-0000-7000-8000-000000000004",
+      "courseName": "Khóa cập nhật",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000005",
+      "outdated": false,
+      "stageVersionNo": 2,
+      "status": "published",
+      "versionNo": 1
+    },
+    {
+      "classCodes": [
+        "basic01"
+      ],
+      "courseCode": "BASIC",
+      "courseId": "01990000-0000-7000-8000-000000000201",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionId": "01990000-0000-7000-8000-000000000211",
+      "outdated": true,
+      "stageVersionNo": 1,
+      "status": "published",
+      "versionNo": 1
+    }
+  ],
+  "versions": [
+    {
+      "clonedFromVersionNo": 1,
+      "id": "01990000-0000-7000-8000-000000000112",
+      "lessonCount": 2,
+      "publishedAt": "2026-10-05T08:00:00Z",
+      "status": "published",
+      "versionNo": 2
+    },
+    {
+      "id": "01990000-0000-7000-8000-000000000111",
+      "lessonCount": 2,
+      "publishedAt": "2026-10-05T08:00:00Z",
+      "status": "published",
+      "versionNo": 1
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "error": {
+    "code": "DRAFT_EXISTS",
+    "details": {
+      "draftVersionId": "0199ffff-0000-7000-8000-000000000001",
+      "draftVersionNo": 2
+    },
+    "message": "Khóa học đang có bản nháp v2. Phát hành hoặc xóa bản nháp trước."
+  }
+}

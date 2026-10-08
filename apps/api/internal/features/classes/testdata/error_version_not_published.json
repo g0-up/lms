@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Chọn một phiên bản khóa học đã phát hành."
+  }
+}

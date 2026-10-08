@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_TRANSITION",
+    "message": "Lớp chưa bắt đầu. Bạn sẽ vào học được khi lớp kích hoạt."
+  }
+}

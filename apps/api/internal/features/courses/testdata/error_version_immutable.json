@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VERSION_IMMUTABLE",
+    "message": "Phiên bản đã phát hành không thể chỉnh sửa."
+  }
+}

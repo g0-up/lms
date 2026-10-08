@@ -1,0 +1,440 @@
+{
+  "class": {
+    "code": "basic01",
+    "courseName": "Lập trình cơ bản",
+    "courseVersionNo": 1,
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active",
+    "teacher": {
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "name": "Lê Thu Hương"
+    }
+  },
+  "filter": {
+    "belowPercent": null,
+    "inactiveDays": null,
+    "includeDropped": false,
+    "notLoggedIn": false,
+    "sort": "name"
+  },
+  "rows": [
+    {
+      "accountStatus": "active",
+      "email": "ha.hoang@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000003",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Hoàng Thu Hà",
+      "percent": 29,
+      "requiredDone": 4,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 67,
+          "requiredDone": 2,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000009"
+    },
+    {
+      "accountStatus": "active",
+      "email": "cuong.le@outlook.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000010",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Lê Văn Cường",
+      "percent": 93,
+      "requiredDone": 13,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 67,
+          "requiredDone": 2,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000011"
+    },
+    {
+      "accountStatus": "active",
+      "email": "an.nguyen@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000012",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Nguyễn Hoàng An",
+      "percent": 71,
+      "requiredDone": 10,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 67,
+          "requiredDone": 2,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000013"
+    },
+    {
+      "accountStatus": "invited",
+      "email": "dung.pham@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": null,
+      "lastLoginAt": null,
+      "memberId": "0199ffff-0000-7000-8000-000000000014",
+      "memberStatus": "active",
+      "mustChangePassword": true,
+      "name": "Phạm Minh Dũng",
+      "percent": 0,
+      "requiredDone": 0,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000015"
+    },
+    {
+      "accountStatus": "active",
+      "email": "bich.tran@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000016",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Trần Thị Bích",
+      "percent": 50,
+      "requiredDone": 7,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 100,
+          "requiredDone": 3,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 67,
+          "requiredDone": 2,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000017"
+    },
+    {
+      "accountStatus": "active",
+      "email": "khang.vu@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000018",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Vũ Đức Khang",
+      "percent": 14,
+      "requiredDone": 2,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000019"
+    },
+    {
+      "accountStatus": "active",
+      "email": "phong.dang@gmail.com",
+      "invite": {
+        "attempts": 0,
+        "kind": "invite",
+        "lastError": null,
+        "status": "sent"
+      },
+      "lastActivityAt": "2026-10-05T08:00:00Z",
+      "lastLoginAt": "2026-10-05T08:00:00Z",
+      "memberId": "0199ffff-0000-7000-8000-000000000020",
+      "memberStatus": "active",
+      "mustChangePassword": false,
+      "name": "Đặng Hải Phong",
+      "percent": 29,
+      "requiredDone": 4,
+      "requiredTotal": 14,
+      "stagePercents": [
+        {
+          "percent": 100,
+          "requiredDone": 2,
+          "requiredTotal": 2,
+          "stageId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "percent": 67,
+          "requiredDone": 2,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000006"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000007"
+        },
+        {
+          "percent": 0,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "stageId": "0199ffff-0000-7000-8000-000000000008"
+        }
+      ],
+      "userId": "0199ffff-0000-7000-8000-000000000021"
+    }
+  ],
+  "selfReported": true,
+  "stages": [
+    {
+      "code": "DB",
+      "name": "Database",
+      "position": 1,
+      "requiredTotal": 2,
+      "stageId": "0199ffff-0000-7000-8000-000000000004",
+      "versionNo": 1
+    },
+    {
+      "code": "DS",
+      "name": "Data structure",
+      "position": 2,
+      "requiredTotal": 3,
+      "stageId": "0199ffff-0000-7000-8000-000000000005",
+      "versionNo": 1
+    },
+    {
+      "code": "GO",
+      "name": "Golang basic",
+      "position": 3,
+      "requiredTotal": 3,
+      "stageId": "0199ffff-0000-7000-8000-000000000006",
+      "versionNo": 1
+    },
+    {
+      "code": "RE",
+      "name": "ReactJS basic",
+      "position": 4,
+      "requiredTotal": 3,
+      "stageId": "0199ffff-0000-7000-8000-000000000007",
+      "versionNo": 1
+    },
+    {
+      "code": "WEB",
+      "name": "HTML CSS JS",
+      "position": 5,
+      "requiredTotal": 3,
+      "stageId": "0199ffff-0000-7000-8000-000000000008",
+      "versionNo": 1
+    }
+  ],
+  "summary": {
+    "activeCount": 7,
+    "avgPercent": 41,
+    "belowCount": 4,
+    "belowPercent": 50,
+    "inactiveCount": 2,
+    "inactiveDays": 7,
+    "memberCount": 7,
+    "notLoggedInCount": 1
+  }
+}

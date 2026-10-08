@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Bạn không còn là thành viên đang học của lớp."
+  }
+}

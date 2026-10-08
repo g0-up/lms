@@ -1,0 +1,58 @@
+{
+  "items": [
+    {
+      "code": "basic00",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000953",
+      "name": "Lập trình cơ bản – khóa 0",
+      "nextLesson": {
+        "lessonId": "01990000-0000-7000-8000-000000000121",
+        "stageName": "Database",
+        "title": "Thiết kế bảng và khóa"
+      },
+      "percent": 20,
+      "readOnlyReason": "ended",
+      "requiredDone": 1,
+      "requiredTotal": 5,
+      "startDate": "2026-10-05",
+      "status": "ended",
+      "teacherName": "Lê Thu Hương"
+    },
+    {
+      "code": "basic01",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000301",
+      "name": "Lập trình cơ bản – khóa 1",
+      "nextLesson": {
+        "lessonId": "01990000-0000-7000-8000-000000000121",
+        "stageName": "Database",
+        "title": "Thiết kế bảng và khóa"
+      },
+      "percent": 20,
+      "requiredDone": 1,
+      "requiredTotal": 5,
+      "startDate": "2026-10-05",
+      "status": "active",
+      "teacherName": "Lê Thu Hương"
+    },
+    {
+      "code": "basic03",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionNo": 1,
+      "endDate": "2026-10-05",
+      "id": "01990000-0000-7000-8000-000000000952",
+      "name": "Lập trình cơ bản – khóa 3",
+      "percent": 0,
+      "readOnlyReason": "draft",
+      "requiredDone": 0,
+      "requiredTotal": 5,
+      "startDate": "2026-10-05",
+      "status": "draft",
+      "teacherName": "Lê Thu Hương"
+    }
+  ]
+}

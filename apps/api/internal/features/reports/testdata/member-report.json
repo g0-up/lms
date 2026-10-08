@@ -1,0 +1,274 @@
+{
+  "class": {
+    "code": "basic01",
+    "courseName": "Lập trình cơ bản",
+    "courseVersionNo": 1,
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active",
+    "teacher": {
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "name": "Lê Thu Hương"
+    }
+  },
+  "member": {
+    "accountStatus": "active",
+    "email": "an.nguyen@gmail.com",
+    "invite": {
+      "attempts": 0,
+      "kind": "invite",
+      "lastError": null,
+      "status": "sent"
+    },
+    "lastActivityAt": "2026-10-05T08:00:00Z",
+    "lastLoginAt": "2026-10-05T08:00:00Z",
+    "memberId": "0199ffff-0000-7000-8000-000000000003",
+    "memberStatus": "active",
+    "mustChangePassword": false,
+    "name": "Nguyễn Hoàng An",
+    "percent": 71,
+    "requiredDone": 10,
+    "requiredTotal": 14,
+    "stagePercents": [
+      {
+        "percent": 100,
+        "requiredDone": 2,
+        "requiredTotal": 2,
+        "stageId": "0199ffff-0000-7000-8000-000000000004"
+      },
+      {
+        "percent": 100,
+        "requiredDone": 3,
+        "requiredTotal": 3,
+        "stageId": "0199ffff-0000-7000-8000-000000000005"
+      },
+      {
+        "percent": 100,
+        "requiredDone": 3,
+        "requiredTotal": 3,
+        "stageId": "0199ffff-0000-7000-8000-000000000006"
+      },
+      {
+        "percent": 67,
+        "requiredDone": 2,
+        "requiredTotal": 3,
+        "stageId": "0199ffff-0000-7000-8000-000000000007"
+      },
+      {
+        "percent": 0,
+        "requiredDone": 0,
+        "requiredTotal": 3,
+        "stageId": "0199ffff-0000-7000-8000-000000000008"
+      }
+    ],
+    "userId": "0199ffff-0000-7000-8000-000000000009"
+  },
+  "selfReported": true,
+  "stages": [
+    {
+      "code": "DB",
+      "lessons": [
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000010",
+          "position": 1,
+          "required": true,
+          "state": "completed",
+          "title": "Giới thiệu SQL",
+          "type": "video"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000011",
+          "position": 2,
+          "required": true,
+          "state": "completed",
+          "title": "Thiết kế bảng và khóa",
+          "type": "markdown"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000012",
+          "position": 3,
+          "required": false,
+          "state": "completed",
+          "title": "Đọc thêm: chỉ mục",
+          "type": "markdown"
+        }
+      ],
+      "name": "Database",
+      "percent": 100,
+      "stageId": "0199ffff-0000-7000-8000-000000000004",
+      "versionNo": 1
+    },
+    {
+      "code": "DS",
+      "lessons": [
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000013",
+          "position": 1,
+          "required": true,
+          "state": "completed",
+          "title": "Mảng và danh sách liên kết",
+          "type": "video"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000014",
+          "position": 2,
+          "required": true,
+          "state": "completed",
+          "title": "Stack và Queue",
+          "type": "markdown"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000015",
+          "position": 3,
+          "required": true,
+          "state": "completed",
+          "title": "Hash table",
+          "type": "video"
+        }
+      ],
+      "name": "Data structure",
+      "percent": 100,
+      "stageId": "0199ffff-0000-7000-8000-000000000005",
+      "versionNo": 1
+    },
+    {
+      "code": "GO",
+      "lessons": [
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000016",
+          "position": 1,
+          "required": true,
+          "state": "completed",
+          "title": "Cài đặt và Hello World",
+          "type": "video"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000017",
+          "position": 2,
+          "required": true,
+          "state": "completed",
+          "title": "Kiểu dữ liệu và hàm",
+          "type": "markdown"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000018",
+          "position": 3,
+          "required": true,
+          "state": "completed",
+          "title": "Goroutine cơ bản",
+          "type": "video"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000019",
+          "position": 4,
+          "required": false,
+          "state": "not_opened",
+          "title": "Bài tập tổng hợp",
+          "type": "markdown"
+        }
+      ],
+      "name": "Golang basic",
+      "percent": 100,
+      "stageId": "0199ffff-0000-7000-8000-000000000006",
+      "versionNo": 1
+    },
+    {
+      "code": "RE",
+      "lessons": [
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000020",
+          "position": 1,
+          "required": true,
+          "state": "completed",
+          "title": "Component và props",
+          "type": "video"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000021",
+          "position": 2,
+          "required": true,
+          "state": "completed",
+          "title": "State và sự kiện",
+          "type": "markdown"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000022",
+          "position": 3,
+          "required": true,
+          "state": "opened",
+          "title": "Hooks",
+          "type": "video"
+        }
+      ],
+      "name": "ReactJS basic",
+      "percent": 67,
+      "stageId": "0199ffff-0000-7000-8000-000000000007",
+      "versionNo": 1
+    },
+    {
+      "code": "WEB",
+      "lessons": [
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000023",
+          "position": 1,
+          "required": true,
+          "state": "not_opened",
+          "title": "HTML ngữ nghĩa",
+          "type": "markdown"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000024",
+          "position": 2,
+          "required": true,
+          "state": "not_opened",
+          "title": "CSS layout",
+          "type": "video"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000025",
+          "position": 3,
+          "required": true,
+          "state": "not_opened",
+          "title": "JavaScript và DOM",
+          "type": "video"
+        }
+      ],
+      "name": "HTML CSS JS",
+      "percent": 0,
+      "stageId": "0199ffff-0000-7000-8000-000000000008",
+      "versionNo": 1
+    }
+  ]
+}

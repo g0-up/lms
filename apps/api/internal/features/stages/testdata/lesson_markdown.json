@@ -1,0 +1,9 @@
+{
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "lessonKey": "db-join-notes",
+  "markdownSource": "# JOIN\n\nINNER và LEFT JOIN.",
+  "position": 4,
+  "required": false,
+  "title": "Ghi chú JOIN",
+  "type": "markdown"
+}

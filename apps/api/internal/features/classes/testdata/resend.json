@@ -1,0 +1,16 @@
+{
+  "member": {
+    "accountStatus": "invited",
+    "email": "moi.hoc.vien@gmail.com",
+    "fullName": "Học Viên Mới",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "inviteAttempts": 0,
+    "inviteKind": "resend",
+    "inviteStatus": "queued",
+    "invitedAt": "2026-10-05T08:00:00Z",
+    "joinedAt": "2026-10-05T08:00:00Z",
+    "memberStatus": "active",
+    "tempPasswordExpiresAt": "2026-10-05T08:00:00Z",
+    "userId": "0199ffff-0000-7000-8000-000000000002"
+  }
+}

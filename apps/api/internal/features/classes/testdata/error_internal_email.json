@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Email này thuộc tài khoản nội bộ, không mời làm học viên được."
+  }
+}

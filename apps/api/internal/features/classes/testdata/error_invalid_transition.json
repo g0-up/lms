@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "INVALID_TRANSITION",
+    "message": "Chỉ chuyển trạng thái một chiều: nháp → đang chạy → đã kết thúc."
+  }
+}

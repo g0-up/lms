@@ -1,0 +1,8 @@
+Chào {{.Name}},
+
+Bạn đã được thêm vào lớp {{.ClassName}} ({{.ClassCode}}) trên {{.AppName}}.
+
+{{if index . "UsePreviousTempPassword"}}Bạn chưa đổi mật khẩu: đăng nhập bằng mật khẩu tạm trong email mời trước đó tại: {{.LoginURL}}
+Nếu mật khẩu tạm đã hết hạn, hãy liên hệ quản trị viên để được gửi lại.{{else}}Đăng nhập bằng tài khoản hiện có tại: {{.LoginURL}}{{end}}
+
+{{.AppName}}

@@ -1,0 +1,31 @@
+{
+  "items": [
+    {
+      "code": "DB",
+      "description": "Nền tảng SQL và thiết kế bảng.",
+      "draftVersionId": "01990000-0000-7000-8000-000000000112",
+      "id": "01990000-0000-7000-8000-000000000101",
+      "latestPublishedNo": 1,
+      "latestVersionNo": 2,
+      "name": "Database",
+      "outdatedCourseCount": 0,
+      "usedByCourseCount": 1,
+      "versions": [
+        {
+          "clonedFromVersionNo": 1,
+          "id": "01990000-0000-7000-8000-000000000112",
+          "lessonCount": 2,
+          "status": "draft",
+          "versionNo": 2
+        },
+        {
+          "id": "01990000-0000-7000-8000-000000000111",
+          "lessonCount": 2,
+          "publishedAt": "2026-10-05T08:00:00Z",
+          "status": "published",
+          "versionNo": 1
+        }
+      ]
+    }
+  ]
+}

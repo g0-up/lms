@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "ACCOUNT_DISABLED",
+    "message": "Tài khoản đã bị vô hiệu hóa. Kích hoạt lại trước khi mời."
+  }
+}

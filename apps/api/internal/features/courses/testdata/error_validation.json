@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Chỉ gắn được phiên bản chặng đã phát hành."
+  }
+}

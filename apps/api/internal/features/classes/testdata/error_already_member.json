@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Học viên đã có trong lớp."
+  }
+}

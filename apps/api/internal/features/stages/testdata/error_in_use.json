@@ -1,0 +1,21 @@
+{
+  "error": {
+    "code": "IN_USE",
+    "details": {
+      "usedBy": [
+        {
+          "classCodes": [
+            "basic01"
+          ],
+          "courseCode": "BASIC",
+          "courseId": "01990000-0000-7000-8000-000000000201",
+          "courseName": "Lập trình cơ bản",
+          "courseVersionId": "01990000-0000-7000-8000-000000000211",
+          "status": "published",
+          "versionNo": 1
+        }
+      ]
+    },
+    "message": "Đang được dùng trong Lập trình cơ bản v1. Hãy lưu trữ thay vì xóa."
+  }
+}

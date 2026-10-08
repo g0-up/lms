@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Mã lớp đã tồn tại."
+  }
+}

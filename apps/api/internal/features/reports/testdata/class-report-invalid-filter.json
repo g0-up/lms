@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Tham số lọc không hợp lệ."
+  }
+}

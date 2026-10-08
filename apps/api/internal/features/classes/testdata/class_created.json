@@ -1,0 +1,23 @@
+{
+  "activatedAt": null,
+  "code": "basic04",
+  "courseVersion": {
+    "courseId": "01990000-0000-7000-8000-000000000201",
+    "courseName": "Lập trình cơ bản",
+    "id": "01990000-0000-7000-8000-000000000211",
+    "lessonCount": 2,
+    "stageCount": 1,
+    "versionNo": 1
+  },
+  "endDate": "2026-10-05",
+  "endedAt": null,
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "memberCount": 0,
+  "name": "Lập trình cơ bản 04",
+  "startDate": "2026-10-05",
+  "status": "draft",
+  "teacher": {
+    "id": "01990000-0000-7000-8000-000000000002",
+    "name": "Lê Thu Hương"
+  }
+}

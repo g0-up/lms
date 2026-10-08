@@ -1,0 +1,11 @@
+{
+  "durationSeconds": 540,
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "lessonKey": "video-join-co-ban",
+  "position": 3,
+  "required": true,
+  "title": "Video: JOIN cơ bản",
+  "type": "video",
+  "videoFileName": "join-co-ban.mp4",
+  "videoMediaId": "0199ffff-0000-7000-8000-000000000002"
+}

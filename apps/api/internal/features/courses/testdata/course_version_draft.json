@@ -1,0 +1,25 @@
+{
+  "classes": [],
+  "clonedFromVersionNo": 1,
+  "courseCode": "BASIC",
+  "courseId": "01990000-0000-7000-8000-000000000201",
+  "courseName": "Lập trình cơ bản",
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "newerPublished": false,
+  "stages": [
+    {
+      "latestPublishedNo": 1,
+      "lessonCount": 2,
+      "outdated": false,
+      "position": 1,
+      "requiredCount": 1,
+      "stageCode": "DB",
+      "stageId": "01990000-0000-7000-8000-000000000101",
+      "stageName": "Database",
+      "stageVersionId": "01990000-0000-7000-8000-000000000111",
+      "stageVersionNo": 1
+    }
+  ],
+  "status": "draft",
+  "versionNo": 2
+}

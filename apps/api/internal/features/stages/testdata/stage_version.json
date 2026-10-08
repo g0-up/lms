@@ -1,0 +1,44 @@
+{
+  "id": "01990000-0000-7000-8000-000000000111",
+  "lessons": [
+    {
+      "id": "01990000-0000-7000-8000-000000000121",
+      "lessonKey": "db-table",
+      "markdownHtml": "<h1>Thiết kế bảng và khóa</h1>\n<p>Mỗi bảng cần một khóa chính.</p>\n",
+      "markdownSource": "# Thiết kế bảng và khóa\n\nMỗi bảng cần một khóa chính.",
+      "position": 1,
+      "required": true,
+      "title": "Thiết kế bảng và khóa",
+      "type": "markdown"
+    },
+    {
+      "id": "01990000-0000-7000-8000-000000000122",
+      "lessonKey": "db-index",
+      "markdownHtml": "<h1>Chỉ mục</h1>\n<p>Chỉ mục giúp truy vấn nhanh hơn.</p>\n",
+      "markdownSource": "# Chỉ mục\n\nChỉ mục giúp truy vấn nhanh hơn.",
+      "position": 2,
+      "required": false,
+      "title": "Đọc thêm: chỉ mục",
+      "type": "markdown"
+    }
+  ],
+  "publishedAt": "2026-10-05T08:00:00Z",
+  "stageCode": "DB",
+  "stageId": "01990000-0000-7000-8000-000000000101",
+  "stageName": "Database",
+  "status": "published",
+  "usedBy": [
+    {
+      "classCodes": [
+        "basic01"
+      ],
+      "courseCode": "BASIC",
+      "courseId": "01990000-0000-7000-8000-000000000201",
+      "courseName": "Lập trình cơ bản",
+      "courseVersionId": "01990000-0000-7000-8000-000000000211",
+      "status": "published",
+      "versionNo": 1
+    }
+  ],
+  "versionNo": 1
+}

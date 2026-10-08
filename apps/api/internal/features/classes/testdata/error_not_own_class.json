@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Bạn chỉ xem được lớp mình phụ trách."
+  }
+}
