@@ -90,12 +90,15 @@
   const brandMark = `<svg class="brand-mark" viewBox="0 0 28 28" aria-hidden="true"><rect width="12" height="28" fill="currentColor"/><rect x="16" y="4" width="12" height="8" rx="4" fill="#f2295b"/><rect x="16" y="16" width="12" height="12" fill="#d8e2ec"/></svg>`;
 
   /* ------------------------------------------------------- persistence */
+  // Fingerprint of the seed source: a walk-through saved by an older build has records the current pages
+  // cannot read (missing collections, older shapes), so it is discarded instead of crashing render.
+  const SEED_ID = [...window.LMS_SEED.toString()].reduce((h, ch) => (Math.imul(h, 31) + ch.charCodeAt(0)) | 0, 0).toString(36);
   function load() {
-    try { const raw = localStorage.getItem(STORE_KEY); if (raw) { S = JSON.parse(raw); return; } } catch (e) { /* storage unavailable: run in memory */ }
-    S = window.LMS_SEED(Date.now());
+    try { const saved = JSON.parse(localStorage.getItem(STORE_KEY)); if (saved?.seedId === SEED_ID) { S = saved; return; } } catch (e) { /* storage unavailable or corrupt: run from the seed */ }
+    resetData();
   }
   function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ } }
-  function resetData() { S = window.LMS_SEED(Date.now()); save(); }
+  function resetData() { S = { ...window.LMS_SEED(Date.now()), seedId: SEED_ID }; save(); }
 
   /* ---------------------------------------------------------- lookups */
   const byId = (list, id) => list.find((x) => x.id === id);

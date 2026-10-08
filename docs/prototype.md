@@ -12,7 +12,8 @@ calls other than Google Fonts.
 
 State lives in `localStorage` under the key `goup-lms-prototype-v1` and starts from
 `prototype/seed.js`. The reset button in the top bar (circular arrow) restores the seed;
-clearing site data does the same.
+clearing site data does the same. Saved state is stamped with a fingerprint of the seed code,
+so after any change to `seed.js` an older saved walk-through is discarded and the seed reloads.
 
 ## Demo accounts
 
