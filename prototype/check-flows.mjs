@@ -1,14 +1,15 @@
 // Functional and accessibility checks for the prototype, run in headless Chrome over the DevTools protocol.
 // Usage: node prototype/check-flows.mjs [--out <dir>]   (Node 18+, Google Chrome installed, no dependencies)
 // Covers spec scenario 7.3 (clone, edit, publish, apply, class version), invites, first login, report filters,
-// lesson ticks, then 320px reflow, reduced motion, keyboard and ARIA probes. Exits 1 when any check fails.
+// lesson ticks, quiz attempts, homework submission and grading, stage summaries, deadlines, extra attempts,
+// daily email jobs and publish blockers, then 320px reflow, reduced motion, keyboard and ARIA probes. Exits 1 when any check fails.
 import { spawn } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const CHROME = process.env.CHROME || ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium'].find((p) => existsSync(p));
 const URL0 = 'file://' + join(dirname(fileURLToPath(import.meta.url)), 'index.html');
 const outIdx = process.argv.indexOf('--out'); const OUT = outIdx > -1 ? process.argv[outIdx + 1] : null; if (OUT) mkdirSync(OUT, { recursive: true });
 const profile = mkdtempSync(join(tmpdir(), 'lms-walk-'));
@@ -36,7 +37,7 @@ const text = () => ev('document.body.innerText');
 const click = async (sel) => { const okc = await ev(`(()=>{const b=document.querySelector(${JSON.stringify(sel)}); if(!b) return false; b.click(); return true;})()`); if (!okc) throw new Error('no element ' + sel); await sleep(250); };
 const fill = (values) => ev(`(()=>{const f=document.querySelector('#modal form'); for (const [k,v] of Object.entries(${JSON.stringify(values)})) { const el=f.elements[k]; if(!el) throw new Error('no field '+k); if(el.type==='checkbox') el.checked=!!v; else { el.value=v; el.dispatchEvent(new Event('change',{bubbles:true})); } } return true;})()`);
 const submitModal = async () => { await ev(`document.querySelector('#modal form').requestSubmit()`); await sleep(300); };
-const state = () => ev(`JSON.parse(localStorage.getItem('goup-lms-prototype-v1'))`);
+const state = () => ev(`JSON.parse(localStorage.getItem('goup-lms-prototype-v2'))`);
 const results = [];
 const check = (name, cond, detail = '') => { results.push({ name, pass: !!cond, detail }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (detail ? ' — ' + detail : '')); };
 
@@ -95,7 +96,7 @@ try {
   // student flow: open + tick a lesson
   await go('#/learn/classes/cl-basic01?as=u-an'); t = await text();
   const pctBefore = Number((await ev(`document.querySelector('.progress-lg .pct, .progress .pct')?.textContent`) || '').replace('%', ''));
-  const lessonHref = await ev(`[...document.querySelectorAll('.lesson-row:not(.is-done)')].filter(r=>!/Không bắt buộc|tùy chọn/i.test(r.innerText)).map(r=>r.querySelector('a.lesson-link').getAttribute('href'))[0]`);
+  const lessonHref = await ev(`[...document.querySelectorAll('.lesson-row:not(.is-done)[data-kind=video], .lesson-row:not(.is-done)[data-kind=markdown]')].filter(r=>!/Không bắt buộc|tùy chọn/i.test(r.innerText)).map(r=>r.querySelector('a.lesson-link').getAttribute('href'))[0]`);
   check('student roadmap renders with an unfinished lesson', !!lessonHref && !Number.isNaN(pctBefore), `course ${pctBefore}% first open lesson ${lessonHref}`);
   await go(lessonHref); await sleep(300);
   st = await state(); const lessonId = lessonHref.split('/lessons/')[1]; const mem = st.members.find((m) => m.classId === 'cl-basic01' && m.userId === 'u-an');
@@ -174,8 +175,91 @@ try {
   await go('#/admin/stages/st-db?as=u-admin'); await click('[data-action="reset-data"]'); await submitModal(); await sleep(400);
   st = await state(); check('reset restores seed', st.stageVersions.filter((v) => v.stageId === 'st-db').length === 1 && st.courseVersions.length === 1);
 
+
+  // --- quiz, homework, grading and stage summary flows
+  await go('#/admin/stages/st-db?as=u-admin'); await click('[data-action="reset-data"]'); await submitModal(); await sleep(300);
+  const anM = (await state()).members.find((m) => m.classId === 'cl-basic01' && m.userId === 'u-an').id;
+  // assessment quiz: start, answer every question, submit
+  await go('#/learn/classes/cl-basic01/lessons/l14?as=u-an');
+  check('assessment quiz intro shows attempts used', /1\/2/.test(await text()));
+  await click('[data-action="start-quiz"]'); await sleep(300);
+  check('starting a quiz shows questions and a running timer', (await ev(`document.querySelectorAll('.quiz-take .quiz-q').length`)) === 5 && /\d\d:\d\d/.test(await ev(`document.querySelector('[data-timer-text]').textContent`)));
+  await ev(`[...document.querySelectorAll('.quiz-take .quiz-q')].slice(0, 4).forEach((f) => f.querySelector('input').click())`); await sleep(200);
+  st = await state(); let open = st.quizAttempts.find((a) => a.memberId === anM && a.status === 'open');
+  check('answers are saved as they are picked', open && Object.keys(open.answers).length === 4 && /4\/5/.test(await ev(`document.querySelector('[data-answered]').textContent`)), JSON.stringify(open?.answers));
+  await click('.quiz-bar [data-action="submit-quiz"]');
+  check('submit dialog warns about the unanswered question', /1 câu chưa trả lời/.test(await ev(`document.querySelector('#modal').innerText`)));
+  await submitModal(); await sleep(300);
+  st = await state(); const sub2 = st.quizAttempts.find((a) => a.id === open.id);
+  check('submitted attempt is scored and shows the result', sub2.status === 'submitted' && /result=/.test(await ev('location.hash')) && !!(await ev(`document.querySelector('.quiz-score')`)), `${sub2.score}/${sub2.max}`);
+  check('assessment result hides the answer key', (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 0);
+  await go('#/learn/classes/cl-basic01/lessons/l14');
+  check('start button is disabled when attempts run out', (await ev(`document.querySelector('[data-action="start-quiz"]')?.getAttribute('aria-disabled')`)) === 'true');
+  // practice quiz: review shows correct answers and explanations
+  await go('#/learn/classes/cl-basic01/lessons/l7?result=qa1');
+  check('practice result reviews every question with the key', (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 5 && (await ev(`document.querySelectorAll('.quiz-opt.is-correct').length`)) >= 5 && (await ev(`document.querySelectorAll('.quiz-explain').length`)) > 0);
+  await shot('11-quiz-review');
+  // homework: invalid then valid submission
+  await go('#/learn/classes/cl-basic01/lessons/l13?as=u-an');
+  await ev(`(()=>{const f=document.querySelector('form[data-form=submit-homework]'); f.repoUrl.value='not a url'; f.requestSubmit(); return true})()`); await sleep(200);
+  check('bad repository link is refused next to the form', !(await ev(`document.querySelector('form[data-form=submit-homework] [data-form-error]').hidden`)));
+  await ev(`(()=>{const f=document.querySelector('form[data-form=submit-homework]'); f.repoUrl.value='https://github.com/hoangan-dev/go-csv-stats'; f.commitRef.value='9f2c1ab'; f.requestSubmit(); return true})()`); await sleep(300);
+  st = await state(); const anSub = st.submissions.filter((x) => x.memberId === anM && x.lessonId === 'l13').pop();
+  check('homework submission is stored as pending', anSub && anSub.status === 'pending' && anSub.no === 1 && anSub.repoUrl.includes('go-csv-stats'), JSON.stringify(anSub));
+  await shot('12-homework-submitted');
+  // teacher grading queue and rubric
+  await go('#/teach/grading?as=u-gv'); t = await text();
+  const queueRows = await ev(`document.querySelectorAll('table tbody tr[data-href]').length`);
+  check('grading queue lists pending submissions oldest first', queueRows >= 3 && t.includes('Nguyễn Hoàng An'), `${queueRows} rows`);
+  await go(`#/teach/grading/${anSub.id}`);
+  await ev(`(()=>{const f=document.querySelector('form[data-form=grade]'); const s=[...f.querySelectorAll('[data-grade-score]')]; s[0].value='40'; s[0].dispatchEvent(new Event('input',{bubbles:true})); return true})()`);
+  check('running total waits for every criterion', /Còn 2 tiêu chí/.test(await ev(`document.querySelector('[data-grade-total]').innerText`)));
+  await ev(`(()=>{const f=document.querySelector('form[data-form=grade]'); const s=[...f.querySelectorAll('[data-grade-score]')]; s[1].value='35'; s[2].value='15'; s[2].dispatchEvent(new Event('input',{bubbles:true})); return true})()`);
+  check('running total shows score and pass state', /90\/100[\s\S]*Đạt/.test(await ev(`document.querySelector('[data-grade-total]').innerText`)), await ev(`document.querySelector('[data-grade-total]').innerText`));
+  await shot('13-grading');
+  await ev(`(()=>{const f=document.querySelector('form[data-form=grade]'); f.comment.value='Đúng yêu cầu, xử lý lỗi rõ ràng.'; f.requestSubmit(); return true})()`); await sleep(400);
+  st = await state(); const graded = st.submissions.find((x) => x.id === anSub.id);
+  check('grading stores the result and emails the student', graded.status === 'passed' && graded.grades.length === 1 && st.emails.some((e) => e.kind === 'graded'), graded.status);
+  check('saving a grade moves to the next queued submission', /\/grading\/sub/.test(await ev('location.hash')) && !(await ev('location.hash')).includes(anSub.id), await ev('location.hash'));
+  // stage summary matrix and teacher comment
+  await go('#/teach/classes/cl-basic01?tab=summary&as=u-gv');
+  check('class matrix shows a cell per student and stage', (await ev(`document.querySelectorAll('.matrix-cell').length`)) >= 10);
+  await click(`.matrix-cell[data-member="${anM}"][data-sv="sv-go-1"]`);
+  await ev(`(()=>{const f=document.querySelector('form[data-form=stage-review]'); f.text.value='Tiến bộ tốt ở chặng Go.'; f.requestSubmit(); return true})()`); await sleep(300);
+  st = await state(); check('stage review is saved from the drawer', st.stageReviews[`${anM}:sv-go-1`]?.text === 'Tiến bộ tốt ở chặng Go.');
+  await go('#/teach/classes/cl-basic01?tab=summary&rework=1');
+  check('matrix filter narrows to students with rework', (await ev(`document.querySelectorAll('.matrix tbody tr').length`)) >= 1 && /rework=1/.test(await ev('location.hash')));
+  // daily email jobs
+  await go('#/admin?as=u-admin'); await click('[data-action="run-daily-jobs"]'); await sleep(200);
+  st = await state(); check('daily jobs send digests and reminders', st.emails.some((e) => e.kind === 'digest') && st.emails.some((e) => e.kind === 'reminder'), st.emails.map((e) => e.kind).join());
+  // deadline and extra attempts
+  await go('#/admin/classes/cl-basic01?tab=homework&as=u-admin');
+  await click('[data-action="set-deadline"][data-lesson="l13"]'); await fill({ due: '2026-12-01T17:00' }); await submitModal();
+  st = await state(); check('deadline is saved for the class', !!st.deadlines['cl-basic01:l13'] && st.deadlines['cl-basic01:l13'].startsWith('2026-12-01'), st.deadlines['cl-basic01:l13']);
+  await go('#/admin/classes/cl-basic01?tab=quiz');
+  await click(`[data-action="grant-attempts"][data-member="${anM}"]`); await fill({ extra: '1', reason: 'Mất kết nối khi làm bài' }); await submitModal();
+  st = await state(); check('extra attempt is granted with a reason', st.attemptGrants.length === 1 && st.attemptGrants[0].reason.includes('Mất kết nối'));
+  // publish blockers for an empty quiz in a draft
+  await go('#/admin/stages/st-ds?as=u-admin'); await click('[data-action="clone-sv"][data-id="sv-ds-1"]'); await sleep(300);
+  st = await state(); const dsDraft = st.stageVersions.find((v) => v.stageId === 'st-ds' && v.status === 'draft');
+  await click(`[data-action="new-lesson"][data-sv="${dsDraft.id}"]`); await fill({ title: 'Kiểm tra chặng DS', type: 'quiz', mode: 'assessment' }); await submitModal(); await sleep(300);
+  check('new quiz lesson opens the question editor', /\/admin\/stages\/st-ds\/lessons\/l/.test(await ev('location.hash')), await ev('location.hash'));
+  await go(`#/admin/stages/st-ds?v=${dsDraft.id}`); await click(`[data-action="publish-sv"][data-id="${dsDraft.id}"]`);
+  check('publishing a quiz without questions is blocked', !(await ev(`document.querySelector('#modal').open`)) && /Chưa phát hành được/.test(await ev(`document.querySelector('#toasts').innerText`)));
+  st = await state(); const newQuiz = st.stageVersions.find((v) => v.id === dsDraft.id).lessons.pop();
+  await go(`#/admin/stages/st-ds/lessons/${newQuiz.id}`);
+  await click('[data-action="new-question"]'); await fill({ text: 'Stack là LIFO?', opt0: 'Đúng', opt1: 'Sai', correct0: true }); await submitModal();
+  st = await state(); check('question is added to the draft quiz', st.stageVersions.find((v) => v.id === dsDraft.id).lessons.find((l) => l.id === newQuiz.id).quiz.questions.length === 1);
+  await go(`#/admin/stages/st-ds?v=${dsDraft.id}`); await click(`[data-action="publish-sv"][data-id="${dsDraft.id}"]`);
+  check('publish opens once the quiz has a keyed question', await ev(`document.querySelector('#modal').open`));
+  await click('[data-action="close-modal"]');
+  await go('#/admin/stages/st-db?as=u-admin'); await click('[data-action="reset-data"]'); await submitModal(); await sleep(300);
+
   // --- accessibility, reflow and keyboard probes
-  const ROUTES = ['#/login', '#/admin?as=u-admin', '#/admin/stages/st-db?as=u-admin', '#/admin/courses/co-basic?as=u-admin', '#/admin/classes/cl-basic01?as=u-admin', '#/admin/classes/cl-basic01?tab=report&as=u-admin', '#/teach?as=u-gv', '#/learn?as=u-an', '#/learn/classes/cl-basic01?as=u-an', '#/learn/classes/cl-basic01/lessons/db-intro?as=u-an'];
+  const ROUTES = ['#/login', '#/admin?as=u-admin', '#/admin/stages/st-db?as=u-admin', '#/admin/courses/co-basic?as=u-admin', '#/admin/classes/cl-basic01?as=u-admin', '#/admin/classes/cl-basic01?tab=report&as=u-admin', '#/teach?as=u-gv', '#/learn?as=u-an', '#/learn/classes/cl-basic01?as=u-an', '#/learn/classes/cl-basic01/lessons/l1?as=u-an',
+    '#/admin/classes/cl-basic01?tab=summary&as=u-admin', '#/admin/classes/cl-basic01?tab=homework&as=u-admin', '#/admin/classes/cl-basic01?tab=quiz&as=u-admin',
+    '#/teach/grading?as=u-gv', '#/teach/grading/sub4?as=u-gv', '#/admin/stages/st-ds/lessons/l7?as=u-admin', '#/admin/stages/st-go/lessons/l13?as=u-admin',
+    '#/learn/classes/cl-basic01/summary?as=u-an', '#/learn/classes/cl-basic01/lessons/l14?as=u-an', '#/learn/classes/cl-basic01/lessons/l13?as=u-an', '#/learn/classes/cl-basic01/lessons/l7?as=u-an&result=qa1'];
   await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
   for (const h of ROUTES) {
     await go(h);
