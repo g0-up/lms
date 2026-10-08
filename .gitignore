@@ -1,0 +1,29 @@
+# env
+.env
+.env.*
+!.env.example
+
+# deps & output
+node_modules/
+dist/
+bin/
+coverage/
+*.tsbuildinfo
+
+# test artifacts
+test-results/
+playwright-report/
+blob-report/
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# e2e: phiên đăng nhập của Playwright và ảnh render-check sinh lại mỗi lượt chạy
+apps/web/e2e/.auth/
+apps/web/e2e/__screenshots__/
+
+# bản dump database lấy trước khi sửa dữ liệu production
+backups/
