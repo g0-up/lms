@@ -1,0 +1,94 @@
+/*
+ * GoUp theme for MDXEditor. Its colour scales are plain custom properties on the editor root and
+ * on the popup container (both get the `goup-mdx` class); two classes outrank its one hashed class.
+ * Values are GoUp tokens only.
+ */
+.mdxeditor.goup-mdx,
+.mdxeditor-popup-container.goup-mdx {
+  --accentBase: var(--surface-0);
+  --accentBgSubtle: var(--surface-blue-50);
+  --accentBg: var(--surface-blue-50);
+  --accentBgHover: var(--surface-blue-100);
+  --accentBgActive: var(--surface-blue-100);
+  --accentLine: var(--surface-blue-100);
+  --accentBorder: var(--navy-700);
+  --accentBorderHover: var(--navy-900);
+  --accentSolid: var(--navy-700);
+  --accentSolidHover: var(--navy-900);
+  --accentText: var(--navy-700);
+  --accentTextContrast: var(--navy-900);
+
+  --basePageBg: var(--surface-0);
+  --baseBase: var(--surface-0);
+  --baseBgSubtle: var(--surface-50);
+  --baseBg: var(--surface-100);
+  --baseBgHover: var(--surface-blue-50);
+  --baseBgActive: var(--surface-blue-100);
+  --baseLine: var(--gray-200);
+  --baseBorder: var(--gray-300);
+  --baseBorderHover: var(--gray-500);
+  --baseSolid: var(--gray-600);
+  --baseSolidHover: var(--gray-800);
+  --baseText: var(--gray-600);
+  --baseTextContrast: var(--navy-900);
+
+  --error-color: var(--danger);
+  --font-body: var(--font-sans);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Above the app's dialogs (z-50), so menus opened from the image dialog stay visible. */
+.mdxeditor-popup-container.goup-mdx {
+  z-index: 60;
+}
+
+/* Frame and focus ring match the app's text inputs. */
+.mdxeditor.goup-mdx {
+  border: 1px solid var(--input);
+  border-radius: var(--radius-xs);
+  background: var(--surface-0);
+  transition:
+    border-color 180ms,
+    box-shadow 180ms;
+}
+
+.mdxeditor.goup-mdx:focus-within {
+  border-color: var(--navy-700);
+  box-shadow: 0 0 0 3px var(--surface-blue-100);
+}
+
+[data-invalid] > .mdxeditor.goup-mdx {
+  border-color: var(--destructive);
+}
+
+.goup-mdx .mdxeditor-toolbar {
+  flex-wrap: wrap;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+/* Touch targets: every editor control is at least 44px on small screens. */
+@media (max-width: 720px) {
+  .goup-mdx .mdxeditor-toolbar button,
+  .goup-mdx .mdxeditor-toolbar [role="combobox"],
+  .goup-mdx .mdxeditor-root-contenteditable button,
+  .goup-mdx .mdxeditor-root-contenteditable [role="combobox"],
+  .mdxeditor-popup-container.goup-mdx button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Select placeholders ("Kiểu khối") default to gray-500, below 4.5:1 on white. */
+.goup-mdx [data-placeholder] > span:first-child {
+  color: var(--gray-600);
+}
+
+/*
+ * The bundled CodeMirror light theme colours tokens below 4.5:1 on white. Lesson code is monochrome
+ * on the learner page, so code blocks in the editor are too.
+ */
+.goup-mdx .cm-editor .cm-content,
+.goup-mdx .cm-editor .cm-line span {
+  color: var(--ink);
+}
