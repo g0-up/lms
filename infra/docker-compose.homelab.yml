@@ -1,0 +1,87 @@
+# Overlay homelab: Traefik (mạng ngoài `homelab`, sau Cloudflare Tunnel) thay cho Caddy.
+# Luôn ghép SAU file production:
+#   docker compose -f infra/docker-compose.prod.yml -f infra/docker-compose.homelab.yml --env-file infra/.env up -d --build
+# hoặc `make homelab-up`.
+#
+# Hostname web (DOMAIN): /api/* → api, còn lại → web, /internal/* không router nào khớp → Traefik trả 404.
+# Cùng origin nên cookie phiên và kiểm tra CSRF giống production sau Caddy.
+# Hostname API (API_DOMAIN): mọi path trừ /internal → api, cho client gọi thẳng API (health, công cụ).
+# Không service nào publish cổng ra máy host, kể cả postgres. Service worker giữ nguyên như file production.
+
+services:
+  # TLS kết thúc ở Cloudflare, Traefik lo định tuyến: không chạy Caddy.
+  # Lưu ý: file production vẫn bắt buộc DOMAIN, ACME_EMAIL và MEDIA_ORIGIN khi đọc cấu hình.
+  caddy:
+    profiles: ["caddy"]
+
+  postgres:
+    # Database chỉ nằm trong mạng default riêng của stack: không bao giờ map cổng ra host.
+    ports: !reset []
+    networks:
+      default:
+        # Mạng `homelab` dùng chung có service `api`, `postgres` của stack khác;
+        # alias riêng để api và worker không phân giải nhầm sang Postgres của stack khác.
+        aliases: [lms-postgres]
+
+  api:
+    ports: !reset []
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-lms}:${POSTGRES_PASSWORD}@lms-postgres:5432/${POSTGRES_DB:-lms}?sslmode=disable
+    networks:
+      - default
+      - homelab
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=homelab
+      - traefik.http.routers.lms-api.rule=Host(`${DOMAIN}`) && PathPrefix(`/api/`)
+      - traefik.http.routers.lms-api.entrypoints=web
+      - traefik.http.routers.lms-api.service=lms-api
+      - traefik.http.routers.lms-api.middlewares=lms-headers
+      # Hostname riêng cho API (API_DOMAIN): mọi path trừ /internal. Web vẫn gọi /api/ cùng origin qua DOMAIN.
+      - traefik.http.routers.lms-api-host.rule=Host(`${API_DOMAIN:?đặt API_DOMAIN trong infra/.env}`) && !PathPrefix(`/internal`)
+      - traefik.http.routers.lms-api-host.entrypoints=web
+      - traefik.http.routers.lms-api-host.service=lms-api
+      - traefik.http.routers.lms-api-host.middlewares=lms-api-headers
+      # API tự đặt CSP, nosniff, frame DENY; Traefik chỉ thêm HSTS và bỏ header Server.
+      - traefik.http.middlewares.lms-api-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.lms-api-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.lms-api-headers.headers.forceSTSHeader=true
+      - traefik.http.middlewares.lms-api-headers.headers.customResponseHeaders.Server=
+      - traefik.http.services.lms-api.loadbalancer.server.port=8080
+      - traefik.http.services.lms-api.loadbalancer.healthcheck.path=/readyz
+      - traefik.http.services.lms-api.loadbalancer.healthcheck.interval=10s
+      - traefik.http.services.lms-api.loadbalancer.healthcheck.timeout=2s
+
+  worker:
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-lms}:${POSTGRES_PASSWORD}@lms-postgres:5432/${POSTGRES_DB:-lms}?sslmode=disable
+
+  web:
+    ports: !reset []
+    networks:
+      - default
+      - homelab
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=homelab
+      # nginx.conf vẫn proxy /api tới `api:8080`; trên mạng `homelab` tên đó có thể trỏ sang stack khác,
+      # nên /api/ đi thẳng router lms-api, /internal không router nào nhận.
+      - traefik.http.routers.lms-web.rule=Host(`${DOMAIN}`) && !PathPrefix(`/api/`) && !PathPrefix(`/internal`)
+      - traefik.http.routers.lms-web.entrypoints=web
+      - traefik.http.routers.lms-web.service=lms-web
+      - traefik.http.routers.lms-web.middlewares=lms-headers
+      - traefik.http.services.lms-web.loadbalancer.server.port=80
+      # Cùng bộ header với infra/caddy/Caddyfile. Traefik chỉ thấy http (TLS ở Cloudflare) nên phải ép HSTS.
+      - traefik.http.middlewares.lms-headers.headers.stsSeconds=31536000
+      - traefik.http.middlewares.lms-headers.headers.stsIncludeSubdomains=true
+      - traefik.http.middlewares.lms-headers.headers.forceSTSHeader=true
+      - traefik.http.middlewares.lms-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.lms-headers.headers.referrerPolicy=strict-origin-when-cross-origin
+      - traefik.http.middlewares.lms-headers.headers.frameDeny=true
+      - "traefik.http.middlewares.lms-headers.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()"
+      - "traefik.http.middlewares.lms-headers.headers.contentSecurityPolicy=default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: ${MEDIA_ORIGIN}; media-src 'self' ${MEDIA_ORIGIN}; connect-src 'self' ${MEDIA_ORIGIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+      - traefik.http.middlewares.lms-headers.headers.customResponseHeaders.Server=
+
+networks:
+  homelab:
+    external: true

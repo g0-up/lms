@@ -1,0 +1,33 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		# Ảnh Markdown luôn là /api/v1/media/{id}/content, trả 302 tới URL ký sẵn trên MEDIA_ORIGIN (R2); CSP kiểm
+		# cả đích redirect nên img-src cần MEDIA_ORIGIN. MEDIA_ORIGIN còn dùng cho presigned PUT từ trình duyệt
+		# (connect-src) và <video src> (media-src).
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob: {$MEDIA_ORIGIN}; media-src 'self' {$MEDIA_ORIGIN}; connect-src 'self' {$MEDIA_ORIGIN}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	# Không bao giờ mở đường dẫn nội bộ ra Internet.
+	handle /internal/* {
+		respond 404
+	}
+
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	handle {
+		reverse_proxy web:80
+	}
+}

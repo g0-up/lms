@@ -1,0 +1,158 @@
+name: lms
+
+# Compose dev: chỉ Postgres + MinIO + Mailpit; API và web chạy ngoài container (`make dev`).
+# Profile "full" thêm api + worker + web cho E2E (`make e2e`).
+# Mọi tài khoản/mật khẩu trong file này CHỈ dành cho máy dev/CI, không dùng ở production
+# (production đọc infra/.env qua infra/docker-compose.prod.yml).
+
+# Khối env chung của api và worker trong profile "full" (chỉ e2e).
+x-api-env: &api-env
+  APP_ENV: e2e
+  HTTP_ADDR: ":8080"
+  PUBLIC_BASE_URL: http://localhost:8081
+  DATABASE_URL: postgres://lms:lms@postgres:5432/lms?sslmode=disable
+  MIGRATE_ON_START: "true"
+  LOG_LEVEL: info
+  APP_TZ: Asia/Ho_Chi_Minh
+  COOKIE_SECURE: "false"
+  SMTP_HOST: mailpit
+  SMTP_PORT: "1025"
+  MAIL_FROM: GoUp LMS <no-reply@localhost>
+  # Chỉ e2e: base64 của "e2e-outbox-key-not-for-prod-0000" (32 byte).
+  OUTBOX_SECRET_KEY: ZTJlLW91dGJveC1rZXktbm90LWZvci1wcm9kLTAwMDA= # gitleaks:allow
+  S3_ENDPOINT: minio:9000
+  S3_PUBLIC_ENDPOINT: http://localhost:9000
+  S3_REGION: us-east-1
+  S3_BUCKET: lms-media
+  S3_ACCESS_KEY: lmsminio
+  S3_SECRET_KEY: lmsminio123 # gitleaks:allow
+  S3_USE_SSL: "false"
+  # Chỉ e2e: mật khẩu chung của tài khoản seed.
+  SEED_PASSWORD: e2e-seed-password-not-for-prod # gitleaks:allow
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: lms
+      POSTGRES_USER: lms
+      POSTGRES_PASSWORD: lms
+    ports:
+      # Đổi cổng host bằng POSTGRES_HOST_PORT khi 5432 đã bị dịch vụ khác giữ.
+      - "${POSTGRES_HOST_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Tạo thêm database lms_test cho integration test.
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Qua TCP: server tạm của bước init chỉ nghe unix socket, nên healthy nghĩa là init SQL đã chạy xong.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U lms -d lms"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # MinIO RELEASE.2025-04-22T22-12-26Z (bản cuối trước khi archive). MinIO đã gỡ image khỏi Docker Hub
+  # và quay.io (09/2026), nên dùng bản đóng gói đóng băng của Bitnami cho đúng release đó
+  # (cùng commit 0d7408fc), ghim digest; bỏ script Bitnami, chạy thẳng binary minio như image gốc.
+  minio:
+    image: bitnamilegacy/minio:2025.4.22@sha256:50cec18ac4184af4671a78aedd5554942c8ae105d51a465fa82037949046da01
+    entrypoint: ["minio"]
+    command: ["server", "/bitnami/minio/data", "--console-address", ":9001"]
+    environment:
+      MC_CONFIG_DIR: /tmp/.mc
+      MINIO_ROOT_USER: lmsminio
+      MINIO_ROOT_PASSWORD: lmsminio123 # gitleaks:allow
+      # MinIO community không có `mc cors set`: CORS cho presigned PUT/GET từ web dev và profile full đặt qua env.
+      MINIO_API_CORS_ALLOW_ORIGIN: http://localhost:5173,http://localhost:8081
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/bitnami/minio/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Chạy một lần: tạo bucket riêng tư lms-media rồi thoát 0.
+  # mc RELEASE.2025-04-16T18-13-26Z (cùng commit b00526b1), bản Bitnami đóng băng, ghim digest.
+  minio-init:
+    image: bitnamilegacy/minio-client:2025.4.16@sha256:8a86e441decf053093c5977d49290298295f850c7843652f93e970ab15871dd1
+    environment:
+      MC_CONFIG_DIR: /tmp/.mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        mc alias set local http://minio:9000 lmsminio lmsminio123 &&
+        mc mb --ignore-existing local/lms-media &&
+        mc anonymous set none local/lms-media
+    restart: "no"
+
+  mailpit:
+    image: axllent/mailpit:v1.28
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    profiles: ["full"]
+    build:
+      context: ../apps/api
+    environment:
+      <<: *api-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "/lms", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Worker outbox email: cùng image với api, không mở HTTP nên không có healthcheck.
+  worker:
+    profiles: ["full"]
+    build:
+      context: ../apps/api
+    command: ["worker"]
+    environment:
+      <<: *api-env
+      MIGRATE_ON_START: "false"
+      # E2E: quét outbox mỗi giây; người nhận khớp mẫu bị từ chối để kiểm luồng gửi thất bại (chỉ đọc khi APP_ENV=e2e).
+      EMAIL_POLL_INTERVAL: 1s
+      MAIL_FAIL_PATTERN: '^e2e\+bounce'
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    profiles: ["full"]
+    build:
+      context: ../apps/web
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+
+volumes:
+  pgdata:
+  miniodata:
