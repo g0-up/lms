@@ -1,0 +1,60 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/learn-home/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x2583",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x0 y56 375x2527",
+      "    nav.crumbs \"Lớp của tôi basic01\" @ x16 y80 343x44",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x16 y124 343x156",
+      "      div \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x16 y124 343x85",
+      "      div.actions \"XEM TỔNG KẾT\" @ x16 y225 343x55",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x16 y304 343x2214",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x16 y304 343x164",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x16 y492 343x2027"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "16 controls smaller than 44px; e.g. input; input; input; input"
+      }
+    ],
+    "height": 2583
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/learn-home/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x2165",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x0 y56 768x2109",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x24 y120 720x55",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x24 y199 720x1902",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x24 y199 720x144",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x24 y367 720x1734"
+    ],
+    "findings": [],
+    "height": 2165
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/learn-home/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x0 y0 1440x2110",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp của tôi basic01 Lập trình cơ bản – k\" @ x135 y59 1170x2051",
+      "    div.page-head \"Lập trình cơ bản – khóa 1 Đang chạy Lập \" @ x159 y123 1122x55",
+      "    div.stack \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x159 y202 1122x1844",
+      "      div.card.card-pad \"TIẾN ĐỘ TOÀN KHÓA 12/18 học liệu bắt buộ\" @ x159 y202 1122x86",
+      "      div.roadmap \"1 Database 3 học liệu · 2/2 bắt buộc đã \" @ x159 y311 1122x1734"
+    ],
+    "findings": [],
+    "height": 2110
+  }
+]

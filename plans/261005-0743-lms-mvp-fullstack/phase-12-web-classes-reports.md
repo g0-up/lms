@@ -310,13 +310,13 @@ Xem mục "ReportPanel" dưới; `basePath=/admin/classes/{id}`, giữ `tab=repo
 
 ## Success Criteria
 
-- `/admin/classes`, `/admin/classes/:id` (3 tab), `/teach`, `/teach/classes/:id` khớp 1:1 prototype về bố cục, lời
-  thoại, toast, trạng thái rỗng/disabled.
-- Vòng đời lớp draft → active → ended và mọi thao tác thành viên chạy thật với API phase 7, mỗi mã lỗi lời mời
+- [ ] `/admin/classes`, `/admin/classes/:id` (3 tab), `/teach`, `/teach/classes/:id` khớp 1:1 prototype về bố cục, lời
+  thoại, toast, trạng thái rỗng/disabled. <!-- copy, toasts, empty/disabled states follow this phase file and are asserted by component tests; four pages walked live with Playwright (screenshots, axe 0 serious/critical). Not compared side by side with the prototype, so left open. -->
+- [x] Vòng đời lớp draft → active → ended và mọi thao tác thành viên chạy thật với API phase 7, mỗi mã lỗi lời mời
   (422/409 `INVALID_TRANSITION`/403/409 `ACCOUNT_DISABLED`/409 `CONFLICT`/429) ra đúng copy; ô Lời mời rỗng khi không có
-  lời mời. <!-- Red Team: RT-10 -->
-- Báo cáo FR-40 lọc/sắp xếp đồng bộ URL (tên ngắn `below`/`notlogged`/`inactive`/`dropped`, chia sẻ link giữ filter)
+  lời mời. <!-- Red Team: RT-10 --> <!-- live (API + worker + Mailpit): create draft, taken code on field, activate, invite new (queued → sent, mail received) and existing (added notice), duplicate → "Học viên đã có trong lớp.", resend (new mail), remove → "Đã rời lớp". End, disable/enable, rejoin and the other five error codes are covered by MSW tests only. -->
+- [x] Báo cáo FR-40 lọc/sắp xếp đồng bộ URL (tên ngắn `below`/`notlogged`/`inactive`/`dropped`, chia sẻ link giữ filter)
   và gọi API bằng `belowPercent`/`notLoggedIn`/`inactiveDays`/`includeDropped`; mặc định ẩn học viên đã rời lớp, bật
   checkbox mới hiện kèm badge, KPI chỉ tính `active`; drawer theo `class_members.id`, 404 xử lý êm; dùng chung được
-  cho admin và giảng viên. <!-- Red Team: RT-14 / RT-15; Validation Session 1 - V5 -->
-- Không file nào ngoài `src/features/{classes,reports}` bị sửa; lint, typecheck, test, build xanh.
+  cho admin và giảng viên. <!-- Red Team: RT-14 / RT-15; Validation Session 1 - V5 --> <!-- report-panel/report-filter tests (API param names, includeDropped keeps KPI, sort toggle, Enter opens drawer, 404 closes with toast); live: admin basic01 below=50 + dropped + sort in URL, drawer on Enter with stages and focus return; teacher /teach list, inactive=7 filter, drawer; other teacher's class → /teach with the 403 message. -->
+- [ ] Không file nào ngoài `src/features/{classes,reports}` bị sửa; lint, typecheck, test, build xanh. <!-- only src/features/{classes,reports} edited; lint, lint:design, typecheck, production bundle green; feature tests 15 files / 182 green. Full suite 466/469: three src/app shell tests (app-shell ×2, session-isolation) still expect the old route stubs and need an update owned by src/app, so left open. -->

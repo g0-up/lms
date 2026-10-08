@@ -1,0 +1,46 @@
+render-check: http://127.0.0.1:8766/index.html#/admin/stages/st-go/lessons/l13?as=u-admin
+
+[375x812] page height 1732px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-hw/375x812.png
+  outline:
+    div#app "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x1732
+      header.topbar "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+        div.topbar-inner "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+      main#main.main "Chặng Golang basic v1 Bài tập: Đọc CSV v" @ x0 y56 375x1676
+        nav.crumbs "Chặng Golang basic v1 Bài tập: Đọc CSV v" @ x16 y80 343x92
+        div.page-head "Bài tập: Đọc CSV và thống kê Bài tập Đã " @ x16 y172 343x85
+          div "Bài tập: Đọc CSV và thống kê Bài tập Đã " @ x16 y172 343x85
+        div.stack "v1 đã phát hành nên không sửa được. Nhân" @ x16 y281 343x1387
+          div.alert.alert-info "v1 đã phát hành nên không sửa được. Nh @ x16 y281 343x85
+          section.card "Thiết lập Ngưỡng đạt 70% tổng điểm (từ 7" @ x16 y390 343x354
+          section.card "Đề bài Bài tập: Đọc CSV và thống kê Viết" @ x16 y767 343x548
+          section.card "Tiêu chí chấm 3 tiêu chí · 100 điểm # TI" @ x16 y1339 343x330
+  no findings
+
+[768x1024] page height 1397px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-hw/768x1024.png
+  outline:
+    div#app "TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC CHẤM BÀ" @ x0 y0 768x1397
+      header.topbar "TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC CHẤM BÀ" @ x0 y0 768x60
+        div.topbar-inner "TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC CHẤM BÀ" @ x0 y0 768x60
+      main#main.main "Chặng Golang basic v1 Bài tập: Đọc CSV v" @ x0 y60 768x1337
+        div.page-head "Bài tập: Đọc CSV và thống kê Bài tập Đã " @ x24 y124 720x55
+        div.stack "v1 đã phát hành nên không sửa được. Nhân" @ x24 y203 720x1131
+          div.alert.alert-info "v1 đã phát hành nên không sửa được. Nh @ x24 y203 720x65
+          section.card "Thiết lập Ngưỡng đạt 70% tổng điểm (từ 7" @ x24 y292 720x234
+          section.card "Đề bài Bài tập: Đọc CSV và thống kê Viết" @ x24 y550 720x489
+          section.card "Tiêu chí chấm 3 tiêu chí · 100 điểm # TI" @ x24 y1062 720x271
+  no findings
+
+[1440x900] page height 1378px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-hw/1440x900.png
+  outline:
+    div#app "GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC" @ x0 y0 1440x1378
+      header.topbar "GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC" @ x0 y0 1440x60
+        div.topbar-inner "GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC" @ x135 y0 1170x60
+      main#main.main "Chặng Golang basic v1 Bài tập: Đọc CSV v" @ x135 y60 1170x1318
+        div.page-head "Bài tập: Đọc CSV và thống kê Bài tập Đã " @ x159 y124 1122x55
+        div.stack "v1 đã phát hành nên không sửa được. Nhân" @ x159 y203 1122x1111
+          section.card "Thiết lập Ngưỡng đạt 70% tổng điểm (từ 7" @ x159 y272 1122x234
+          section.card "Đề bài Bài tập: Đọc CSV và thống kê Viết" @ x159 y530 1122x489
+          section.card "Tiêu chí chấm 3 tiêu chí · 100 điểm # TI" @ x159 y1043 1122x271
+  no findings
+
+Summary: 0 errors, 0 warnings. Fix errors first, re-run, then review the screenshots.

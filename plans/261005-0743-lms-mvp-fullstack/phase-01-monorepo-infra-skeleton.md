@@ -256,13 +256,13 @@ Kết quả mong đợi: mọi lệnh exit 0; không có file `.env` nào trong 
 
 ## Success Criteria
 
-- [ ] `make dev` chạy API (8080) + web (5173) + Postgres + MinIO + Mailpit; Ctrl-C dừng sạch, `lsof` không còn tiến trình của phase.
-- [ ] `lms --help` liệt kê `serve migrate seed worker healthcheck`; `lms migrate up|down|version` chạy trên file SQL nhúng qua iofs; không có `migrate force`, `routes`. <!-- Updated: Validation Session 1 - cắt lệnh ngoài spec -->
-- [ ] Thiếu `APP_ENV` hoặc `OUTBOX_SECRET_KEY` sai độ dài → tiến trình thoát mã 1 trước khi mở cổng; `TestEnvExample` xanh. <!-- Red Team: RT-11 -->
-- [ ] `GET /healthz` 200, `GET /readyz` 200 khi DB sống và 503 khi DB tắt.
+- [x] `make dev` chạy API (8080) + web (5173) + Postgres + MinIO + Mailpit; Ctrl-C dừng sạch, `lsof` không còn tiến trình của phase.
+- [x] `lms --help` liệt kê `serve migrate seed worker healthcheck`; `lms migrate up|down|version` chạy trên file SQL nhúng qua iofs; không có `migrate force`, `routes`. <!-- Updated: Validation Session 1 - cắt lệnh ngoài spec -->
+- [x] Thiếu `APP_ENV` hoặc `OUTBOX_SECRET_KEY` sai độ dài → tiến trình thoát mã 1 trước khi mở cổng; `TestEnvExample` xanh. <!-- Red Team: RT-11 -->
+- [x] `GET /healthz` 200, `GET /readyz` 200 khi DB sống và 503 khi DB tắt.
 - [ ] `make lint`, `make test`, `make build` exit 0; CI `ci.yml` xanh trên branch.
-- [ ] Profile `full` phục vụ SPA ở 8081 và proxy `/api/*` sang container api; `docker compose ps` thấy cả `api` và `worker` chạy; `docker-compose.prod.yml` cũng có `worker`. <!-- Red Team: RT-04 - worker service -->
-- [ ] `docs/README.md` và `docs/architecture.md` tồn tại, README gốc liên kết tới chúng. <!-- Updated: Validation Session 1 -->
-- [ ] `docker-compose.prod.yml` + Caddyfile `config --quiet` hợp lệ; header bảo mật có mặt trong Caddyfile.
-- [ ] `src/styles/goup-tokens.css` giống hệt dòng 4–51 của `prototype/goup.css` (`diff` rỗng sau khi bỏ comment đầu file).
-- [ ] Không có `.env` trong git; `gitleaks` không báo.
+- [x] Profile `full` phục vụ SPA ở 8081 và proxy `/api/*` sang container api; `docker compose ps` thấy cả `api` và `worker` chạy; `docker-compose.prod.yml` cũng có `worker`. <!-- Red Team: RT-04 - worker service -->
+- [x] `docs/README.md` và `docs/architecture.md` tồn tại, README gốc liên kết tới chúng. <!-- Updated: Validation Session 1 -->
+- [x] `docker-compose.prod.yml` + Caddyfile `config --quiet` hợp lệ; header bảo mật có mặt trong Caddyfile.
+- [x] `src/styles/goup-tokens.css` giống hệt dòng 4–51 của `prototype/goup.css` (`diff` rỗng sau khi bỏ comment đầu file).
+- [x] Không có `.env` trong git; `gitleaks` không báo.

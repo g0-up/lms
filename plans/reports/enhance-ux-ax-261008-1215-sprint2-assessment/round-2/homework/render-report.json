@@ -1,0 +1,50 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/homework/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x2145",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 Golang basic Bài tập\" @ x0 y56 375x2089",
+      "    nav.crumbs \"Lớp của tôi basic01 Golang basic Bài tập\" @ x16 y80 343x92",
+      "    div.page-head \"Bài tập: Đọc CSV và thống kê Chưa nộp\" @ x16 y172 343x59",
+      "      div \"Bài tập: Đọc CSV và thống kê Chưa nộp\" @ x16 y172 343x59",
+      "    div.viewer \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x16 y255 343x1826",
+      "      div.stack \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x16 y255 343x1393",
+      "      aside.card \"Golang basic v1 Cài đặt và Hello World (\" @ x16 y1672 343x409"
+    ],
+    "findings": [],
+    "height": 2145
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/homework/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x1868",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Lớp của tôi basic01 Golang basic Bài tập\" @ x0 y56 768x1812",
+      "    div.viewer \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x24 y172 720x1631",
+      "      div.stack \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x24 y172 720x1207",
+      "      aside.card \"Golang basic v1 Cài đặt và Hello World (\" @ x24 y1403 720x401"
+    ],
+    "findings": [],
+    "height": 1868
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/homework/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x0 y0 1440x1446",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x0 y0 1440x59",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi\" @ x135 y0 1170x59",
+      "  main#main.main \"Lớp của tôi basic01 Golang basic Bài tập\" @ x135 y59 1170x1387",
+      "    div.viewer \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x159 y175 1122x1207",
+      "      div.stack \"Bài tập: Đọc CSV và thống kê Viết chương\" @ x159 y175 778x1207",
+      "      aside.card \"Golang basic v1 Cài đặt và Hello World (\" @ x961 y175 320x401"
+    ],
+    "findings": [],
+    "height": 1446
+  }
+]

@@ -272,12 +272,12 @@ Rollback: không mount `reports`; không có dữ liệu ghi.
 
 ## Success Criteria
 
-- [ ] Unit + integration `reports` xanh; `Filter.Match` và SQL (`Filter.Apply`) cho cùng tập dòng trên fixture.
-- [ ] Báo cáo trả đủ cột FR-40: tên, email, trạng thái tài khoản/thành viên/lời mời, % từng chặng theo thứ tự, % tổng, đăng nhập và hoạt động gần nhất.
-- [ ] Ba filter hoạt động riêng và kết hợp; năm sort đúng thứ tự, null xử lý nhất quán; tham số sai → 422 "Tham số lọc không hợp lệ.".
-- [ ] `includeDropped` mặc định `false`: dòng dropped chỉ xuất hiện (badge "Đã rời lớp") khi `includeDropped=true`; `summary` đếm theo cùng quy tắc.
-- [ ] `selfReported: true` ở cả báo cáo lớp và drilldown.
-- [ ] Teacher lớp khác → 403 "Bạn chỉ xem được lớp mình phụ trách."; student → 403; admin → 200; `mid` không thuộc lớp → 404.
-- [ ] Drilldown liệt kê mọi học liệu của course version với `state`, `firstOpenedAt`, `completedAt`.
-- [ ] Dashboard trả đúng hình dạng `{kpis, hints, outdated, classes, recentActivity}` (plan.md §7); `kpis`/`hints` khớp SQL thủ công; `outdated[]` và `hints.outdatedCourses` khớp fixture FR-18; `classes[]` có `courseName`, `courseVersionNo`; golden `testdata/dashboard.json` khớp; `recentActivity` 8 dòng với `actionLabel` nguyên văn prototype, `actorName`, `target`.
-- [ ] Không có chuỗi query nào được nối vào SQL (review `repository_pg.go`); không có `Specification[T]` hay `httpx.Paginate`.
+- [x] Unit + integration `reports` xanh; `Filter.Match` và SQL (`Filter.Apply`) cho cùng tập dòng trên fixture.
+- [x] Báo cáo trả đủ cột FR-40: tên, email, trạng thái tài khoản/thành viên/lời mời, % từng chặng theo thứ tự, % tổng, đăng nhập và hoạt động gần nhất.
+- [x] Ba filter hoạt động riêng và kết hợp; năm sort đúng thứ tự, null xử lý nhất quán; tham số sai → 422 "Tham số lọc không hợp lệ.".
+- [x] `includeDropped` mặc định `false`: dòng dropped chỉ xuất hiện (badge "Đã rời lớp") khi `includeDropped=true`; `summary` đếm theo cùng quy tắc.
+- [x] `selfReported: true` ở cả báo cáo lớp và drilldown.
+- [x] Teacher lớp khác → 403 "Bạn chỉ xem được lớp mình phụ trách."; student → 403; admin → 200; `mid` không thuộc lớp → 404.
+- [x] Drilldown liệt kê mọi học liệu của course version với `state`, `firstOpenedAt`, `completedAt`.
+- [x] Dashboard trả đúng hình dạng `{kpis, hints, outdated, classes, recentActivity}` (plan.md §7); `kpis`/`hints` khớp SQL thủ công; `outdated[]` và `hints.outdatedCourses` khớp fixture FR-18; `classes[]` có `courseName`, `courseVersionNo`; golden `testdata/dashboard.json` khớp; `recentActivity` 8 dòng với `actionLabel` nguyên văn prototype, `actorName`, `target`.
+- [x] Không có chuỗi query nào được nối vào SQL (review `repository_pg.go`); không có `Specification[T]` hay `httpx.Paginate`.

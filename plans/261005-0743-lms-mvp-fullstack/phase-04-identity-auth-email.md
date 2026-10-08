@@ -346,12 +346,12 @@ Rollback: phase chỉ thêm code và template; migration đã ở Phase 2. Tắt
 
 ## Success Criteria
 
-- [ ] `go test ./internal/features/identity/... ./internal/features/mailer/...` xanh; coverage entity ≥ 90%.
-- [ ] Integration: 5 lần sai → 429 + `Retry-After` (song song cũng chỉ ghi 5 attempt); mật khẩu tạm hết hạn → `TEMP_PASSWORD_EXPIRED`; disabled → `ACCOUNT_DISABLED`; sai mật khẩu của tài khoản disabled → `UNAUTHENTICATED` (không lộ trạng thái). <!-- Red Team: RT-09 -->
-- [ ] Sau `DisableUser`: session cũ bị từ chối ngay; reset token tạo trước đó → 403 và không đổi mật khẩu. <!-- Red Team: RT-09 -->
-- [ ] `must_change_password=true` → `GET /stages` 403 `PASSWORD_CHANGE_REQUIRED`; `GET /auth/me`, `POST /auth/change-password`, `POST /auth/logout` đi qua.
-- [ ] Đổi mật khẩu xong: `must_change_password=false`, `status=active`, `temp_password_expires_at IS NULL`, session khác bị xóa; học viên `invited` đổi được với body 2 trường. <!-- Updated: Validation Session 1 - V4 -->
-- [ ] Forgot/reset round-trip qua Mailpit; token dùng lần hai → 400; phản hồi forgot giống nhau cho email có/không tồn tại.
-- [ ] Outbox: sender lỗi → `attempts` tăng, `run_at` lùi 1/5/15 phút, lần 3 → `failed` + `last_error`; `secret_enc IS NULL` sau `sent`/`failed`; `payload` không chứa mật khẩu tạm; 2 worker song song không claim trùng. <!-- Red Team: RT-02 -->
-- [ ] `grep` log API trong suite integration không thấy mật khẩu tạm hay token thô.
-- [ ] Audit có `user.disabled` / `user.enabled` với `actor_id`.
+- [x] `go test ./internal/features/identity/... ./internal/features/mailer/...` xanh; coverage entity ≥ 90%.
+- [x] Integration: 5 lần sai → 429 + `Retry-After` (song song cũng chỉ ghi 5 attempt); mật khẩu tạm hết hạn → `TEMP_PASSWORD_EXPIRED`; disabled → `ACCOUNT_DISABLED`; sai mật khẩu của tài khoản disabled → `UNAUTHENTICATED` (không lộ trạng thái). <!-- Red Team: RT-09 -->
+- [x] Sau `DisableUser`: session cũ bị từ chối ngay; reset token tạo trước đó → 403 và không đổi mật khẩu. <!-- Red Team: RT-09 -->
+- [x] `must_change_password=true` → `GET /stages` 403 `PASSWORD_CHANGE_REQUIRED`; `GET /auth/me`, `POST /auth/change-password`, `POST /auth/logout` đi qua.
+- [x] Đổi mật khẩu xong: `must_change_password=false`, `status=active`, `temp_password_expires_at IS NULL`, session khác bị xóa; học viên `invited` đổi được với body 2 trường. <!-- Updated: Validation Session 1 - V4 -->
+- [x] Forgot/reset round-trip qua Mailpit; token dùng lần hai → 400; phản hồi forgot giống nhau cho email có/không tồn tại.
+- [x] Outbox: sender lỗi → `attempts` tăng, `run_at` lùi 1/5/15 phút, lần 3 → `failed` + `last_error`; `secret_enc IS NULL` sau `sent`/`failed`; `payload` không chứa mật khẩu tạm; 2 worker song song không claim trùng. <!-- Red Team: RT-02 -->
+- [x] `grep` log API trong suite integration không thấy mật khẩu tạm hay token thô.
+- [x] Audit có `user.disabled` / `user.enabled` với `actor_id`.

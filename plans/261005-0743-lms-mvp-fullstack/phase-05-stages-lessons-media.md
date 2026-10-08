@@ -338,16 +338,16 @@ Rollback: không mount `stages`/`media` trong router; dữ liệu đã tạo gi�
 
 ## Success Criteria
 
-- [ ] `go test` unit + integration xanh cho `stages`, `media`, `platform/storage`.
-- [ ] Tạo chặng → có đúng một `stage_versions` v1 `draft`; tạo mã trùng → 409.
-- [ ] Thêm/sửa/xóa/sắp học liệu trên bản published → 409 `VERSION_IMMUTABLE` (kể cả khi gọi repo trực tiếp bỏ qua service, nhờ SQL có điều kiện; `TestImmutability_*` xanh). <!-- Updated: Session 2 - D1 -->
-- [ ] Publish không học liệu → 422 đúng message; publish có học liệu markdown → thành công trên schema thật, `markdown_html` đã sanitize và không NULL, `published_at` set, audit `stage_version.published`; archive bản published thành công mà không chạm `lessons`. <!-- Red Team: RT-01 -->
-- [ ] AddLesson song song với Publish: đúng một bên thành công, không có học liệu mồ côi trên bản published. <!-- Red Team: RT-01 -->
-- [ ] Tạo chặng ghi audit `stage.created`; xóa bản nháp cuối cùng xóa luôn chặng và trả `stageDeleted:true`. <!-- Red Team: RT-07 -->
-- [ ] `OutdatedReader.AllOutdated` trả đúng tập hợp cho dashboard Phase 9. <!-- Red Team: RT-07 -->
-- [ ] Clone → v(n+1) draft, lessons cùng `lesson_key`/`video_media_id`/`required`/`position`; clone lần hai → 409 `DRAFT_EXISTS` kèm `draftVersionId`.
-- [ ] Delete published được khóa học dùng → 409 `IN_USE` với `usedBy` tên khóa học + version; delete draft → 204 và lessons CASCADE.
-- [ ] `GET /stages/{id}` trả `outdatedCourses` khớp fixture 3 khóa học (một `canApply=false` với blockedReason).
-- [ ] Upload handshake: body `{kind,fileName,contentType,sizeBytes}`, sai content type → 422; PUT thành công → `complete` → `ready`; `GET /media/{id}/url` trả `expiresAt` ≈ now + 2h; học viên không thuộc lớp hoặc lớp còn nháp → 403; media ảnh markdown được cấp quyền qua `lesson_media`. <!-- Red Team: RT-15 --> <!-- Updated: Validation Session 1 - TTL 2h -->
-- [ ] Presign không mở kết nối mạng (unit test); PUT từ `http://localhost:5173` không lỗi CORS. <!-- Red Team: RT-08 -->
-- [ ] Bộ test XSS markdown: `<script>`, `onerror`, `javascript:`, `data:` URI, ảnh ngoài đều bị gỡ; policy dựng từ `NewPolicy()` không gọi `AllowImages()`. <!-- Red Team: RT-15 -->
+- [x] `go test` unit + integration xanh cho `stages`, `media`, `platform/storage`.
+- [x] Tạo chặng → có đúng một `stage_versions` v1 `draft`; tạo mã trùng → 409.
+- [x] Thêm/sửa/xóa/sắp học liệu trên bản published → 409 `VERSION_IMMUTABLE` (kể cả khi gọi repo trực tiếp bỏ qua service, nhờ SQL có điều kiện; `TestImmutability_*` xanh). <!-- Updated: Session 2 - D1 -->
+- [x] Publish không học liệu → 422 đúng message; publish có học liệu markdown → thành công trên schema thật, `markdown_html` đã sanitize và không NULL, `published_at` set, audit `stage_version.published`; archive bản published thành công mà không chạm `lessons`. <!-- Red Team: RT-01 -->
+- [x] AddLesson song song với Publish: đúng một bên thành công, không có học liệu mồ côi trên bản published. <!-- Red Team: RT-01 -->
+- [x] Tạo chặng ghi audit `stage.created`; xóa bản nháp cuối cùng xóa luôn chặng và trả `stageDeleted:true`. <!-- Red Team: RT-07 -->
+- [x] `OutdatedReader.AllOutdated` trả đúng tập hợp cho dashboard Phase 9. <!-- Red Team: RT-07 -->
+- [x] Clone → v(n+1) draft, lessons cùng `lesson_key`/`video_media_id`/`required`/`position`; clone lần hai → 409 `DRAFT_EXISTS` kèm `draftVersionId`.
+- [x] Delete published được khóa học dùng → 409 `IN_USE` với `usedBy` tên khóa học + version; delete draft → 204 và lessons CASCADE. (Thực tế: 200 `{stageDeleted}` theo bảng endpoint.)
+- [x] `GET /stages/{id}` trả `outdatedCourses` khớp fixture 3 khóa học (một `canApply=false` với blockedReason).
+- [x] Upload handshake: body `{kind,fileName,contentType,sizeBytes}`, sai content type → 422; PUT thành công → `complete` → `ready`; `GET /media/{id}/url` trả `expiresAt` ≈ now + 2h; học viên không thuộc lớp hoặc lớp còn nháp → 403; media ảnh markdown được cấp quyền qua `lesson_media`. <!-- Red Team: RT-15 --> <!-- Updated: Validation Session 1 - TTL 2h -->
+- [x] Presign không mở kết nối mạng (unit test); PUT từ `http://localhost:5173` không lỗi CORS. <!-- Red Team: RT-08 -->
+- [x] Bộ test XSS markdown: `<script>`, `onerror`, `javascript:`, `data:` URI, ảnh ngoài đều bị gỡ; policy dựng từ `NewPolicy()` không gọi `AllowImages()`. <!-- Red Team: RT-15 -->

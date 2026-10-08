@@ -1,0 +1,58 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/grading/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1224",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x0 y56 375x1168",
+      "    div.page-head \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x16 y80 343x78",
+      "      div \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x16 y80 343x78",
+      "    div.stack \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x16 y182 343x979",
+      "      section.card \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x16 y182 343x584",
+      "      section.card \"Đã chấm gần đây Nguyễn Hoàng An · Cài đặ\" @ x16 y789 343x371"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "1 controls smaller than 44px; e.g. input"
+      }
+    ],
+    "height": 1224
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/grading/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x939",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x0 y56 768x883",
+      "    div.page-head \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x24 y88 720x55",
+      "    div.stack \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x24 y167 720x708",
+      "      section.card \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x24 y167 720x436",
+      "      section.card \"Đã chấm gần đây Nguyễn Hoàng An · Cài đặ\" @ x24 y627 720x248"
+    ],
+    "findings": [],
+    "height": 1024
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/grading/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x867",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x60",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x135 y0 1170x60",
+      "  main#main.main \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x135 y60 1170x807",
+      "    div.page-head \"Chấm bài 1 bài quá 3 ngày Bài nộp chờ ch\" @ x159 y92 1122x55",
+      "    div.stack \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x159 y171 1122x632",
+      "      section.card \"Lớp Tất cả lớp basic01 Bài tập Tất cả bà\" @ x159 y171 1122x360",
+      "      section.card \"Đã chấm gần đây Nguyễn Hoàng An · Cài đặ\" @ x159 y555 1122x248"
+    ],
+    "findings": [],
+    "height": 900
+  }
+]

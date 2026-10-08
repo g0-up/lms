@@ -1,0 +1,70 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/dashboard/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x2859",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x0 y56 375x2803",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x16 y80 343x55",
+      "      div \"Tổng quan Tình trạng các lớp đang chạy v\" @ x16 y80 307x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x16 y159 343x2635",
+      "      div.stack-sm \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x16 y159 343x194",
+      "      details.card.guide \"Kịch bản tham chiếu (spec 7.3): sửa một  @ x16 y377 343x122",
+      "      details.card.guide \"Kịch bản Sprint 2: quiz, bài tập, chấm b @ x16 y523 343x99",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x16 y646 343x529",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x16 y1199 343x1086",
+      "      div.grid-2 \"Tồn đọng chấm bài HÀNG CHỜ CHẤM GIẢNG VI\" @ x16 y2309 343x486"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "1 controls smaller than 44px; e.g. a"
+      }
+    ],
+    "height": 2859
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/dashboard/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x2132",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x0 y56 768x2076",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x24 y88 720x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x24 y167 720x1900",
+      "      div.stack-sm \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x24 y167 720x147",
+      "      details.card.guide \"Kịch bản tham chiếu (spec 7.3): sửa một  @ x24 y338 720x77",
+      "      details.card.guide \"Kịch bản Sprint 2: quiz, bài tập, chấm b @ x24 y439 720x56",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x24 y519 720x252",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x24 y796 720x864",
+      "      div.grid-2 \"Tồn đọng chấm bài HÀNG CHỜ CHẤM GIẢNG VI\" @ x24 y1684 720x384"
+    ],
+    "findings": [],
+    "height": 2132
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/dashboard/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x0 y0 1440x1506",
+      "  header.topbar \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x0 y0 1440x60",
+      "    div.topbar-inner \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x135 y0 1170x60",
+      "  main#main.main \"Tổng quan Tình trạng các lớp đang chạy v\" @ x135 y60 1170x1446",
+      "    div.page-head \"Tổng quan Tình trạng các lớp đang chạy v\" @ x159 y92 1122x55",
+      "    div.stack \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x159 y171 1122x1271",
+      "      div.stack-sm \"1 lời mời gửi thất bại. Kiểm tra email h\" @ x159 y171 1122x147",
+      "      details.card.guide \"Kịch bản tham chiếu (spec 7.3): sửa một  @ x159 y342 1122x56",
+      "      details.card.guide \"Kịch bản Sprint 2: quiz, bài tập, chấm b @ x159 y422 1122x56",
+      "      div.grid-4 \"LỚP ĐANG CHẠY 2 1 lớp nháp HỌC VIÊN ĐANG\" @ x159 y502 1122x114",
+      "      div.grid-2 \"Lớp học TẤT CẢ LỚP basic01 · Lập trình c\" @ x159 y640 1122x576",
+      "      div.grid-2 \"Tồn đọng chấm bài HÀNG CHỜ CHẤM GIẢNG VI\" @ x159 y1240 1122x202"
+    ],
+    "findings": [],
+    "height": 1506
+  }
+]

@@ -1,0 +1,54 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/class-homework/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1956",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x0 y56 375x1900",
+      "    nav.crumbs \"Lớp của tôi basic01\" @ x16 y80 343x44",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x114",
+      "      div \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x114",
+      "    nav.tabs \"Tiến độ Tổng kết Bài tập 3 bài chờ chấm \" @ x16 y262 343x50",
+      "    div.stack \"Bài tập: Cài đặt Stack và Queue Data str\" @ x16 y336 343x1557",
+      "      section.card \"Bài tập: Cài đặt Stack và Queue Data str\" @ x16 y336 343x779",
+      "      section.card \"Bài tập: Đọc CSV và thống kê Golang basi\" @ x16 y1139 343x754"
+    ],
+    "findings": [],
+    "height": 1956
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/class-homework/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x1584",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x0 y56 768x1528",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x24 y120 720x55",
+      "    nav.tabs \"Tiến độ Tổng kết Bài tập 3 bài chờ chấm \" @ x24 y199 720x46",
+      "    div.stack \"Bài tập: Cài đặt Stack và Queue Data str\" @ x24 y268 720x1251",
+      "      section.card \"Bài tập: Cài đặt Stack và Queue Data str\" @ x24 y268 720x614",
+      "      section.card \"Bài tập: Đọc CSV và thống kê Golang basi\" @ x24 y907 720x613"
+    ],
+    "findings": [],
+    "height": 1584
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/class-homework/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x1586",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x60",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x135 y0 1170x60",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x135 y60 1170x1526",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x159 y124 1122x55",
+      "    div.stack \"Bài tập: Cài đặt Stack và Queue Data str\" @ x159 y272 1122x1250",
+      "      section.card \"Bài tập: Cài đặt Stack và Queue Data str\" @ x159 y272 1122x613",
+      "      section.card \"Bài tập: Đọc CSV và thống kê Golang basi\" @ x159 y909 1122x613"
+    ],
+    "findings": [],
+    "height": 1586
+  }
+]

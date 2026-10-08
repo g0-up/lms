@@ -1,0 +1,54 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-quiz/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x2301",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Chặng Data structure v1 Luyện tập: Stack\" @ x0 y56 375x2245",
+      "    nav.crumbs \"Chặng Data structure v1 Luyện tập: Stack\" @ x16 y80 343x92",
+      "    div.page-head \"Luyện tập: Stack, Queue và Hash Quiz Đã \" @ x16 y172 343x137",
+      "      div \"Luyện tập: Stack, Queue và Hash Quiz Đã \" @ x16 y172 343x137",
+      "    div.stack \"v1 đã phát hành nên không sửa được. Nhân\" @ x16 y333 343x1905",
+      "      div.alert.alert-info \"v1 đã phát hành nên không sửa được. Nh @ x16 y333 343x85",
+      "      section.card \"Thiết lập Chế độ Luyện tập Ngưỡng đạt 70\" @ x16 y441 343x456",
+      "      section.card \"Câu hỏi 5 câu · 5 điểm 1 Cấu trúc nào ho\" @ x16 y921 343x1317"
+    ],
+    "findings": [],
+    "height": 2301
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-quiz/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x1771",
+      "  header.topbar \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "    div.topbar-inner \"GoUpLMS Admin · Trần Minh Quân Giảng viê\" @ x0 y0 768x56",
+      "  main#main.main \"Chặng Data structure v1 Luyện tập: Stack\" @ x0 y56 768x1715",
+      "    div.page-head \"Luyện tập: Stack, Queue và Hash Quiz Đã \" @ x24 y120 720x55",
+      "    div.stack \"v1 đã phát hành nên không sửa được. Nhân\" @ x24 y199 720x1509",
+      "      div.alert.alert-info \"v1 đã phát hành nên không sửa được. Nh @ x24 y199 720x65",
+      "      section.card \"Thiết lập Chế độ Luyện tập Ngưỡng đạt 70\" @ x24 y288 720x289",
+      "      section.card \"Câu hỏi 5 câu · 5 điểm 1 Cấu trúc nào ho\" @ x24 y601 720x1107"
+    ],
+    "findings": [],
+    "height": 1771
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/editor-quiz/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x0 y0 1440x1756",
+      "  header.topbar \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x0 y0 1440x60",
+      "    div.topbar-inner \"GoUpLMS TỔNG QUAN CHẶNG KHÓA HỌC LỚP HỌC\" @ x135 y0 1170x60",
+      "  main#main.main \"Chặng Data structure v1 Luyện tập: Stack\" @ x135 y60 1170x1696",
+      "    div.page-head \"Luyện tập: Stack, Queue và Hash Quiz Đã \" @ x159 y124 1122x55",
+      "    div.stack \"v1 đã phát hành nên không sửa được. Nhân\" @ x159 y203 1122x1489",
+      "      section.card \"Thiết lập Chế độ Luyện tập Ngưỡng đạt 70\" @ x159 y272 1122x289",
+      "      section.card \"Câu hỏi 5 câu · 5 điểm 1 Cấu trúc nào ho\" @ x159 y585 1122x1107"
+    ],
+    "findings": [],
+    "height": 1756
+  }
+]

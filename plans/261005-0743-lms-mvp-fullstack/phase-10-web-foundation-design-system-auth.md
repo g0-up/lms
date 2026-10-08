@@ -1,7 +1,7 @@
 ---
 phase: 10
 title: "Phase 10: Web foundation: design system, shell, auth"
-status: pending
+status: in-progress
 priority: P1
 effort: "3 ngày"
 dependencies: [1, 4]
@@ -295,13 +295,13 @@ a11y chung auth: mỗi `Field` nối `label htmlFor`, lỗi field `aria-describe
 
 ## Success Criteria
 
-- `apps/web` build, lint, typecheck, test xanh; dev server proxy được tới API phase 4.
-- Token GoUp phủ 100% `goup.css`; mọi component `shared/ui` khớp bảng chỉnh và `docs/design.md` (không hex thô ngoài
+- [x] `apps/web` build, lint, typecheck, test xanh; dev server proxy được tới API phase 4. <!-- build/lint/lint:design/typecheck/test xanh; dev server proxy tới API thật đã kiểm bằng Playwright -->
+- [x] Token GoUp phủ 100% `goup.css`; mọi component `shared/ui` khớp bảng chỉnh và `docs/design.md` (không hex thô ngoài
   `goup-tokens.css`/`app.css`, không chữ <12px, hit area 44px, một gradient mỗi trang).
-- Bốn trang auth chạy thật với API: login, forgot, reset, first-login; redirect theo vai trò và `mustChangePassword`
+- [x] Bốn trang auth chạy thật với API: login, forgot, reset, first-login; redirect theo vai trò và `mustChangePassword`
   đúng; 401 từ bất kỳ query nào `clear()` cache rồi đẩy về `/login?next=`; mọi request mang `X-Requested-With: fetch`;
-  reset-password đọc token từ fragment và access log nginx không chứa token.
-- `AppShell` đúng nav theo vai trò, `aria-current`, skip link, `RouteAnnouncer`, drawer ≤720.
-- Bảy file `features/<f>/routes.tsx` tồn tại và được `app/router.tsx` import; comment đầu `router.tsx` và
+  reset-password đọc token từ fragment và access log nginx không chứa token. <!-- đã kiểm bằng MSW và bằng Playwright với API thật; access log nginx (profile full) không chứa token -->
+- [x] `AppShell` đúng nav theo vai trò, `aria-current`, skip link, `RouteAnnouncer`, drawer ≤720.
+- [x] Bảy file `features/<f>/routes.tsx` tồn tại và được `app/router.tsx` import; comment đầu `router.tsx` và
   `docs/architecture.md` ghi rõ hợp đồng và quy tắc sở hữu file để phase 11–13 chạy song song không đụng `src/app`,
   `src/shared`, `src/styles`. <!-- Updated: Validation Session 1 - V7 -->

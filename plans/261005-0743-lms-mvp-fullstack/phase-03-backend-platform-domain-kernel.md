@@ -284,12 +284,12 @@ Kỳ vọng: mọi lệnh exit 0; `golangci-lint` không cảnh báo; log server
 
 ## Success Criteria
 
-- [ ] `internal/domain` không import ngoài stdlib (`go list -deps` kiểm); coverage ≥ 90%; bảng transition `VersionStatus`/`ClassStatus` (`Draft|Active|Ended`)/`UserStatus` (`Disabled→Invited|Active`) được test đầy đủ với thông điệp tiếng Việt; `MemberStatus` có `Completed`; `Percent(1,2)=50`. <!-- Red Team: RT-03/RT-09/RT-12 --> <!-- Updated: Validation Session 1 - V3 -->
-- [ ] `apperr` phủ đủ 14 mã của plan.md §7; `FromDomain` map đúng từng `Kind`.
-- [ ] `db.Transact` rollback khi lỗi và khi panic (test chứng minh), commit khi thành công.
-- [ ] `pgerr.Map` không có nhánh mã lỗi tự định nghĩa (D1); `db.ExecAffectOne` trả `ErrNoRowsAffected` đúng khi 0 dòng; `uq_*_one_draft` → 409 `DRAFT_EXISTS`; 23503 → 409 `IN_USE` (hoặc 404 khi tham chiếu không tồn tại); 23514 → 400 `VALIDATION_FAILED`; test với lỗi thật từ Postgres; không còn chuỗi tên constraint ngoài `constraints.go`. <!-- Red Team: RT-01/RT-11 -->
-- [ ] `httpx.BindJSON` giới hạn 64KB, từ chối field lạ, trả `Details` theo tên field JSON; `Fail` trả envelope `{"error":{code,message,details}}`.
-- [ ] Middleware `RequestID`, `Logger` (JSON, không body/query), `Recover`, `SecurityHeaders`, `RateLimit` (429 + `Retry-After`, tắt khi `APP_ENV=e2e`), `ClientIP` (không tin proxy khi `TRUSTED_PROXIES` rỗng) có test. <!-- Updated: Validation Session 1 - V2 --> <!-- Red Team: RT-11 -->
-- [ ] `secretbox.Seal/Open` round-trip, phát hiện sửa đổi, từ chối khóa sai độ dài. <!-- Updated: Validation Session 1 - V1 -->
-- [ ] `clock.Fake`, `ids.New()` (uuid v7), `audit.PG.Record` trong tx của caller, `testdb.Open/Reset/Tx/Fixture` sẵn dùng; `router.go` dùng toàn bộ platform, không còn middleware inline.
-- [ ] `docs/architecture.md` có mục Backend mô tả layer, luồng lỗi, bất biến thứ tự ghi, quy tắc CSRF và checklist viết feature mới; không có `docs/backend-architecture.md`. <!-- Updated: Validation Session 1 - V7 -->
+- [x] `internal/domain` không import ngoài stdlib (`go list -deps` kiểm); coverage ≥ 90%; bảng transition `VersionStatus`/`ClassStatus` (`Draft|Active|Ended`)/`UserStatus` (`Disabled→Invited|Active`) được test đầy đủ với thông điệp tiếng Việt; `MemberStatus` có `Completed`; `Percent(1,2)=50`. <!-- Red Team: RT-03/RT-09/RT-12 --> <!-- Updated: Validation Session 1 - V3 -->
+- [x] `apperr` phủ đủ 14 mã của plan.md §7; `FromDomain` map đúng từng `Kind`.
+- [x] `db.Transact` rollback khi lỗi và khi panic (test chứng minh), commit khi thành công.
+- [x] `pgerr.Map` không có nhánh mã lỗi tự định nghĩa (D1); `db.ExecAffectOne` trả `ErrNoRowsAffected` đúng khi 0 dòng; `uq_*_one_draft` → 409 `DRAFT_EXISTS`; 23503 → 409 `IN_USE` (hoặc 404 khi tham chiếu không tồn tại); 23514 → 400 `VALIDATION_FAILED`; test với lỗi thật từ Postgres; không còn chuỗi tên constraint ngoài `constraints.go`. <!-- Red Team: RT-01/RT-11 -->
+- [x] `httpx.BindJSON` giới hạn 64KB, từ chối field lạ, trả `Details` theo tên field JSON; `Fail` trả envelope `{"error":{code,message,details}}`.
+- [x] Middleware `RequestID`, `Logger` (JSON, không body/query), `Recover`, `SecurityHeaders`, `RateLimit` (429 + `Retry-After`, tắt khi `APP_ENV=e2e`), `ClientIP` (không tin proxy khi `TRUSTED_PROXIES` rỗng) có test. <!-- Updated: Validation Session 1 - V2 --> <!-- Red Team: RT-11 -->
+- [x] `secretbox.Seal/Open` round-trip, phát hiện sửa đổi, từ chối khóa sai độ dài. <!-- Updated: Validation Session 1 - V1 -->
+- [x] `clock.Fake`, `ids.New()` (uuid v7), `audit.PG.Record` trong tx của caller, `testdb.Open/Reset/Tx/Fixture` sẵn dùng; `router.go` dùng toàn bộ platform, không còn middleware inline.
+- [x] `docs/architecture.md` có mục Backend mô tả layer, luồng lỗi, bất biến thứ tự ghi, quy tắc CSRF và checklist viết feature mới; không có `docs/backend-architecture.md`. <!-- Updated: Validation Session 1 - V7 -->

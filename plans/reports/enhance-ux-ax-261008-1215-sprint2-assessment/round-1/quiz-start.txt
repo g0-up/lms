@@ -1,0 +1,39 @@
+render-check: http://127.0.0.1:8766/index.html#/learn/classes/cl-basic01/lessons/l14?as=u-an
+
+[375x812] page height 1313px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/quiz-start/375x812.png
+  outline:
+    div#app "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x1313
+      header.topbar "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+        div.topbar-inner "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+      main#main.main "Lớp của tôi basic01 Golang basic Kiểm tr" @ x0 y56 375x1257
+        nav.crumbs "Lớp của tôi basic01 Golang basic Kiểm tr" @ x16 y80 343x92
+        div.page-head "Kiểm tra cuối chặng Go Chưa đạt 60%" @ x16 y172 343x61
+          div "Kiểm tra cuối chặng Go Chưa đạt 60%" @ x16 y172 343x61
+        div.viewer "Hình thức Kiểm tra, tính vào tiến độ Số " @ x16 y257 343x992
+          div.card "Hình thức Kiểm tra, tính vào tiến độ Số " @ x16 y257 343x559
+          aside.card "Golang basic v1 Cài đặt và Hello World (" @ x16 y840 343x409
+  WARN  small-touch-target: 3 controls smaller than 44px; e.g. a "basic01"; a "Golang basic"; a.title "Lượt 1"
+
+[768x1024] page height 1043px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/quiz-start/768x1024.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x1043
+      header.topbar "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x59
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x59
+      main#main.main "Lớp của tôi basic01 Golang basic Kiểm tr" @ x0 y59 768x984
+        div.viewer "Hình thức Kiểm tra, tính vào tiến độ Số " @ x24 y175 720x804
+          div.card "Hình thức Kiểm tra, tính vào tiến độ Số " @ x24 y175 720x379
+          aside.card "Golang basic v1 Cài đặt và Hello World (" @ x24 y578 720x401
+  no findings
+
+[1440x900] page height 900px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/quiz-start/1440x900.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x640
+      header.topbar "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x59
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x135 y0 1170x59
+      main#main.main "Lớp của tôi basic01 Golang basic Kiểm tr" @ x135 y59 1170x581
+        div.viewer "Hình thức Kiểm tra, tính vào tiến độ Số " @ x159 y175 1122x401
+          div.card "Hình thức Kiểm tra, tính vào tiến độ Số " @ x159 y175 778x379
+          aside.card "Golang basic v1 Cài đặt và Hello World (" @ x961 y175 320x401
+  no findings
+
+Summary: 0 errors, 1 warnings. Fix errors first, re-run, then review the screenshots.

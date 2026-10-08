@@ -1,0 +1,43 @@
+render-check: http://127.0.0.1:8766/index.html#/teach/grading/sub4?as=u-gv
+
+[375x812] page height 1941px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/grade-sub4/375x812.png
+  outline:
+    div#app "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x1941
+      header.topbar "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+        div.topbar-inner "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+      main#main.main "Chấm bài Lê Văn Cường #1 Lê Văn Cường · " @ x0 y56 375x1885
+        nav.crumbs "Chấm bài Lê Văn Cường #1" @ x16 y80 343x44
+        div.page-head "Lê Văn Cường · Cài đặt Stack và Queue ba" @ x16 y124 343x84
+          div "Lê Văn Cường · Cài đặt Stack và Queue ba" @ x16 y124 343x84
+        div.alert.alert-warn "Đây là lần nộp #1; học viên đã nộp lần @ x16 y232 343x65
+        div.grade-layout "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x16 y297 343x1580
+          div.stack "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x16 y297 343x731
+          form.card.grade-form "Chấm theo tiêu chí Đạt từ 70% (70/100  @ x16 y1052 343x825
+  WARN  small-touch-target: 2 controls smaller than 44px; e.g. a "Mở lần nộp #2"; a "gitlab.com/cuongle/ds-go (mở tab mới)"
+
+[768x1024] page height 1628px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/grade-sub4/768x1024.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x0 y0 768x1628
+      header.topbar "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x0 y0 768x60
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x0 y0 768x60
+      main#main.main "Chấm bài Lê Văn Cường #1 Lê Văn Cường · " @ x0 y60 768x1568
+        div.page-head "Lê Văn Cường · Cài đặt Stack và Queue ba" @ x24 y124 720x55
+        div.alert.alert-warn "Đây là lần nộp #1; học viên đã nộp lần @ x24 y203 720x46
+        div.grade-layout "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x24 y248 720x1315
+          div.stack "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x24 y248 720x540
+          form.card.grade-form "Chấm theo tiêu chí Đạt từ 70% (70/100  @ x24 y812 720x752
+  no findings
+
+[1440x900] page height 1064px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/grade-sub4/1440x900.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x0 y0 1440x1064
+      header.topbar "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x0 y0 1440x60
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH" @ x135 y0 1170x60
+      main#main.main "Chấm bài Lê Văn Cường #1 Lê Văn Cường · " @ x135 y60 1170x1004
+        div.page-head "Lê Văn Cường · Cài đặt Stack và Queue ba" @ x159 y124 1122x55
+        div.grade-layout "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x159 y248 1122x752
+          div.stack "Bài nộp #1 Đã thay bằng lần nộp sau Học " @ x159 y248 658x540
+          form.card.grade-form "Chấm theo tiêu chí Đạt từ 70% (70/100  @ x841 y248 440x752
+  no findings
+
+Summary: 0 errors, 1 warnings. Fix errors first, re-run, then review the screenshots.

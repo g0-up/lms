@@ -294,13 +294,13 @@ Rollback: không mount `classes`; user đã tạo qua mời vẫn đăng nhập 
 
 ## Success Criteria
 
-- [ ] Unit + integration `classes` xanh; `invite_policy_test` phủ đủ 10 nhánh (gồm invited-keep).
-- [ ] Tạo lớp: bản draft/archived → 422; teacher disabled → 422; `end <= start` → 422; hợp lệ → `status=draft`.
-- [ ] `PATCH courseVersionId` chỉ khi draft và chỉ sang published; audit `class.course_version_changed`.
-- [ ] `activate`/`end` một chiều; sai → 409 đúng message; audit `class.activated`/`class.ended`.
-- [ ] Mời đủ nhánh FR-01 theo bảng mã lỗi (422/409 `INVALID_TRANSITION`/403/409 `ACCOUNT_DISABLED`/409 `CONFLICT`); email mới → user invited + mật khẩu tạm 72h + outbox `invite` (`secret_enc` không NULL, `payload` sạch); user active → outbox `added`; invited còn hạn → `added` không xoay; email chuẩn hóa. <!-- Red Team: RT-10 -->
-- [ ] Mailpit nhận mail đúng subject; `GET members` phản ánh `queued → sent`; thành viên chưa có lời mời → `inviteStatus` vắng; `includeDropped` mặc định ẩn dropped; bản `failed` seed hiển thị `inviteAttempts=3`, `inviteLastError`.
-- [ ] Resend 200, đổi hash + reset expiry, mật khẩu cũ vô hiệu, hàng `queued` cũ `superseded`; lần 4/giờ → 429; sau khi đổi mật khẩu → 409.
-- [ ] Gỡ → `dropped`, `lesson_progress` còn; mời lại → `Rejoin` giữ `joined_at`.
-- [ ] Teacher xem lớp người khác → 403 "Bạn chỉ xem được lớp mình phụ trách."; `GET /teach/classes` chỉ trả lớp của mình, có `notLoggedIn`, `inactiveOver7Days` (seed: khang.vu 21 ngày không hoạt động được tính).
-- [ ] Không có mật khẩu tạm trong response/log/audit (grep suite integration).
+- [x] Unit + integration `classes` xanh; `invite_policy_test` phủ đủ 10 nhánh (gồm invited-keep).
+- [x] Tạo lớp: bản draft/archived → 422; teacher disabled → 422; `end <= start` → 422; hợp lệ → `status=draft`.
+- [x] `PATCH courseVersionId` chỉ khi draft và chỉ sang published; audit `class.course_version_changed`.
+- [x] `activate`/`end` một chiều; sai → 409 đúng message; audit `class.activated`/`class.ended`.
+- [x] Mời đủ nhánh FR-01 theo bảng mã lỗi (422/409 `INVALID_TRANSITION`/403/409 `ACCOUNT_DISABLED`/409 `CONFLICT`); email mới → user invited + mật khẩu tạm 72h + outbox `invite` (`secret_enc` không NULL, `payload` sạch); user active → outbox `added`; invited còn hạn → `added` không xoay; email chuẩn hóa. <!-- Red Team: RT-10 -->
+- [x] Mailpit nhận mail đúng subject; `GET members` phản ánh `queued → sent`; thành viên chưa có lời mời → `inviteStatus` vắng; `includeDropped` mặc định ẩn dropped; bản `failed` seed hiển thị `inviteAttempts=3`, `inviteLastError`.
+- [x] Resend 200, đổi hash + reset expiry, mật khẩu cũ vô hiệu, hàng `queued` cũ `superseded`; lần 4/giờ → 429; sau khi đổi mật khẩu → 409.
+- [x] Gỡ → `dropped`, `lesson_progress` còn; mời lại → `Rejoin` giữ `joined_at`.
+- [x] Teacher xem lớp người khác → 403 "Bạn chỉ xem được lớp mình phụ trách."; `GET /teach/classes` chỉ trả lớp của mình, có `notLoggedIn`, `inactiveOver7Days` (seed: khang.vu 21 ngày không hoạt động được tính).
+- [x] Không có mật khẩu tạm trong response/log/audit (grep suite integration).

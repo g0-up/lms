@@ -257,12 +257,12 @@ Rollback: không mount `courses` trong router; dữ liệu giữ nguyên.
 
 ## Success Criteria
 
-- [ ] Unit + integration `courses` xanh.
-- [ ] Tạo khóa học → v1 draft; mã trùng → 409.
-- [ ] `PUT stages`: ref draft → 422; hai version cùng chặng → 409 `CONFLICT`; trên bản published → 409 `VERSION_IMMUTABLE`.
-- [ ] Publish rỗng → 422 "Khóa học cần ít nhất một chặng."; publish hợp lệ → `published_at`, audit, `course_version_stages` không đổi; archive bản published thành công trên schema thật, `archived_at` set. <!-- Red Team: RT-01 -->
-- [ ] Tạo khóa học ghi audit `course.created`; xóa bản nháp cuối cùng xóa luôn khóa học và trả `courseDeleted:true`. <!-- Red Team: RT-07 -->
-- [ ] Clone → v(n+1) draft với danh sách tham chiếu y hệt; clone lần hai → `DRAFT_EXISTS` + `draftVersionId`.
-- [ ] Delete published bị lớp dùng → 409 `IN_USE` liệt kê mã lớp (`basic01`); delete draft → 200 `{courseDeleted}`.
-- [ ] FR-17 integration (§7.3) trên repository và schema thật: BASIC thành công v2 published giữ thứ tự; HASDRAFT/WEBONLY/DBV2 (tạo trong test qua `testdb`) thất bại với đúng message; dữ liệu của ba khóa học đó không đổi; lớp `basic01` vẫn trỏ BASIC v1; audit `course.stage_version_applied` đúng một bản ghi; kết quả dùng `courseCode`. <!-- Red Team: RT-01 --> <!-- Red Team: RT-03 -->
-- [ ] FR-17 với nguồn chưa published → 422 toàn cục, không có khóa học nào đổi.
+- [x] Unit + integration `courses` xanh.
+- [x] Tạo khóa học → v1 draft; mã trùng → 409.
+- [x] `PUT stages`: ref draft → 422; hai version cùng chặng → 409 `CONFLICT`; trên bản published → 409 `VERSION_IMMUTABLE`.
+- [x] Publish rỗng → 422 "Khóa học cần ít nhất một chặng."; publish hợp lệ → `published_at`, audit, `course_version_stages` không đổi; archive bản published thành công trên schema thật, `archived_at` set. <!-- Red Team: RT-01 -->
+- [x] Tạo khóa học ghi audit `course.created`; xóa bản nháp cuối cùng xóa luôn khóa học và trả `courseDeleted:true`. <!-- Red Team: RT-07 -->
+- [x] Clone → v(n+1) draft với danh sách tham chiếu y hệt; clone lần hai → `DRAFT_EXISTS` + `draftVersionId`.
+- [x] Delete published bị lớp dùng → 409 `IN_USE` liệt kê mã lớp (`basic01`); delete draft → 200 `{courseDeleted}`.
+- [x] FR-17 integration (§7.3) trên repository và schema thật: BASIC thành công v2 published giữ thứ tự; HASDRAFT/WEBONLY/DBV2 (tạo trong test qua `testdb`) thất bại với đúng message; dữ liệu của ba khóa học đó không đổi; lớp `basic01` vẫn trỏ BASIC v1; audit `course.stage_version_applied` đúng một bản ghi; kết quả dùng `courseCode`. <!-- Red Team: RT-01 --> <!-- Red Team: RT-03 -->
+- [x] FR-17 với nguồn chưa published → 422 toàn cục, không có khóa học nào đổi.

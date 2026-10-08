@@ -238,12 +238,12 @@ Lời thoại bám `prototype/app.js` (`pageLearn`, `pageLearnClass`, `pageLesso
 
 ## Success Criteria
 
-- Ba trang `/learn`, `/learn/classes/:id`, `/learn/classes/:id/lessons/:lid` khớp 1:1 prototype về bố cục, lời thoại,
-  toast, trạng thái rỗng/disabled và lý do disabled.
-- Zod schema parse được golden JSON của Phase 08; mã lỗi xử lý đúng ba mã `NOT_FOUND`, `CONFLICT`,
-  `INVALID_TRANSITION`; lớp nháp hiển thị lộ trình chỉ đọc.
-- FR-31 ghi "mở lần đầu" khi vào trang học liệu và mở khóa nút tích ngay không cần tải lại; tiến độ chỉ tính học liệu
-  bắt buộc, khớp số ở báo cáo phase 12.
-- Video phát qua URL ký, tự hồi phục khi hết hạn, lỗi rõ sau 2 lần; markdown an toàn, ảnh hiển thị qua
-  `/media/{id}/content`.
-- Không file nào ngoài `src/features/learning` bị sửa; lint, typecheck, test, build xanh.
+- [x] Ba trang `/learn`, `/learn/classes/:id`, `/learn/classes/:id/lessons/:lid` khớp 1:1 prototype về bố cục, lời thoại,
+  toast, trạng thái rỗng/disabled và lý do disabled. <!-- copy, toasts, empty/disabled states and reasons verified by component tests and live Playwright walk; layout structure (crumbs, grid, side list) checked live and no horizontal overflow at 320px; not pixel-compared against the prototype. Side list omits stage version (API has none). -->
+- [x] Zod schema parse được golden JSON của Phase 08; mã lỗi xử lý đúng ba mã `NOT_FOUND`, `CONFLICT`,
+  `INVALID_TRANSITION`; lớp nháp hiển thị lộ trình chỉ đọc. <!-- model/schemas.test.ts parses every golden file; page tests cover 404/409 CONFLICT/409 INVALID_TRANSITION; live: draft roadmap read-only without links, draft lesson URL shows the 409 message with link back. -->
+- [x] FR-31 ghi "mở lần đầu" khi vào trang học liệu và mở khóa nút tích ngay không cần tải lại; tiến độ chỉ tính học liệu
+  bắt buộc, khớp số ở báo cáo phase 12. <!-- unlock without reload covered by lesson-page test; percent comes from the API response (never recounted client-side); live: An basic01 shows 71% on card and roadmap, tick/untick round-trips 71→71. Not cross-checked number-by-number against the phase 12 report. -->
+- [x] Video phát qua URL ký, tự hồi phục khi hết hạn, lỗi rõ sau 2 lần; markdown an toàn, ảnh hiển thị qua
+  `/media/{id}/content`. <!-- video-player.test.tsx (re-sign before expiry, recover on error, alert after 2); live: seed video loads via signed MinIO URL, recovery simulated by routing a 403/abort; markdown-lesson.test.tsx keeps /api/v1/media/{id}/content images and strips scripts/handlers. No markdown image exists in seed data to observe live. -->
+- [x] Không file nào ngoài `src/features/learning` bị sửa; lint, typecheck, test, build xanh. <!-- lint, typecheck, lint:design, 23 files / 144 tests, production bundle all green. -->

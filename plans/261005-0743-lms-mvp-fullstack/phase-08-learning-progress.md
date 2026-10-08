@@ -243,13 +243,13 @@ Rollback: không mount `learning`; `lesson_progress` giữ nguyên.
 
 ## Success Criteria
 
-- [ ] Unit + integration `learning` xanh; `BuildRoadmap` và SQL % cho cùng kết quả trên fixture.
-- [ ] `first_opened_at` ghi đúng một lần; lớp ended không ghi.
-- [ ] Tích trước mở → 409 `CONFLICT`; tích/bỏ tích idempotent; `completed_at` đúng.
-- [ ] Học liệu ngoài course version, dropped, không member → 404 `NOT_FOUND`; lớp draft → 200 `readOnly=true, readOnlyReason='draft'`; lớp ended `readOnlyReason='ended'`; PUT trên draft/ended → 409 `INVALID_TRANSITION`.
-- [ ] % theo required: optional không ảnh hưởng; 0 required → 0%; tổng = required done/required total toàn khóa; `domain.Percent` và SQL `round()` trùng nhau.
-- [ ] `/me/classes` gồm lớp draft, không gồm dropped; `nextLesson {lessonId,title,stageName}` đúng học liệu đầu chưa hoàn thành.
-- [ ] `users.last_active_at` cập nhật khi học viên gọi API học tập.
-- [ ] `selfReported: true` trong roadmap; `Cache-Control: no-store`.
-- [ ] DTO 4 route khớp từng trường bảng HTTP API (plan.md §7); golden JSON `testdata/*.json` được commit cho Phase 13.
-- [ ] `learning.ProgressReader` được nối vào `classes` (`avgPercent`, `notLoggedIn`, `inactiveOver7Days`) và sẵn cho Phase 9.
+- [x] Unit + integration `learning` xanh; `BuildRoadmap` và SQL % cho cùng kết quả trên fixture.
+- [x] `first_opened_at` ghi đúng một lần; lớp ended không ghi.
+- [x] Tích trước mở → 409 `CONFLICT`; tích/bỏ tích idempotent; `completed_at` đúng.
+- [x] Học liệu ngoài course version, dropped, không member → 404 `NOT_FOUND`; lớp draft → 200 `readOnly=true, readOnlyReason='draft'`; lớp ended `readOnlyReason='ended'`; PUT trên draft/ended → 409 `INVALID_TRANSITION`.
+- [x] % theo required: optional không ảnh hưởng; 0 required → 0%; tổng = required done/required total toàn khóa; `domain.Percent` và SQL `round()` trùng nhau.
+- [x] `/me/classes` gồm lớp draft, không gồm dropped; `nextLesson {lessonId,title,stageName}` đúng học liệu đầu chưa hoàn thành.
+- [x] `users.last_active_at` cập nhật khi học viên gọi API học tập.
+- [x] `selfReported: true` trong roadmap; `Cache-Control: no-store`.
+- [x] DTO 4 route khớp từng trường bảng HTTP API (plan.md §7); golden JSON `testdata/*.json` được commit cho Phase 13.
+- [x] `learning.ProgressReader` được nối vào `classes` (`avgPercent`, `notLoggedIn`, `inactiveOver7Days`) và sẵn cho Phase 9. (`avgPercent` qua `ClassAveragePercent`; `notLoggedIn`/`inactiveOver7Days` giữ SQL của classes cùng quy tắc, `ClassActivityCounts` sẵn cho Phase 9.)

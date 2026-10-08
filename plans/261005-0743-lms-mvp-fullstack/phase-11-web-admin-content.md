@@ -322,10 +322,10 @@ qua presigned URL. Mọi trang, nút, modal, toast và thông điệp lỗi bám
 
 ## Success Criteria
 
-- Năm trang admin (`/admin`, `/admin/stages`, `/admin/stages/:id`, `/admin/courses`, `/admin/courses/:id`) khớp 1:1
-  prototype về bố cục, lời thoại, toast, trạng thái rỗng/disabled và lý do disabled.
-- Luồng FR-18 chạy end-to-end bằng một thao tác với toast đúng số phiên bản.
-- Upload video có tiến độ, hủy được, lỗi rõ; học liệu markdown lưu và xem trước an toàn.
-- Mọi mã lỗi `CONFLICT`, `VERSION_IMMUTABLE`, `DRAFT_EXISTS`, `IN_USE`, `INVALID_TRANSITION` có thông điệp Việt hóa
-  đúng chỗ (field, alert dialog hoặc toast).
-- Không file nào ngoài `src/features/{dashboard,stages,courses}` bị sửa; lint, typecheck, test, build xanh.
+- [ ] Năm trang admin (`/admin`, `/admin/stages`, `/admin/stages/:id`, `/admin/courses`, `/admin/courses/:id`) khớp 1:1
+  prototype về bố cục, lời thoại, toast, trạng thái rỗng/disabled và lý do disabled. <!-- copy, toasts, empty/disabled states and disabled reasons covered by page tests and the live Playwright walk (axe clean on every page). Not ticked: the dashboard outdated alert cannot name the course version or link to it (dashboard DTO has no course version number or id), the course stage row takes its version status from GET /stages (course DTO has none), and layout was not pixel-compared with the prototype. -->
+- [x] Luồng FR-18 chạy end-to-end bằng một thao tác với toast đúng số phiên bản. <!-- live: stage v2 published, "Áp dụng v2" on the outdated course, one confirm, toast "Đã phát hành W11 Khóa … v2 dùng v2."; course v2 has no outdated hint, v1 keeps it. ApplyDialog page tests cover all-ok toast and the failed-row Alert. -->
+- [ ] Upload video có tiến độ, hủy được, lỗi rõ; học liệu markdown lưu và xem trước an toàn. <!-- upload: progress label, closing the dialog aborts the PUT and skips complete, non-mp4 refusal, size limit, not-uploaded error all covered by tests; live mp4 PUT to MinIO and lesson created. Markdown lessons save (tests and live). Not ticked: no markdown preview in the lesson dialog. -->
+- [x] Mọi mã lỗi `CONFLICT`, `VERSION_IMMUTABLE`, `DRAFT_EXISTS`, `IN_USE`, `INVALID_TRANSITION` có thông điệp Việt hóa
+  đúng chỗ (field, alert dialog hoặc toast). <!-- CONFLICT on the code field (stage and course create), VERSION_IMMUTABLE in the lesson dialog and as a toast for course stage edits, DRAFT_EXISTS and IN_USE as toasts, publish refusals in the confirm dialog; all by page tests. Stage and course endpoints do not emit INVALID_TRANSITION; any such refusal would show the server message through the same dialog/toast paths. -->
+- [ ] Không file nào ngoài `src/features/{dashboard,stages,courses}` bị sửa; lint, typecheck, test, build xanh. <!-- only files under those three features were touched; lint, lint:design, typecheck and the production bundle are green; all dashboard/stages/courses tests pass. Not ticked: the full suite has 3 failures in src/app (app-shell and session-isolation tests assume /admin, /admin/stages and /admin/courses are unrouted and lack handlers for the feature endpoints); fix belongs to src/app. -->

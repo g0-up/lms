@@ -1,0 +1,39 @@
+render-check: http://127.0.0.1:8766/index.html#/learn/classes/cl-basic01/lessons/l7?result=qa1&as=u-an
+
+[375x812] page height 3162px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/quiz-review/375x812.png
+  outline:
+    div#app "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x3162
+      header.topbar "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+        div.topbar-inner "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+      main#main.main "Lớp của tôi basic01 Data structure Luyện" @ x0 y56 375x3106
+        nav.crumbs "Lớp của tôi basic01 Data structure Luyện" @ x16 y80 343x92
+        div.page-head "Luyện tập: Stack, Queue và Hash Đã làm" @ x16 y172 343x90
+          div "Luyện tập: Stack, Queue và Hash Đã làm" @ x16 y172 343x90
+        div.viewer "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x16 y286 343x2813
+          div.card "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x16 y286 343x2424
+          aside.card "Data structure v1 Mảng và danh sách liên" @ x16 y2734 343x365
+  no findings
+
+[768x1024] page height 2740px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/quiz-review/768x1024.png
+  outline:
+    div#app "LỚP CỦA TÔI Admin · Trần Minh Quân Giảng" @ x0 y0 768x2740
+      header.topbar "LỚP CỦA TÔI Admin · Trần Minh Quân Giảng" @ x0 y0 768x59
+        div.topbar-inner "LỚP CỦA TÔI Admin · Trần Minh Quân Giảng" @ x0 y0 768x59
+      main#main.main "Lớp của tôi basic01 Data structure Luyện" @ x0 y59 768x2681
+        div.viewer "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x24 y175 720x2500
+          div.card "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x24 y175 720x2120
+          aside.card "Data structure v1 Mảng và danh sách liên" @ x24 y2319 720x357
+  no findings
+
+[1440x900] page height 2359px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-2/quiz-review/1440x900.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x2359
+      header.topbar "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x59
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x135 y0 1170x59
+      main#main.main "Lớp của tôi basic01 Data structure Luyện" @ x135 y59 1170x2300
+        div.viewer "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x159 y175 1122x2120
+          div.card "LƯỢT 1 · NỘP 29/09/2026 12:37 3/5 (60%) " @ x159 y175 778x2120
+          aside.card "Data structure v1 Mảng và danh sách liên" @ x961 y175 320x357
+  no findings
+
+Summary: 0 errors, 0 warnings. Fix errors first, re-run, then review the screenshots.

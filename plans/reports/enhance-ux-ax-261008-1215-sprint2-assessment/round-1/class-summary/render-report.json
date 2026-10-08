@@ -1,0 +1,63 @@
+[
+  {
+    "viewport": "375x812",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/class-summary/375x812.png",
+    "outline": [
+      "div#app \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x1330",
+      "  header.topbar \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "    div.topbar-inner \"Admin · Trần Minh Quân Giảng viên · Lê T\" @ x0 y0 375x56",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x0 y56 375x1274",
+      "    nav.crumbs \"Lớp của tôi basic01\" @ x16 y80 343x44",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x114",
+      "      div \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x16 y124 343x114",
+      "    nav.tabs \"Tiến độ Tổng kết Bài tập 3 bài chờ chấm \" @ x16 y262 343x50",
+      "    div.card \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x16 y336 343x930",
+      "      form.filter-bar \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x16 y336 343x296",
+      "      div.card-head \"7/7 học viên · Bấm một ô để xem tổng kết\" @ x16 y632 343x114",
+      "      div.table-wrap \"HỌC VIÊN DATABASE DATA STRUCTURE GOLANG \" @ x16 y746 343x520"
+    ],
+    "findings": [
+      {
+        "severity": "warn",
+        "type": "small-touch-target",
+        "target": "",
+        "message": "2 controls smaller than 44px; e.g. input; input"
+      }
+    ],
+    "height": 1330
+  },
+  {
+    "viewport": "768x1024",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/class-summary/768x1024.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 768x1065",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 768x60",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 768x60",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x0 y60 768x1005",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x24 y124 720x55",
+      "    nav.tabs \"Tiến độ Tổng kết Bài tập 3 bài chờ chấm \" @ x24 y203 720x46",
+      "    div.card \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x24 y272 720x729",
+      "      form.filter-bar \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x24 y272 720x141",
+      "      div.card-head \"7/7 học viên · Bấm một ô để xem tổng kết\" @ x24 y413 720x67",
+      "      div.table-wrap \"HỌC VIÊN DATABASE DATA STRUCTURE GOLANG \" @ x24 y480 720x521"
+    ],
+    "findings": [],
+    "height": 1065
+  },
+  {
+    "viewport": "1440x900",
+    "screenshot": "/home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/class-summary/1440x900.png",
+    "outline": [
+      "div#app \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x981",
+      "  header.topbar \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x0 y0 1440x60",
+      "    div.topbar-inner \"GoUpLMS LỚP CỦA TÔI CHẤM BÀI3 BÀI CHỜ CH\" @ x135 y0 1170x60",
+      "  main#main.main \"Lớp của tôi basic01 basic01 · Lập trình \" @ x135 y60 1170x921",
+      "    div.page-head \"basic01 · Lập trình cơ bản – khóa 1 Đang\" @ x159 y124 1122x55",
+      "    div.card \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x159 y272 1122x645",
+      "      form.filter-bar \"Chưa hoàn thành chặng Tất cả chặng Datab\" @ x159 y272 1122x89",
+      "      div.table-wrap \"HỌC VIÊN DATABASE DATA STRUCTURE GOLANG \" @ x159 y396 1122x521"
+    ],
+    "findings": [],
+    "height": 981
+  }
+]

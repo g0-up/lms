@@ -1,0 +1,53 @@
+render-check: http://127.0.0.1:8766/index.html#/learn/classes/cl-basic01/summary?as=u-an
+
+[375x812] page height 3103px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/learn-summary/375x812.png
+  outline:
+    div#app "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x3103
+      header.topbar "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+        div.topbar-inner "Admin · Trần Minh Quân Giảng viên · Lê T" @ x0 y0 375x56
+      main#main.main "Lớp của tôi basic01 Tổng kết Tổng kết kh" @ x0 y56 375x3047
+        nav.crumbs "Lớp của tôi basic01 Tổng kết" @ x16 y80 343x44
+        div.page-head "Tổng kết khóa học Lập trình cơ bản – khó" @ x16 y124 343x55
+          div "Tổng kết khóa học Lập trình cơ bản – khó" @ x16 y124 298x55
+        div.stack "TOÀN KHÓA 12/18 học liệu bắt buộc 67% 1." @ x16 y203 343x2836
+          div.card.card-pad "TOÀN KHÓA 12/18 học liệu bắt buộc 67%" @ x16 y203 343x125
+          section.card "1. Database 2/2 học liệu bắt buộc Hoàn t" @ x16 y352 343x457
+          section.card "2. Data structure 5/5 học liệu bắt buộc " @ x16 y832 343x696
+          section.card "3. Golang basic 3/5 học liệu bắt buộc Đa" @ x16 y1552 343x650
+          section.card "4. ReactJS basic 2/3 học liệu bắt buộc Đ" @ x16 y2226 343x413
+          section.card "5. HTML CSS JS 0/3 học liệu bắt buộc Đan" @ x16 y2662 343x377
+  WARN  small-touch-target: 1 controls smaller than 44px; e.g. a "basic01"
+
+[768x1024] page height 2730px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/learn-summary/768x1024.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x2730
+      header.topbar "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x59
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI Admin · Trần Minh Qu" @ x0 y0 768x59
+      main#main.main "Lớp của tôi basic01 Tổng kết Tổng kết kh" @ x0 y59 768x2671
+        div.page-head "Tổng kết khóa học Lập trình cơ bản – khó" @ x24 y123 720x55
+        div.stack "TOÀN KHÓA 12/18 học liệu bắt buộc 67% 1." @ x24 y202 720x2465
+          div.card.card-pad "TOÀN KHÓA 12/18 học liệu bắt buộc 67%" @ x24 y202 720x86
+          section.card "1. Database 2/2 học liệu bắt buộc Hoàn t" @ x24 y311 720x377
+          section.card "2. Data structure 5/5 học liệu bắt buộc " @ x24 y712 720x557
+          section.card "3. Golang basic 3/5 học liệu bắt buộc Đa" @ x24 y1292 720x573
+          section.card "4. ReactJS basic 2/3 học liệu bắt buộc Đ" @ x24 y1889 720x377
+          section.card "5. HTML CSS JS 0/3 học liệu bắt buộc Đan" @ x24 y2290 720x377
+  no findings
+
+[1440x900] page height 2708px, screenshot /home/cesc/Documents/personal-workspace/lms/plans/reports/enhance-ux-ax-261008-1215-sprint2-assessment/round-1/learn-summary/1440x900.png
+  outline:
+    div#app "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x2708
+      header.topbar "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x0 y0 1440x59
+        div.topbar-inner "GoUpLMS LỚP CỦA TÔI Xem với vai trò Admi" @ x135 y0 1170x59
+      main#main.main "Lớp của tôi basic01 Tổng kết Tổng kết kh" @ x135 y59 1170x2649
+        div.page-head "Tổng kết khóa học Lập trình cơ bản – khó" @ x159 y123 1122x55
+        div.stack "TOÀN KHÓA 12/18 học liệu bắt buộc 67% 1." @ x159 y202 1122x2442
+          div.card.card-pad "TOÀN KHÓA 12/18 học liệu bắt buộc 67%" @ x159 y202 1122x86
+          section.card "1. Database 2/2 học liệu bắt buộc Hoàn t" @ x159 y311 1122x377
+          section.card "2. Data structure 5/5 học liệu bắt buộc " @ x159 y712 1122x534
+          section.card "3. Golang basic 3/5 học liệu bắt buộc Đa" @ x159 y1270 1122x573
+          section.card "4. ReactJS basic 2/3 học liệu bắt buộc Đ" @ x159 y1867 1122x377
+          section.card "5. HTML CSS JS 0/3 học liệu bắt buộc Đan" @ x159 y2267 1122x377
+  no findings
+
+Summary: 0 errors, 1 warnings. Fix errors first, re-run, then review the screenshots.
