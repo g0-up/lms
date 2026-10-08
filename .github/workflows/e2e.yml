@@ -1,0 +1,143 @@
+name: E2E
+
+# E2E trên stack container thật (compose profile "full": postgres + minio + mailpit + api + worker + web :8081).
+# Mọi spec dùng chung một DB seed nên chạy một worker; webkit chạy ở job riêng sau chromium.
+# Render-check (so với prototype tĩnh) chỉ chạy khi gọi tay.
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COMPOSE: docker compose -f infra/docker-compose.yml --profile full
+
+jobs:
+  chromium:
+    name: chromium (e2e + a11y)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Dựng stack profile full
+        run: make e2e-up
+      - name: Chờ api sẵn sàng (/readyz, kiểm cả kết nối DB)
+        run: $COMPOSE exec -T web curl -fsS --retry 30 --retry-delay 2 --retry-all-errors -o /dev/null http://api:8080/readyz
+      - name: Playwright e2e + a11y
+        run: pnpm exec playwright test -c e2e/playwright.config.ts --project=e2e --project=a11y
+        working-directory: apps/web
+      - name: Log container khi lỗi
+        if: failure()
+        run: mkdir -p apps/web/e2e/test-results && $COMPOSE logs --no-color --tail=300 api worker web > apps/web/e2e/test-results/compose.log 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-chromium
+          path: |
+            apps/web/e2e/test-results
+            apps/web/e2e/playwright-report
+          retention-days: 7
+      - name: Dừng api/worker/web
+        if: always()
+        run: make e2e-down
+
+  webkit:
+    name: webkit (e2e, retry 1)
+    needs: chromium
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm exec playwright install --with-deps webkit
+        working-directory: apps/web
+      - name: Dựng stack profile full
+        run: make e2e-up
+      - name: Chờ api sẵn sàng (/readyz, kiểm cả kết nối DB)
+        run: $COMPOSE exec -T web curl -fsS --retry 30 --retry-delay 2 --retry-all-errors -o /dev/null http://api:8080/readyz
+      - name: Playwright webkit
+        # retries 1 đặt trong project webkit của playwright.config.ts (chỉ khi CI).
+        run: pnpm exec playwright test -c e2e/playwright.config.ts --project=webkit
+        working-directory: apps/web
+      - name: Log container khi lỗi
+        if: failure()
+        run: mkdir -p apps/web/e2e/test-results && $COMPOSE logs --no-color --tail=300 api worker web > apps/web/e2e/test-results/compose.log 2>&1 || true
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-webkit
+          path: |
+            apps/web/e2e/test-results
+            apps/web/e2e/playwright-report
+          retention-days: 7
+      - name: Dừng api/worker/web
+        if: always()
+        run: make e2e-down
+
+  render:
+    name: render-check (so với prototype)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: apps/web
+      - run: pnpm exec playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Dựng stack profile full
+        run: make e2e-up
+      - name: Chờ api sẵn sàng (/readyz, kiểm cả kết nối DB)
+        run: $COMPOSE exec -T web curl -fsS --retry 30 --retry-delay 2 --retry-all-errors -o /dev/null http://api:8080/readyz
+      - name: Render-check (prototype phục vụ bằng python3 ở :8090)
+        run: pnpm render-check
+        working-directory: apps/web
+      # Ảnh web/prototype theo route và viewport là kết quả cần xem, nên luôn tải lên.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: render-check
+          path: |
+            apps/web/e2e/__screenshots__
+            apps/web/e2e/test-results
+            apps/web/e2e/playwright-report
+          retention-days: 7
+      - name: Dừng api/worker/web
+        if: always()
+        run: make e2e-down
