@@ -1,8 +1,9 @@
 // Functional and accessibility checks for the prototype, run in headless Chrome over the DevTools protocol.
 // Usage: node prototype/check-flows.mjs [--out <dir>]   (Node 18+, Google Chrome installed, no dependencies)
 // Covers spec scenario 7.3 (clone, edit, publish, apply, class version), invites, first login, report filters,
-// lesson ticks, quiz attempts, homework submission and grading, stage summaries, deadlines, extra attempts,
-// daily email jobs and publish blockers, then 320px reflow, reduced motion, keyboard and ARIA probes. Exits 1 when any check fails.
+// bài học grouping (editor, clone, roadmap, prev/next),
+// lesson ticks, one-question-at-a-time quiz taking, quiz attempts, teacher quiz review and confirmation, admin-only
+// quiz authoring, homework submission and grading, stage summaries, deadlines, extra attempts, daily email jobs and publish blockers, then 320px reflow, reduced motion, keyboard and ARIA probes. Exits 1 when any check fails.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -51,16 +52,40 @@ try {
   let hash = await ev('location.hash');
   check('clone creates draft and navigates', /\?v=sv-/.test(hash) && (await text()).includes('Học liệu của v2'), hash);
   let st = await state(); const draft = st.stageVersions.find((v) => v.stageId === 'st-db' && v.status === 'draft');
-  check('draft v2 copies 3 lessons with same keys', draft && draft.no === 2 && draft.lessons.length === 3 && draft.lessons.map((l) => l.key).join() === st.stageVersions.find((v) => v.id === 'sv-db-1').lessons.map((l) => l.key).join());
+  check('draft v2 copies 5 lessons with same keys', draft && draft.no === 2 && draft.lessons.length === 5 && draft.lessons.map((l) => l.key).join() === st.stageVersions.find((v) => v.id === 'sv-db-1').lessons.map((l) => l.key).join());
+  const v1 = st.stageVersions.find((v) => v.id === 'sv-db-1');
+  check('draft v2 copies bài học with the same keys, new ids, and học liệu remapped', draft.units.map((u) => u.key).join() === v1.units.map((u) => u.key).join()
+    && draft.units.every((u) => !v1.units.some((x) => x.id === u.id)) && draft.lessons.every((l) => draft.units.some((u) => u.id === l.unitId)), draft.units.map((u) => u.key + ':' + u.id).join(' '));
   check('second clone is blocked (one draft max)', !(await ev(`!!document.querySelector('[data-action="clone-sv"]')`)) );
 
-  // step 2: edit draft (add lesson)
-  await click(`[data-action="new-lesson"][data-sv="${draft.id}"]`);
+  // step 2: edit draft (add a học liệu to the "Thiết kế bảng" bài học, try an empty bài học, move a học liệu across bài học)
+  check('stage editor groups học liệu under each bài học', (await ev(`[...document.querySelectorAll('.unit-head h3')].map((h)=>h.textContent).join('|')`)) === 'Nhập môn SQL|Thiết kế bảng|Kiểm tra cuối chặng');
+  const design = draft.units.find((u) => u.key === 'ux-db-design');
+  await click(`[data-action="new-lesson"][data-unit="${design.id}"]`);
+  check('the add form preselects the bài học of the clicked button', (await ev(`document.querySelector('#modal form').elements.unitId.value`)) === design.id);
   await fill({ title: 'JOIN và subquery', type: 'video', video: 'db-04-join.mp4', duration: '12:40', required: true });
   await submitModal();
-  st = await state(); const d2 = st.stageVersions.find((v) => v.id === draft.id);
-  check('lesson added to draft', d2.lessons.length === 4 && d2.lessons[3].title === 'JOIN và subquery', JSON.stringify(d2.lessons[3]));
-  check('published v1 untouched', st.stageVersions.find((v) => v.id === 'sv-db-1').lessons.length === 3);
+  st = await state(); let d2 = st.stageVersions.find((v) => v.id === draft.id); const join_ = d2.lessons.find((l) => l.title === 'JOIN và subquery');
+  const inDesign = (d) => d.lessons.filter((l) => l.unitId === design.id).map((l) => l.key);
+  check('lesson added to draft', d2.lessons.length === 6 && !!join_, JSON.stringify(join_));
+  check('new học liệu goes last in the chosen bài học', join_.unitId === design.id && inDesign(d2).join() === 'db-table,db-index,' + join_.key, inDesign(d2).join());
+  await click(`[data-action="new-unit"][data-sv="${draft.id}"]`); await fill({ title: 'Truy vấn nâng cao' }); await submitModal();
+  st = await state(); d2 = st.stageVersions.find((v) => v.id === draft.id); const extraUnit = d2.units.at(-1);
+  check('bài học is added at the end of the stage', extraUnit.title === 'Truy vấn nâng cao' && d2.units.length === 4);
+  check('an empty bài học blocks publishing', (await text()).includes('Bài học "Truy vấn nâng cao" chưa có học liệu.'));
+  await click(`[data-action="move-unit"][data-id="${extraUnit.id}"][data-dir="-1"]`);
+  st = await state(); d2 = st.stageVersions.find((v) => v.id === draft.id);
+  check('bài học can be moved up', d2.units.map((u) => u.title).join('|') === 'Nhập môn SQL|Thiết kế bảng|Truy vấn nâng cao|Kiểm tra cuối chặng');
+  await click(`[data-action="move-lesson"][data-id="${join_.id}"][data-dir="1"]`);
+  st = await state(); d2 = st.stageVersions.find((v) => v.id === draft.id);
+  check('moving the last học liệu of a bài học down puts it first in the next bài học', d2.lessons.find((l) => l.id === join_.id).unitId === extraUnit.id);
+  await click(`[data-action="edit-lesson"][data-id="${join_.id}"]`); await fill({ unitId: design.id }); await submitModal();
+  st = await state(); d2 = st.stageVersions.find((v) => v.id === draft.id);
+  check('the edit form moves a học liệu to another bài học', d2.lessons.find((l) => l.id === join_.id).unitId === design.id && inDesign(d2).at(-1) === join_.key);
+  await click(`[data-action="delete-unit"][data-id="${extraUnit.id}"]`); await submitModal();
+  st = await state(); d2 = st.stageVersions.find((v) => v.id === draft.id);
+  check('the empty bài học is deleted and publishing unblocks', d2.units.length === 3 && !(await text()).includes('Chưa phát hành được'));
+  check('published v1 untouched', st.stageVersions.find((v) => v.id === 'sv-db-1').lessons.length === 5);
   await shot('01-draft-v2');
 
   // step 3: publish v2
@@ -97,6 +122,8 @@ try {
   await go('#/learn/classes/cl-basic01?as=u-an'); t = await text();
   const pctBefore = Number((await ev(`document.querySelector('.progress-lg .pct, .progress .pct')?.textContent`) || '').replace('%', ''));
   const lessonHref = await ev(`[...document.querySelectorAll('.lesson-row:not(.is-done)[data-kind=video], .lesson-row:not(.is-done)[data-kind=markdown]')].filter(r=>!/Không bắt buộc|tùy chọn/i.test(r.innerText)).map(r=>r.querySelector('a.lesson-link').getAttribute('href'))[0]`);
+  check('roadmap groups each stage by bài học with progress per bài học', (await ev(`document.querySelectorAll('.roadmap .unit').length`)) === 16
+    && /Bài 3\.1 · Cài đặt và Hello World\s*1\/1 bắt buộc\s*Hoàn thành/i.test(await ev(`[...document.querySelectorAll('.roadmap .unit-head')].map((h)=>h.innerText).join('\\n')`)), await ev(`[...document.querySelectorAll('.roadmap .unit-head')].slice(6,8).map((h)=>h.innerText.replace(/\\s+/g,' ')).join(' / ')`));
   check('student roadmap renders with an unfinished lesson', !!lessonHref && !Number.isNaN(pctBefore), `course ${pctBefore}% first open lesson ${lessonHref}`);
   await go(lessonHref); await sleep(300);
   st = await state(); const lessonId = lessonHref.split('/lessons/')[1]; const mem = st.members.find((m) => m.classId === 'cl-basic01' && m.userId === 'u-an');
@@ -115,6 +142,14 @@ try {
   await go(lessonHref); await click('[data-action="complete"][data-done="0"]'); await go('#/learn/classes/cl-basic01');
   const pctBack = Number((await ev(`document.querySelector('.progress-lg .pct, .progress .pct')?.textContent`) || '').replace('%', ''));
   check('untick restores %', pctBack === pctBefore, `${pctBack}%`);
+  // prev and next walk the học liệu of a bài học, then cross into the next bài học
+  await go('#/learn/classes/cl-basic01/lessons/l9');
+  const navOf = () => ev(`[...document.querySelectorAll('.complete-bar a.un-btn')].map((a)=>a.innerText.trim()+'>'+a.getAttribute('href').split('/').pop()).join(' ')`);
+  check('lesson breadcrumb shows the bài học', (await ev(`document.querySelector('.crumbs').innerText`)).includes('Golang basic') && (await ev(`document.querySelector('.crumbs').innerText`)).includes('Cài đặt và Hello World'));
+  check('next stays inside the bài học', /Học liệu tiếp>l36/i.test(await navOf()), await navOf());
+  check('lesson side list groups học liệu by bài học', (await ev(`[...document.querySelectorAll('.side-unit')].map((h)=>h.textContent).join('|')`)) === 'Cài đặt và Hello World|Kiểu dữ liệu và hàm|Goroutine và channel|Kiểm tra cuối chặng');
+  await go('#/learn/classes/cl-basic01/lessons/l12');
+  check('next crosses into the next bài học from its last học liệu', /Học liệu trước>l10 Sang bài học tiếp>l11/i.test(await navOf()), await navOf());
 
   // report filters / sort (admin)
   await go('#/admin/classes/cl-basic01?tab=report&as=u-admin'); t = await text();
@@ -184,21 +219,53 @@ try {
   check('assessment quiz intro shows attempts used', /1\/2/.test(await text()));
   await click('[data-action="start-quiz"]'); await sleep(300);
   check('starting a quiz shows questions and a running timer', (await ev(`document.querySelectorAll('.quiz-take .quiz-q').length`)) === 5 && /\d\d:\d\d/.test(await ev(`document.querySelector('[data-timer-text]').textContent`)));
+  const visibleQ = `[...document.querySelectorAll('.quiz-take .quiz-q')].filter((f) => !f.hidden)`;
+  check('focus mode shows one question at a time without the lesson list', (await ev(`${visibleQ}.length`)) === 1 && (await ev(`!!document.querySelector('.viewer.is-focus') && !document.querySelector('.viewer .side-list')`)) && /Câu 1\/5/.test(await ev(`document.querySelector('.quiz-pos').textContent`)), await ev(`document.querySelector('.quiz-pos')?.textContent`));
+  check('previous is disabled on the first question', (await ev(`document.querySelector('[data-action="quiz-prev"]').disabled`)) === true);
+  await click('[data-action="quiz-next"]');
+  check('next moves to question 2 and focuses it', (await ev(`document.querySelector('[data-pos]').textContent`)) === '2' && (await ev(`${visibleQ}[0] === document.activeElement && ${visibleQ}[0] === document.querySelectorAll('.quiz-take .quiz-q')[1]`)) && (await ev(`document.querySelector('.qm-btn[aria-current="step"]').dataset.idx`)) === '1');
+  await shot('10b-quiz-focus');
+  await click('.qm-btn[data-idx="4"]');
+  check('question map jumps to the last question and shows submit', (await ev(`document.querySelector('[data-pos]').textContent`)) === '5' && (await ev(`document.querySelector('[data-action="quiz-next"]').hidden && !document.querySelector('[data-step-submit]').hidden`)) === true);
   await ev(`[...document.querySelectorAll('.quiz-take .quiz-q')].slice(0, 4).forEach((f) => f.querySelector('input').click())`); await sleep(200);
   st = await state(); let open = st.quizAttempts.find((a) => a.memberId === anM && a.status === 'open');
   check('answers are saved as they are picked', open && Object.keys(open.answers).length === 4 && /4\/5/.test(await ev(`document.querySelector('[data-answered]').textContent`)), JSON.stringify(open?.answers));
+  check('question map marks answered questions', (await ev(`document.querySelectorAll('.qm-btn.is-answered').length`)) === 4 && /đã trả lời/.test(await ev(`document.querySelector('.qm-btn[data-idx="0"]').getAttribute('aria-label')`)));
   await click('.quiz-bar [data-action="submit-quiz"]');
   check('submit dialog warns about the unanswered question', /1 câu chưa trả lời/.test(await ev(`document.querySelector('#modal').innerText`)));
   await submitModal(); await sleep(300);
   st = await state(); const sub2 = st.quizAttempts.find((a) => a.id === open.id);
   check('submitted attempt is scored and shows the result', sub2.status === 'submitted' && /result=/.test(await ev('location.hash')) && !!(await ev(`document.querySelector('.quiz-score')`)), `${sub2.score}/${sub2.max}`);
   check('assessment result hides the answer key', (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 0);
+  check('new assessment attempt waits for teacher confirmation and supersedes the older unconfirmed one', sub2.review?.status === 'pending' && st.quizAttempts.find((a) => a.id === 'qa7').review?.status === 'superseded' && /Chờ giảng viên xác nhận/.test(await text()), JSON.stringify(sub2.review));
   await go('#/learn/classes/cl-basic01/lessons/l14');
   check('start button is disabled when attempts run out', (await ev(`document.querySelector('[data-action="start-quiz"]')?.getAttribute('aria-disabled')`)) === 'true');
   // practice quiz: review shows correct answers and explanations
   await go('#/learn/classes/cl-basic01/lessons/l7?result=qa1');
   check('practice result reviews every question with the key', (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 5 && (await ev(`document.querySelectorAll('.quiz-opt.is-correct').length`)) >= 5 && (await ev(`document.querySelectorAll('.quiz-explain').length`)) > 0);
+  check('practice result shows the teacher comment and per-question notes', !!(await ev(`document.querySelector('.review-box')`)) && (await ev(`document.querySelectorAll('.quiz-q.is-review .qnote-view').length`)) === 2);
   await shot('11-quiz-review');
+  // teacher confirms the assessment attempt from the shared queue
+  await go('#/teach/grading?as=u-gv');
+  check('grading queue lists the quiz attempt waiting for confirmation', (await ev(`!!document.querySelector('[data-href*="/grading/quiz/${sub2.id}"], a[href*="/grading/quiz/${sub2.id}"]')`)) && /chờ xác nhận/i.test(await text()), await ev(`[...document.querySelectorAll('table tbody tr[data-href]')].map((r) => r.dataset.href).join(' ')`));
+  await go('#/teach/grading?type=quiz');
+  check('queue type filter keeps only quiz rows', (await ev(`[...document.querySelectorAll('table tbody tr[data-href]')].every((r) => r.dataset.href.includes('/grading/quiz/'))`)) === true && (await ev(`document.querySelectorAll('table tbody tr[data-href]').length`)) >= 1);
+  await go('#/teach/grading/quiz/qa7');
+  check('superseded attempt links to the newest one and cannot be confirmed', (await ev(`document.querySelector('form[data-form=quiz-review] fieldset').disabled`)) === true && (await ev(`!!document.querySelector('.alert a[href*="/grading/quiz/${sub2.id}"]')`)));
+  await go(`#/teach/grading/quiz/${sub2.id}`);
+  check('review page marks every answer against the key', (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 5 && (await ev(`document.querySelectorAll('.quiz-opt.is-correct').length`)) >= 5 && (await ev(`document.querySelectorAll('input[name^="qnote-"]').length`)) === 5);
+  await ev(`document.querySelector('form[data-form=quiz-review]').requestSubmit()`); await sleep(200);
+  check('confirming without an overall comment is refused', !(await ev(`document.querySelector('form[data-form=quiz-review] [data-form-error]').hidden`)));
+  await shot('11b-quiz-confirm');
+  await ev(`(()=>{const f=document.querySelector('form[data-form=quiz-review]'); document.querySelector('input[name^="qnote-"]').value='Xem lại cách khai báo slice.'; f.comment.value='Nắm vững cú pháp cơ bản, cần ôn goroutine.'; f.requestSubmit(); return true})()`); await sleep(400);
+  st = await state(); const conf = st.quizAttempts.find((a) => a.id === sub2.id);
+  check('confirmation stores the comment and note and emails the student', conf.review?.status === 'confirmed' && conf.review.by === 'u-gv' && conf.review.comment.includes('goroutine') && Object.keys(conf.review.notes).length === 1 && st.emails[0].kind === 'quizReview' && st.emails[0].to === 'an.nguyen@gmail.com', JSON.stringify(conf.review));
+  hash = await ev('location.hash');
+  check('confirming moves on in the queue', hash.startsWith('#/teach/grading') && !hash.includes(sub2.id), hash);
+  await go(`#/learn/classes/cl-basic01/lessons/l14?result=${sub2.id}&as=u-an`);
+  check('student result shows the confirmation and notes without the key', /cần ôn goroutine/.test(await ev(`document.querySelector('.review-box')?.innerText || ''`)) && (await ev(`document.querySelectorAll('.qnote-list li').length`)) === 1 && (await ev(`document.querySelectorAll('.quiz-q.is-review').length`)) === 0);
+  await go('#/teach/grading/quiz/qa1?as=u-gv');
+  check('practice attempt review goes back to class quiz stats, not the queue', (await ev(`document.querySelector('form[data-form=quiz-review] a[href*="?tab=quiz"]')?.textContent || ''`)).includes('thống kê quiz'));
   // homework: invalid then valid submission
   await go('#/learn/classes/cl-basic01/lessons/l13?as=u-an');
   await ev(`(()=>{const f=document.querySelector('form[data-form=submit-homework]'); f.repoUrl.value='not a url'; f.requestSubmit(); return true})()`); await sleep(200);
@@ -220,7 +287,7 @@ try {
   await ev(`(()=>{const f=document.querySelector('form[data-form=grade]'); f.comment.value='Đúng yêu cầu, xử lý lỗi rõ ràng.'; f.requestSubmit(); return true})()`); await sleep(400);
   st = await state(); const graded = st.submissions.find((x) => x.id === anSub.id);
   check('grading stores the result and emails the student', graded.status === 'passed' && graded.grades.length === 1 && st.emails.some((e) => e.kind === 'graded'), graded.status);
-  check('saving a grade moves to the next queued submission', /\/grading\/sub/.test(await ev('location.hash')) && !(await ev('location.hash')).includes(anSub.id), await ev('location.hash'));
+  check('saving a grade moves to the next queued item', /\/grading\//.test(await ev('location.hash')) && !(await ev('location.hash')).includes(anSub.id), await ev('location.hash'));
   // stage summary matrix and teacher comment
   await go('#/teach/classes/cl-basic01?tab=summary&as=u-gv');
   check('class matrix shows a cell per student and stage', (await ev(`document.querySelectorAll('.matrix-cell').length`)) >= 10);
@@ -239,14 +306,26 @@ try {
   await go('#/admin/classes/cl-basic01?tab=quiz');
   await click(`[data-action="grant-attempts"][data-member="${anM}"]`); await fill({ extra: '1', reason: 'Mất kết nối khi làm bài' }); await submitModal();
   st = await state(); check('extra attempt is granted with a reason', st.attemptGrants.length === 1 && st.attemptGrants[0].reason.includes('Mất kết nối'));
+  // quizzes are authored by admin only; teachers review attempts but never open an authoring screen
+  await go('#/teach?as=u-gv');
+  check('teacher navigation has no quiz authoring entry', (await ev(`!document.querySelector('a[href="#/teach/quizzes"]') && !document.querySelector('[data-action="new-lesson"]')`)) === true);
+  await go('#/teach/quizzes');
+  check('teacher quiz authoring route is gone', (await ev('location.hash')) === '#/teach', await ev('location.hash'));
+  await go('#/admin/stages/st-go/lessons/l14');
+  check('teacher cannot open the admin quiz editor', (await ev('location.hash')) === '#/teach', await ev('location.hash'));
   // publish blockers for an empty quiz in a draft
   await go('#/admin/stages/st-ds?as=u-admin'); await click('[data-action="clone-sv"][data-id="sv-ds-1"]'); await sleep(300);
   st = await state(); const dsDraft = st.stageVersions.find((v) => v.stageId === 'st-ds' && v.status === 'draft');
-  await click(`[data-action="new-lesson"][data-sv="${dsDraft.id}"]`); await fill({ title: 'Kiểm tra chặng DS', type: 'quiz', mode: 'assessment' }); await submitModal(); await sleep(300);
+  await click(`[data-action="new-lesson"][data-sv="${dsDraft.id}"]`);
+  check('lesson type select lists every kind, both quizzes included', (await ev(`[...document.querySelector('#modal form').elements.type.options].map((o)=>o.value).join()`)) === 'video,markdown,quiz:practice,quiz:assessment,homework');
+  await fill({ title: 'Kiểm tra chặng DS', type: 'quiz:assessment' });
+  check('picking Quiz bài tập shows attempt and time limits', (await ev(`!document.querySelector('#modal [data-quiz-limits]').hidden && !document.querySelector('#modal [data-lesson-section="quiz"]').hidden`)) === true); await submitModal(); await sleep(300);
   check('new quiz lesson opens the question editor', /\/admin\/stages\/st-ds\/lessons\/l/.test(await ev('location.hash')), await ev('location.hash'));
+  st = await state(); const dsQuiz = st.stageVersions.find((v) => v.id === dsDraft.id).lessons.find((l) => l.title === 'Kiểm tra chặng DS');
+  check('the combined kind saves an assessment quiz', dsQuiz.type === 'quiz' && dsQuiz.quiz.mode === 'assessment' && dsQuiz.quiz.attempts === 2, JSON.stringify(dsQuiz.quiz));
   await go(`#/admin/stages/st-ds?v=${dsDraft.id}`); await click(`[data-action="publish-sv"][data-id="${dsDraft.id}"]`);
   check('publishing a quiz without questions is blocked', !(await ev(`document.querySelector('#modal').open`)) && /Chưa phát hành được/.test(await ev(`document.querySelector('#toasts').innerText`)));
-  st = await state(); const newQuiz = st.stageVersions.find((v) => v.id === dsDraft.id).lessons.pop();
+  st = await state(); const newQuiz = st.stageVersions.find((v) => v.id === dsDraft.id).lessons.find((l) => l.title === 'Kiểm tra chặng DS');
   await go(`#/admin/stages/st-ds/lessons/${newQuiz.id}`);
   await click('[data-action="new-question"]'); await fill({ text: 'Stack là LIFO?', opt0: 'Đúng', opt1: 'Sai', correct0: true }); await submitModal();
   st = await state(); check('question is added to the draft quiz', st.stageVersions.find((v) => v.id === dsDraft.id).lessons.find((l) => l.id === newQuiz.id).quiz.questions.length === 1);
@@ -256,16 +335,21 @@ try {
   await go('#/admin/stages/st-db?as=u-admin'); await click('[data-action="reset-data"]'); await submitModal(); await sleep(300);
 
   // --- accessibility, reflow and keyboard probes
-  const ROUTES = ['#/login', '#/admin?as=u-admin', '#/admin/stages/st-db?as=u-admin', '#/admin/courses/co-basic?as=u-admin', '#/admin/classes/cl-basic01?as=u-admin', '#/admin/classes/cl-basic01?tab=report&as=u-admin', '#/teach?as=u-gv', '#/learn?as=u-an', '#/learn/classes/cl-basic01?as=u-an', '#/learn/classes/cl-basic01/lessons/l1?as=u-an',
+  const ROUTES = ['#/login', '#/admin?as=u-admin', '#/admin/stages/st-db?as=u-admin', '#/admin/stages/st-go?v=sv-go-2&as=u-admin', '#/admin/courses/co-basic?as=u-admin', '#/admin/classes/cl-basic01?as=u-admin', '#/admin/classes/cl-basic01?tab=report&as=u-admin', '#/teach?as=u-gv', '#/learn?as=u-an', '#/learn/classes/cl-basic01?as=u-an', '#/learn/classes/cl-basic01/lessons/l1?as=u-an',
     '#/admin/classes/cl-basic01?tab=summary&as=u-admin', '#/admin/classes/cl-basic01?tab=homework&as=u-admin', '#/admin/classes/cl-basic01?tab=quiz&as=u-admin',
     '#/teach/grading?as=u-gv', '#/teach/grading/sub4?as=u-gv', '#/admin/stages/st-ds/lessons/l7?as=u-admin', '#/admin/stages/st-go/lessons/l13?as=u-admin',
-    '#/learn/classes/cl-basic01/summary?as=u-an', '#/learn/classes/cl-basic01/lessons/l14?as=u-an', '#/learn/classes/cl-basic01/lessons/l13?as=u-an', '#/learn/classes/cl-basic01/lessons/l7?as=u-an&result=qa1'];
+    '#/learn/classes/cl-basic01/summary?as=u-an', '#/learn/classes/cl-basic01/lessons/l14?as=u-an', '#/learn/classes/cl-basic01/lessons/l13?as=u-an', '#/learn/classes/cl-basic01/lessons/l7?as=u-an&result=qa1',
+    '#/teach/grading/quiz/qa7?as=u-gv', '#/teach/grading/quiz/qa9?as=u-gv', '#/teach/grading/quiz/qa1?as=u-gv', '#/learn/classes/cl-basic01/lessons/l14?as=u-cuong&result=qa9'];
   await send('Emulation.setDeviceMetricsOverride', { width: 320, height: 812, deviceScaleFactor: 1, mobile: true }, sessionId);
   for (const h of ROUTES) {
     await go(h);
     const r = await ev(`({ inner: window.innerWidth, scroll: document.documentElement.scrollWidth })`);
     check(`320px reflow ${h.split('?')[0]}`, r.inner === 320 && r.scroll <= 320, `innerWidth ${r.inner}, scrollWidth ${r.scroll}`);
   }
+  await go('#/learn/classes/cl-basic01/lessons/l7?as=u-an'); await click('[data-action="start-quiz"]'); await sleep(300);
+  const rf = await ev(`({ scroll: document.documentElement.scrollWidth, map: [...document.querySelectorAll('.qm-btn')].every((b) => b.getBoundingClientRect().width >= 44 && b.getBoundingClientRect().height >= 44) })`);
+  check('320px reflow focus-mode quiz with 44px map buttons', rf.scroll <= 320 && rf.map, JSON.stringify(rf));
+  await go('#/admin/stages/st-db?as=u-admin'); await click('[data-action="reset-data"]'); await submitModal(); await sleep(300);
   await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] }, sessionId);
   await go('#/admin?as=u-admin');
   check('reduced motion removes transitions', (await ev(`getComputedStyle(document.querySelector('.un-btn')).transitionDuration`)) === '0s');

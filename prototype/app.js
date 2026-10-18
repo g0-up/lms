@@ -162,16 +162,18 @@
     if (!code || !name) return err('Nhập mã và tên chặng.');
     if (S.stages.some((s) => s.code === code)) return err(`Mã chặng ${code} đã tồn tại.`);
     const st = { id: uid('st-'), code, name }; S.stages.push(st);
-    S.stageVersions.push({ id: uid('sv-'), stageId: st.id, no: 1, status: 'draft', clonedFrom: null, publishedAt: null, lessons: [] });
+    S.stageVersions.push({ id: uid('sv-'), stageId: st.id, no: 1, status: 'draft', clonedFrom: null, publishedAt: null, units: [], lessons: [] });
     log('Tạo chặng', `${name} (${code})`); save(); return ok({ id: st.id });
   }
   function cloneStage(fromId) {
     const from = sv(fromId); if (from.status === 'draft') return err('Chỉ nhân bản từ phiên bản đã phát hành.');
     const versions = stageVersionsOf(from.stageId); const draft = draftOf(versions);
     if (draft) return err(`Chặng đã có bản nháp ${versionLabel(draft)}.`, draft.id);
+    const unitIds = new Map(from.units.map((u) => [u.id, uid('un-')])); // bài học keep their key, like học liệu
     const v = { id: uid('sv-'), stageId: from.stageId, no: Math.max(...versions.map((x) => x.no)) + 1, status: 'draft', clonedFrom: from.id, publishedAt: null,
+      units: from.units.map((u) => ({ ...u, id: unitIds.get(u.id) })),
       lessons: from.lessons.map((l) => { // same lesson_key; video reference copied, not the file
-        const c = JSON.parse(JSON.stringify(l)); c.id = uid('l-');
+        const c = JSON.parse(JSON.stringify(l)); c.id = uid('l-'); c.unitId = unitIds.get(l.unitId);
         if (c.quiz) c.quiz.questions.forEach((x) => { x.id = uid('q-'); x.options.forEach((o) => { o.id = uid('o-'); }); }); // question keys stay stable
         if (c.homework) c.homework.criteria.forEach((x) => { x.id = uid('c-'); });
         return c; }) };
@@ -195,15 +197,18 @@
     const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
     const title = String(data.title || '').trim(); if (!title) return err('Nhập tiêu đề học liệu.');
     const prev = lessonId ? v.lessons.find((x) => x.id === lessonId) : null;
-    const base = { title, type: data.type, required: !!data.required };
-    if (data.type === 'video') {
+    const unit = v.units.find((u) => u.id === (data.unitId || prev?.unitId)); if (!unit) return err('Chọn bài học cho học liệu.');
+    // The form sends one combined kind ("quiz:practice", "quiz:assessment"); direct callers may pass type and mode apart.
+    const [type, kindMode] = String(data.type || '').split(':');
+    const base = { title, type, required: !!data.required };
+    if (type === 'video') {
       if (!String(data.video || '').trim()) return err('Học liệu video bắt buộc có file video.');
       Object.assign(base, { video: data.video.trim(), duration: data.duration || '—' });
-    } else if (data.type === 'markdown') {
+    } else if (type === 'markdown') {
       if (!String(data.content || '').trim()) return err('Học liệu markdown bắt buộc có nội dung.');
       base.content = data.content;
-    } else if (data.type === 'quiz') {
-      const mode = data.mode === 'assessment' ? 'assessment' : 'practice'; const threshold = Number(data.quizThreshold || 70);
+    } else if (type === 'quiz') {
+      const mode = (kindMode || data.mode) === 'assessment' ? 'assessment' : 'practice'; const threshold = Number(data.quizThreshold || 70);
       if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) return err('Ngưỡng đạt là số nguyên từ 1 đến 100%.');
       let attempts = null, timeLimit = null;
       if (mode === 'assessment') {
@@ -212,19 +217,52 @@
         if (!Number.isInteger(timeLimit) || timeLimit < 1 || timeLimit > 180) return err('Thời gian làm bài từ 1 đến 180 phút.');
       }
       base.quiz = { mode, attempts, timeLimit, threshold, shuffle: !!data.shuffle, questions: prev?.quiz?.questions || [] };
-    } else if (data.type === 'homework') {
+    } else if (type === 'homework') {
       const threshold = Number(data.hwThreshold || 70);
       if (!Number.isInteger(threshold) || threshold < 1 || threshold > 100) return err('Ngưỡng đạt là số nguyên từ 1 đến 100%.');
       base.homework = { brief: String(data.brief || ''), threshold, attachments: String(data.attachments || '').split(',').map((x) => x.trim()).filter(Boolean), criteria: prev?.homework?.criteria || [] };
     } else return err('Chọn loại học liệu.');
-    if (prev) { ['video', 'duration', 'content', 'quiz', 'homework'].forEach((k) => delete prev[k]); Object.assign(prev, base); save(); return ok({ id: prev.id }); }
-    const l = { id: uid('l-'), key: uid('k-'), ...base }; v.lessons.push(l); save(); return ok({ id: l.id });
+    if (prev) {
+      ['video', 'duration', 'content', 'quiz', 'homework'].forEach((k) => delete prev[k]); Object.assign(prev, base);
+      if (prev.unitId !== unit.id) { v.lessons = [...v.lessons.filter((x) => x !== prev), Object.assign(prev, { unitId: unit.id })]; orderByUnit(v); } // moved: goes last in the new bài học
+      save(); return ok({ id: prev.id });
+    }
+    const l = { id: uid('l-'), key: uid('k-'), unitId: unit.id, ...base }; v.lessons.push(l); orderByUnit(v); save(); return ok({ id: l.id });
   }
-  function deleteLesson(svId, lessonId) { const v = sv(svId); const e = assertDraft(v); if (e) return err(e); v.lessons = v.lessons.filter((l) => l.id !== lessonId); save(); return ok(); }
+  function deleteLesson(svId, lessonId) {
+    const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
+    v.lessons = v.lessons.filter((l) => l.id !== lessonId); save(); return ok();
+  }
+  // Within a bài học the học liệu swap places; past its first or last one it moves to the end of the
+  // previous bài học or the start of the next one.
   function moveLesson(svId, lessonId, dir) {
     const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
-    const i = v.lessons.findIndex((l) => l.id === lessonId); const j = i + dir; if (j < 0 || j >= v.lessons.length) return ok();
-    [v.lessons[i], v.lessons[j]] = [v.lessons[j], v.lessons[i]]; save(); return ok();
+    const i = v.lessons.findIndex((l) => l.id === lessonId); const l = v.lessons[i]; const j = i + dir;
+    if (v.lessons[j]?.unitId === l.unitId) { [v.lessons[i], v.lessons[j]] = [v.lessons[j], l]; save(); return ok(); }
+    const u = v.units[v.units.findIndex((x) => x.id === l.unitId) + dir]; if (!u) return ok();
+    l.unitId = u.id; orderByUnit(v); save(); return ok();
+  }
+  // Bài học (FR-78): a stage version groups its học liệu into ordered bài học. v.lessons stays one flat
+  // list kept in bài học order, so progress, attempts and submissions keep keying on the học liệu id.
+  function orderByUnit(v) { v.lessons = v.units.flatMap((u) => v.lessons.filter((l) => l.unitId === u.id)); }
+  const unitsOf = (v) => v.units.map((u) => ({ ...u, lessons: v.lessons.filter((l) => l.unitId === u.id) }));
+  const unitOf = (v, l) => v.units.find((u) => u.id === l.unitId) || null;
+  function saveUnit(svId, unitId, data) {
+    const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
+    const title = String(data.title || '').trim(); if (!title) return err('Nhập tên bài học.');
+    if (v.units.some((u) => u.id !== unitId && u.title.toLowerCase() === title.toLowerCase())) return err(`Chặng đã có bài học "${title}".`);
+    const u = unitId ? v.units.find((x) => x.id === unitId) : null;
+    if (u) u.title = title; else v.units.push({ id: uid('un-'), key: uid('uk-'), title });
+    save(); return ok({ id: u ? u.id : v.units.at(-1).id });
+  }
+  function deleteUnit(svId, unitId) {
+    const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
+    v.units = v.units.filter((u) => u.id !== unitId); v.lessons = v.lessons.filter((l) => l.unitId !== unitId); save(); return ok();
+  }
+  function moveUnit(svId, unitId, dir) {
+    const v = sv(svId); const e = assertDraft(v); if (e) return err(e);
+    const i = v.units.findIndex((u) => u.id === unitId); const j = i + dir; if (j < 0 || j >= v.units.length) return ok();
+    [v.units[i], v.units[j]] = [v.units[j], v.units[i]]; orderByUnit(v); save(); return ok();
   }
 
   // Courses and course versions (FR-14 .. FR-17, FR-19)
@@ -446,6 +484,11 @@
     const pr = progressOf(m.id, l.id);
     return pr?.completedAt ? S_(true, 'done', 'Đã học xong', 'ok') : pr ? S_(false, 'opened', 'Đã mở', 'optional') : S_(false, 'todo', 'Chưa mở', 'optional');
   }
+  // A bài học is complete when every required học liệu in it is complete; one with only optional học liệu has no completion state.
+  function unitProgress(m, u) {
+    const req = u.lessons.filter((l) => l.required); const done = req.filter((l) => lessonStatus(m, l).done).length;
+    return { done, total: req.length, complete: req.length > 0 && done === req.length };
+  }
   function stageSummary(m, svId) {
     const s = sv(svId); const rows = s.lessons.map((l) => ({ l, st: lessonStatus(m, l) }));
     const missing = rows.filter((r) => r.l.required && !r.st.done);
@@ -492,13 +535,38 @@
     const a = byId(S.quizAttempts, attemptId); if (!a || a.status !== 'open') return err('Lượt làm bài này đã được nộp.');
     const late = pastGrace(a);
     Object.assign(a, scoreAttempt(a), { status: 'submitted', submittedAt: late ? a.deadlineAt : nowISO(), autoSubmitted: auto || late });
+    // Assessment attempts wait for the teacher to confirm the auto score; the score counts right away.
+    // A newer attempt replaces an earlier one that is still waiting, so the queue holds one item per student and quiz.
+    if (lessonById(a.lessonId).quiz.mode === 'assessment') {
+      attemptsOf(a.memberId, a.lessonId).forEach((x) => { if (x.id !== a.id && x.review?.status === 'pending') x.review.status = 'superseded'; });
+      a.review = { status: 'pending' };
+    }
     save(); return ok({ id: a.id, late });
+  }
+  // Teacher review of one submitted attempt: overall comment (required) and optional notes per question.
+  // Assessment: confirms the auto score and clears the queue item. Practice: optional feedback, no queue.
+  function reviewAttempt(attemptId, d) {
+    const u = me(); const a = byId(S.quizAttempts, attemptId); if (!a || a.status !== 'submitted') return err('Không tìm thấy lượt làm bài đã nộp.');
+    const m = byId(S.members, a.memberId); const c = cls(m.classId);
+    if (!canGrade(u, c)) return err('Bạn chỉ nhận xét bài của lớp mình phụ trách.');
+    if (a.review?.status === 'superseded') return err('Học viên đã nộp lượt mới hơn. Hãy xác nhận lượt mới nhất.');
+    const comment = String(d.comment || '').trim(); if (!comment) return err('Nhập nhận xét chung cho học viên.');
+    const l = lessonById(a.lessonId); const notes = {};
+    l.quiz.questions.forEach((q) => { const t = String(d['qnote-' + q.id] || '').trim(); if (t) notes[q.id] = t; });
+    const prev = a.review?.status === 'confirmed' ? a.review : null; const at = nowISO();
+    a.review = { status: 'confirmed', by: u.id, at, comment, notes, history: prev ? [...(prev.history || []), { by: prev.by, at: prev.at, comment: prev.comment, notes: prev.notes }] : [] };
+    const stu = user(m.userId); const assess = l.quiz.mode === 'assessment'; const pct = pctOf(a.score, a.max);
+    const verdict = assess ? ` · ${pct}% · ${pct >= l.quiz.threshold ? 'Đạt' : 'Chưa đạt'}` : '';
+    S.emails.unshift({ id: uid('em-'), to: stu.email, kind: 'quizReview', at,
+      subject: `${prev ? 'Nhận xét đã được cập nhật' : assess ? 'Giảng viên đã xác nhận kết quả' : 'Giảng viên đã nhận xét'}: ${shortTitle(l)} lượt #${a.no}${verdict}` });
+    log(prev ? 'Sửa nhận xét quiz' : assess ? 'Xác nhận quiz' : 'Nhận xét quiz', `${stu.name} · ${shortTitle(l)} #${a.no}${verdict}`); save();
+    return ok({ edit: !!prev, assess });
   }
   function sweepExpiredAttempts() { S.quizAttempts.filter((a) => a.status === 'open' && pastGrace(a)).forEach((a) => submitAttempt(a.id, { auto: true })); }
   function grantAttempts(memberId, lessonId, extra, reason) {
     const u = me(); const m = byId(S.members, memberId); const c = m && cls(m.classId);
     if (!canGrade(u, c)) return err('Bạn chỉ cấp thêm lượt cho lớp mình phụ trách.');
-    const l = lessonInClass(c, lessonId); if (!l || l.type !== 'quiz' || l.quiz.mode !== 'assessment') return err('Chỉ cấp thêm lượt cho bài kiểm tra.');
+    const l = lessonInClass(c, lessonId); if (!l || l.type !== 'quiz' || l.quiz.mode !== 'assessment') return err('Chỉ cấp thêm lượt cho quiz bài tập.');
     extra = Number(extra); if (!Number.isInteger(extra) || extra < 1 || extra > 3) return err('Số lượt cấp thêm từ 1 đến 3.');
     reason = String(reason || '').trim(); if (!reason) return err('Nhập lý do cấp thêm lượt. Lý do được lưu vào lịch sử.');
     S.attemptGrants.push({ id: uid('gr-'), memberId, lessonId, extra, reason, by: u.id, at: nowISO() });
@@ -561,18 +629,30 @@
     S.stageReviews[key] = { text, by: u.id, at: nowISO(), history: prev ? [...(prev.history || []), { text: prev.text, by: prev.by, at: prev.at }] : [] };
     log(prev ? 'Sửa nhận xét tổng kết chặng' : 'Nhận xét tổng kết chặng', `${user(m.userId).name} · ${stage(sv(svId).stageId).name}`); save(); return ok();
   }
+  // One queue for homework waiting for a grade and assessment quiz attempts waiting for confirmation, oldest first.
   function gradingQueue(u, f = {}) {
-    return S.submissions.filter((s) => s.status === 'pending').map((s) => {
-      const m = byId(S.members, s.memberId); const c = cls(m.classId);
-      return { s, m, c, student: user(m.userId), lesson: lessonById(s.lessonId), svx: svOfLesson(s.lessonId), waited: daysSince(s.submittedAt), overdue: isOverdueGrading(s) };
-    }).filter((r) => canGrade(u, r.c) && (!f.classId || r.c.id === f.classId) && (!f.lessonId || r.lesson.id === f.lessonId))
-      .sort((a, b) => a.s.submittedAt.localeCompare(b.s.submittedAt));
+    const row = (kind, item, href) => {
+      const m = byId(S.members, item.memberId); const c = cls(m.classId); const at = item.submittedAt; const waited = daysSince(at);
+      return { kind, item, href, at, no: item.no, m, c, student: user(m.userId), lesson: lessonById(item.lessonId), svx: svOfLesson(item.lessonId), waited, overdue: waited > GRADING_SLA_DAYS,
+        s: kind === 'homework' ? item : null, a: kind === 'quiz' ? item : null };
+    };
+    return [
+      ...S.submissions.filter((s) => s.status === 'pending').map((s) => row('homework', s, gradeHref(s.id))),
+      ...S.quizAttempts.filter((a) => a.review?.status === 'pending').map((a) => row('quiz', a, quizReviewHref(a.id)))
+    ].filter((r) => canGrade(u, r.c) && (!f.kind || r.kind === f.kind) && (!f.classId || r.c.id === f.classId) && (!f.lessonId || r.lesson.id === f.lessonId))
+      .sort((a, b) => a.at.localeCompare(b.at));
   }
-  // Per teacher: queue size, items past the grading SLA, and mean hours from submission to first grade.
+  // First time each queue item left the queue: a homework grade or an assessment quiz confirmation.
+  const firstReview = (a) => a.review?.status === 'confirmed' ? (a.review.history?.[0] || a.review) : null;
+  // Per teacher: queue size, items past the grading SLA, and mean hours from submission to first grade or confirmation.
   function teacherBacklog() {
     return S.users.filter((u) => u.role === 'teacher').map((t) => {
-      const q = gradingQueue(t); const firsts = S.submissions.filter((s) => s.grades[0]?.by === t.id);
-      const avgH = firsts.length ? firsts.reduce((a, s) => a + (new Date(s.grades[0].at) - new Date(s.submittedAt)) / 36e5, 0) / firsts.length : null;
+      const q = gradingQueue(t);
+      const waits = [
+        ...S.submissions.filter((s) => s.grades[0]?.by === t.id).map((s) => new Date(s.grades[0].at) - new Date(s.submittedAt)),
+        ...S.quizAttempts.filter((a) => lessonById(a.lessonId).quiz.mode === 'assessment' && firstReview(a)?.by === t.id).map((a) => new Date(firstReview(a).at) - new Date(a.submittedAt))
+      ];
+      const avgH = waits.length ? waits.reduce((x, w) => x + w / 36e5, 0) / waits.length : null;
       return { t, pending: q.length, overdue: q.filter((r) => r.overdue).length, avgH };
     });
   }
@@ -584,7 +664,7 @@
       const items = gradingQueue(t).filter((r) => r.overdue); const key = `digest:${t.id}:${day}`;
       if (!items.length || S.jobRuns[key]) return;
       S.jobRuns[key] = nowISO(); digests++;
-      S.emails.unshift({ id: uid('em-'), to: t.email, kind: 'digest', subject: `${items.length} bài chờ chấm quá ${GRADING_SLA_DAYS} ngày: ${items.map((r) => r.student.name).join(', ')}`, at: nowISO() });
+      S.emails.unshift({ id: uid('em-'), to: t.email, kind: 'digest', subject: `${items.length} bài chờ chấm hoặc xác nhận quá ${GRADING_SLA_DAYS} ngày: ${items.map((r) => `${r.student.name} (${r.kind === 'quiz' ? 'quiz' : 'bài tập'})`).join(', ')}`, at: nowISO() });
     });
     Object.entries(S.deadlines).forEach(([k, due]) => {
       const left = new Date(due) - Date.now(); if (left <= 0 || left > 864e5) return;
@@ -613,10 +693,12 @@
     }
     return [];
   }
-  const stagePublishBlockers = (v) => v.lessons.length ? v.lessons.flatMap(lessonBlockers) : ['Chặng cần ít nhất một học liệu trước khi phát hành.'];
+  const stagePublishBlockers = (v) => !v.units.length ? ['Chặng cần ít nhất một bài học trước khi phát hành.']
+    : [...unitsOf(v).filter((u) => !u.lessons.length).map((u) => `Bài học "${u.title}" chưa có học liệu.`), ...v.lessons.flatMap(lessonBlockers)];
   function editableLesson(svId, lessonId) {
     const v = sv(svId); const e = assertDraft(v); if (e) return { error: e };
-    const l = v.lessons.find((x) => x.id === lessonId); return l ? { v, l } : { error: 'Không tìm thấy học liệu.' };
+    const l = v.lessons.find((x) => x.id === lessonId); if (!l) return { error: 'Không tìm thấy học liệu.' };
+    return { v, l };
   }
   function moveIn(list, id, dir) { const i = list.findIndex((x) => x.id === id); const j = i + dir; if (i < 0 || j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; }
   function saveQuestion(svId, lessonId, qid, d) {
@@ -702,11 +784,13 @@
   const field = (label, control, { help = '', required = false, error = '' } = {}) => `<div class="field${error ? ' has-error' : ''}"><label>${esc(label)}${required ? '<span class="req" aria-hidden="true">*</span>' : ''}${control}</label>${help ? `<div class="help">${help}</div>` : ''}${error ? `<div class="error">${esc(error)}</div>` : ''}</div>`;
   const selectOpts = (opts, value) => opts.map((o) => `<option value="${esc(o.value)}" ${o.value === value ? 'selected' : ''} ${o.disabled ? 'disabled' : ''}>${esc(o.label)}</option>`).join('');
   const stBadge = (st) => `<span class="badge badge-${st.tone}">${esc(st.label)}</span>`;
+  // Product names for the two quiz modes: practice belongs to the learning materials, assessment is an assignment.
+  const QUIZ_KIND = { practice: 'Quiz học liệu', assessment: 'Quiz bài tập' };
   const mdInline = (t) => esc(t).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   function lessonMeta(l) {
     if (l.type === 'video') return `Video · ${esc(l.video)} · ${esc(l.duration || '')}`;
     if (l.type === 'markdown') return `Bài đọc · ${(l.content || '').length} ký tự`;
-    if (l.type === 'quiz') { const z = l.quiz; return `Quiz ${z.mode === 'assessment' ? 'kiểm tra' : 'luyện tập'} · ${z.questions.length} câu · đạt từ ${z.threshold}%${z.mode === 'assessment' ? ` · ${z.attempts} lượt · ${z.timeLimit} phút` : ' · không giới hạn lượt'}`; }
+    if (l.type === 'quiz') { const z = l.quiz; return `${QUIZ_KIND[z.mode]} · ${z.questions.length} câu · đạt từ ${z.threshold}%${z.mode === 'assessment' ? ` · ${z.attempts} lượt · ${z.timeLimit} phút` : ' · không giới hạn lượt'}`; }
     return `Bài tập · ${l.homework.criteria.length} tiêu chí · ${hwMax(l.homework)} điểm · đạt từ ${l.homework.threshold}%`;
   }
   const toLocalInput = (iso) => { if (!iso) return ''; const d = new Date(iso); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
@@ -718,9 +802,19 @@
     return ms >= 0 ? `còn ${span}` : `quá hạn ${span}`;
   }
   const gradeHref = (subId) => `${me()?.role === 'admin' ? '#/admin' : '#/teach'}/grading/${subId}`;
+  const quizReviewHref = (attemptId) => `${me()?.role === 'admin' ? '#/admin' : '#/teach'}/grading/quiz/${attemptId}`;
+  // Teacher review state of one submitted attempt, or null when there is nothing to show.
+  function reviewState(a) {
+    const assess = lessonById(a.lessonId).quiz.mode === 'assessment'; const st = a.review?.status;
+    if (st === 'pending') return { tone: 'info', label: 'Chờ xác nhận' };
+    if (st === 'superseded') return { tone: 'optional', label: 'Đã có lượt mới hơn' };
+    if (st === 'confirmed') return { tone: 'ok', label: assess ? 'Đã xác nhận' : 'Đã nhận xét' };
+    return null;
+  }
   const go = (hash) => { if (location.hash === hash) render(); else location.hash = hash; };
-  const EMAIL_KIND = { graded: 'Kết quả chấm', digest: 'Tổng hợp chấm bài', reminder: 'Nhắc hạn nộp' };
+  const EMAIL_KIND = { graded: 'Kết quả chấm', quizReview: 'Nhận xét quiz', digest: 'Tổng hợp chấm bài', reminder: 'Nhắc hạn nộp' };
   let quizTimer = null;
+  const quizPos = {}; // current question index per open attempt, kept in memory while the student takes a quiz
 
   /* --------------------------------------------------------- routing */
   const homeFor = (u) => ({ admin: '#/admin', teacher: '#/teach', student: '#/learn' }[u.role]);
@@ -739,6 +833,7 @@
     { re: /^\/admin\/stages\/([^/]+)$/, page: pageStageDetail, roles: ['admin'] },
     { re: /^\/admin\/stages\/([^/]+)\/lessons\/([^/]+)$/, page: pageLessonEditor, roles: ['admin'] },
     { re: /^\/admin\/grading$/, page: pageGrading, roles: ['admin'] },
+    { re: /^\/admin\/grading\/quiz\/([^/]+)$/, page: pageReviewAttempt, roles: ['admin'] },
     { re: /^\/admin\/grading\/([^/]+)$/, page: pageGradeSubmission, roles: ['admin'] },
     { re: /^\/admin\/courses$/, page: pageCourses, roles: ['admin'] },
     { re: /^\/admin\/courses\/([^/]+)$/, page: pageCourseDetail, roles: ['admin'] },
@@ -747,6 +842,7 @@
     { re: /^\/teach$/, page: pageTeachClasses, roles: ['teacher'] },
     { re: /^\/teach\/classes\/([^/]+)$/, page: pageTeachClass, roles: ['teacher'] },
     { re: /^\/teach\/grading$/, page: pageGrading, roles: ['teacher'] },
+    { re: /^\/teach\/grading\/quiz\/([^/]+)$/, page: pageReviewAttempt, roles: ['teacher'] },
     { re: /^\/teach\/grading\/([^/]+)$/, page: pageGradeSubmission, roles: ['teacher'] },
     { re: /^\/learn$/, page: pageLearn, roles: ['student'] },
     { re: /^\/learn\/classes\/([^/]+)$/, page: pageLearnClass, roles: ['student'] },
@@ -787,9 +883,9 @@
   function shell(u, path, content) {
     const pending = u.role === 'student' ? 0 : gradingQueue(u).length;
     const navItems = NAV[u.role].map(([href, label]) => { const cur = path === href.slice(1) || (href !== homeFor(u) && path.startsWith(href.slice(1) + '/'));
-      const count = href.endsWith('/grading') && pending ? `<span class="nav-count">${pending}<span class="sr-only"> bài chờ chấm</span></span>` : '';
+      const count = href.endsWith('/grading') && pending ? `<span class="nav-count">${pending}<span class="sr-only"> bài chờ chấm hoặc xác nhận</span></span>` : '';
       return `<a href="${href}" ${cur ? 'aria-current="page"' : ''}>${label}${count}</a>`; }).join('');
-    const roleOpts = [['u-admin', 'Admin · Trần Minh Quân'], ['u-gv', 'Giảng viên · Lê Thu Hương'], ['u-gv2', 'Giảng viên · Phạm Quốc Bảo'], ['u-an', 'Học viên · Nguyễn Hoàng An'], ['u-cuong', 'Học viên · Lê Văn Cường'], ['u-phong', 'Học viên · Đặng Hải Phong']]
+    const roleOpts = [['u-admin', 'Admin · Trần Minh Quân'], ['u-gv', 'Giảng viên · Lê Thu Hương'], ['u-gv2', 'Giảng viên · Phạm Quốc Bảo'], ['u-an', 'Học viên · Nguyễn Hoàng An'], ['u-bich', 'Học viên · Trần Thị Bích'], ['u-cuong', 'Học viên · Lê Văn Cường'], ['u-phong', 'Học viên · Đặng Hải Phong'], ['u-linh', 'Học viên · Đỗ Ngọc Linh']]
       .filter(([id]) => user(id)).map(([id, l]) => `<option value="${id}" ${u.id === id ? 'selected' : ''}>${l}</option>`).join('');
     return `<header class="topbar"><div class="topbar-inner">
       <button class="icon-btn nav-toggle" data-action="toggle-nav" aria-label="Mở menu" aria-expanded="false">${icon('menu')}</button>
@@ -878,15 +974,16 @@
   /* Walkthrough of the homework, quiz and summary flows: each step opens the right screen as the right person. */
   function sprint2Guide() {
     const steps = [
-      ['Học viên <b>An</b> làm quiz kiểm tra Go (15 phút, đồng hồ đếm ngược, tự lưu) và nộp bài tập Đọc CSV.', '#/learn/classes/cl-basic01?as=u-an', 'Mở lộ trình của An'],
-      ['Giảng viên <b>Hương</b> mở hàng chờ chấm: bài quá 3 ngày nổi lên đầu. Chấm theo rubric, học viên nhận email kết quả.', '#/teach/grading?as=u-gv', 'Mở hàng chờ chấm'],
-      ['<b>Cường</b> đã dùng hết 2 lượt quiz kiểm tra Go. Cấp thêm lượt kèm lý do; lý do vào lịch sử.', '#/teach/classes/cl-basic01?tab=quiz&as=u-gv', 'Mở thống kê quiz'],
+      ['<b>Admin</b> soạn quiz học liệu và quiz bài tập trong bản nháp Golang basic v2, rồi phát hành. Giảng viên không soạn quiz.', '#/admin/stages/st-go?as=u-admin', 'Mở chặng Golang basic'],
+      ['Học viên <b>An</b> làm Quiz bài tập Go từng câu một (15 phút, đồng hồ đếm ngược, tự lưu) và nộp bài tập Đọc CSV.', '#/learn/classes/cl-basic01?as=u-an', 'Mở lộ trình của An'],
+      ['Hương mở hàng chờ chấm: bài tập chờ chấm và Quiz bài tập chờ xác nhận nằm chung, bài quá 3 ngày nổi lên đầu. Xác nhận kèm nhận xét, học viên nhận email.', '#/teach/grading?as=u-gv', 'Mở hàng chờ chấm'],
+      ['<b>Cường</b> đã dùng hết 2 lượt Quiz bài tập Go. Cấp thêm lượt kèm lý do; lý do vào lịch sử.', '#/teach/classes/cl-basic01?tab=quiz&as=u-gv', 'Mở thống kê quiz'],
       ['Đặt hoặc đổi hạn nộp bài tập cho riêng lớp basic01; thay đổi được ghi nhật ký.', '#/teach/classes/cl-basic01?tab=homework&as=u-gv', 'Mở bài tập của lớp'],
       ['Xem ma trận tổng kết học viên × chặng, lọc người cần làm lại, viết nhận xét chặng.', '#/teach/classes/cl-basic01?tab=summary&as=u-gv', 'Mở tổng kết lớp'],
       ['Chạy tác vụ email hằng ngày: giảng viên có bài quá hạn chấm nhận bản tổng hợp, học viên sắp hết hạn nộp nhận lời nhắc.', '#/admin?as=u-admin', 'Về Tổng quan']
     ];
     return `<details class="card guide">
-      <summary><span class="guide-title">${icon('clipboard-check')}Kịch bản Sprint 2: quiz, bài tập, chấm bài và tổng kết chặng</span><span class="guide-hint">6 bước · khoảng 5 phút</span></summary>
+      <summary><span class="guide-title">${icon('clipboard-check')}Kịch bản Sprint 2: quiz, bài tập, chấm bài và tổng kết chặng</span><span class="guide-hint">7 bước · khoảng 6 phút</span></summary>
       <div class="guide-body">
         <ol class="guide-steps">${steps.map(([text, href, label]) => `<li><span>${text}</span><a class="un-btn un-btn-ghost un-btn-sm" href="${href}">${label}</a></li>`).join('')}</ol>
         <p class="small muted">Các giá trị đánh dấu [đề xuất] trong bản mẫu là mặc định tạm cho câu hỏi còn mở của spec, cần chốt trước khi làm thật.</p>
@@ -896,7 +993,7 @@
   function backlogCard() {
     const rows = teacherBacklog();
     return `<section class="card"><div class="card-head"><h2>Tồn đọng chấm bài</h2><a class="un-btn un-btn-ghost un-btn-sm" href="#/admin/grading">Hàng chờ chấm</a></div>
-      <div class="table-wrap"><table><thead><tr><th>Giảng viên</th><th class="num">Chờ chấm</th><th class="num">Quá ${GRADING_SLA_DAYS} ngày</th><th class="num">TG chấm TB</th></tr></thead><tbody>
+      <div class="table-wrap"><table><thead><tr><th>Giảng viên</th><th class="num">Chờ chấm, xác nhận</th><th class="num">Quá ${GRADING_SLA_DAYS} ngày</th><th class="num">TG chấm TB</th></tr></thead><tbody>
       ${rows.map((r) => `<tr><td>${esc(r.t.name)}</td><td class="num">${r.pending}</td><td class="num">${r.overdue ? `<span class="badge badge-danger">${r.overdue}</span>` : '0'}</td><td class="num">${r.avgH == null ? '—' : r.avgH < 24 ? `${Math.round(r.avgH)} giờ` : `${(r.avgH / 24).toFixed(1)} ngày`}</td></tr>`).join('')}
       </tbody></table></div></section>`;
   }
@@ -917,7 +1014,7 @@
     const alerts = [
       ...outdated.map((o) => `<div class="alert alert-warn">${icon('alert')}<div class="alert-body"><strong>${esc(o.course.name)} ${versionLabel(o.cv)}</strong> vẫn dùng ${esc(o.stage.name)} ${versionLabel(o.used)} trong khi ${versionLabel(o.latest)} đã phát hành.<div class="alert-actions"><a class="un-btn un-btn-secondary un-btn-sm" href="#/admin/stages/${o.stage.id}?v=${o.latest.id}">Xem và áp dụng</a></div></div></div>`),
       ...(failed ? [`<div class="alert alert-danger">${icon('mail')}<div class="alert-body"><strong>${failed} lời mời gửi thất bại.</strong> Kiểm tra email học viên rồi gửi lại trong trang lớp.</div></div>`] : []),
-      ...(lateGrading ? [`<div class="alert alert-danger">${icon('clock')}<div class="alert-body"><strong>${lateGrading} bài chờ chấm quá ${GRADING_SLA_DAYS} ngày.</strong> Học viên đang chờ phản hồi để làm tiếp.<div class="alert-actions"><a class="un-btn un-btn-secondary un-btn-sm" href="#/admin/grading?overdue=1">Xem bài quá hạn chấm</a></div></div></div>`] : [])
+      ...(lateGrading ? [`<div class="alert alert-danger">${icon('clock')}<div class="alert-body"><strong>${lateGrading} bài chờ chấm hoặc xác nhận quá ${GRADING_SLA_DAYS} ngày.</strong> Học viên đang chờ phản hồi để làm tiếp.<div class="alert-actions"><a class="un-btn un-btn-secondary un-btn-sm" href="#/admin/grading?overdue=1">Xem bài quá hạn chấm</a></div></div></div>`] : [])
     ].join('');
     const audit = S.audit.slice().sort((a, b) => b.at.localeCompare(a.at)).slice(0, 8);
     return { title: 'Tổng quan', html: `${pageHead('Tổng quan', { lede: 'Tình trạng các lớp đang chạy và việc cần xử lý.' })}
@@ -966,14 +1063,20 @@
     const actions = isDraft
       ? `<button class="un-btn un-btn-secondary" data-action="delete-sv" data-id="${v.id}">${icon('trash')} Xóa bản nháp</button><button class="un-btn un-btn-primary" data-action="publish-sv" data-id="${v.id}" ${blockers.length ? `aria-disabled="true" title="${esc(blockers[0])}"` : ''}>${icon('check')} Phát hành ${versionLabel(v)}</button>`
       : `${v.status === 'published' ? `<button class="un-btn un-btn-secondary" data-action="archive-sv" data-id="${v.id}">${icon('archive')} Lưu trữ</button>` : ''}<button class="un-btn un-btn-secondary" data-action="delete-sv" data-id="${v.id}" ${deleteBlock ? `aria-disabled="true" title="${esc(deleteBlock)}"` : ''}>${icon('trash')} Xóa</button>${draft ? `<a class="un-btn un-btn-navy" href="${href(draft)}">${icon('pencil')} Mở bản nháp ${versionLabel(draft)}</a>` : `<button class="un-btn un-btn-navy" data-action="clone-sv" data-id="${v.id}">${icon('copy')} Nhân bản thành bản nháp</button>`}`;
-    const lessons = v.lessons.length ? v.lessons.map((l, i) => { const graded = l.type === 'quiz' || l.type === 'homework'; const lb = isDraft ? lessonBlockers(l) : [];
+    const units = unitsOf(v); const last = v.lessons.at(-1);
+    const lessonRow = (l, ord) => { const graded = l.type === 'quiz' || l.type === 'homework'; const lb = isDraft ? lessonBlockers(l) : [];
       const edHref = `#/admin/stages/${s.id}/lessons/${l.id}?v=${v.id}`;
       return `<li>
-        <span class="ord">${i + 1}</span><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span>
+        <span class="ord">${ord}</span><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span>
         <div class="grow"><div class="title">${graded ? `<a href="${edHref}">${esc(l.title)}</a>` : esc(l.title)}</div><div class="meta"><span>${lessonMeta(l)}</span>${l.required ? '' : '<span class="badge badge-optional">Không bắt buộc</span>'}${lb.length ? `<span class="badge badge-warn">${icon('alert')} Chưa đủ để phát hành</span>` : ''}<span class="muted">key ${esc(l.key)}</span></div></div>
         ${graded ? `<a class="un-btn un-btn-ghost un-btn-sm" href="${edHref}">${isDraft ? (l.type === 'quiz' ? 'Soạn câu hỏi' : 'Soạn tiêu chí') : 'Xem chi tiết'}</a>` : ''}
-        ${isDraft ? `<div class="inline-actions"><button class="icon-btn" data-action="move-lesson" data-sv="${v.id}" data-id="${l.id}" data-dir="-1" aria-label="Chuyển lên" ${i === 0 ? 'disabled' : ''}>${icon('chevron-up')}</button><button class="icon-btn" data-action="move-lesson" data-sv="${v.id}" data-id="${l.id}" data-dir="1" aria-label="Chuyển xuống" ${i === v.lessons.length - 1 ? 'disabled' : ''}>${icon('chevron-down')}</button><button class="icon-btn" data-action="edit-lesson" data-sv="${v.id}" data-id="${l.id}" aria-label="Sửa">${icon('pencil')}</button><button class="icon-btn" data-action="delete-lesson" data-sv="${v.id}" data-id="${l.id}" aria-label="Xóa">${icon('trash')}</button></div>` : ''}
-      </li>`; }).join('') : `<li>${empty('Chưa có học liệu', isDraft ? 'Thêm video, bài đọc, quiz hoặc bài tập để phát hành chặng này.' : 'Phiên bản này không có học liệu.')}</li>`;
+        ${isDraft ? `<div class="inline-actions"><button class="icon-btn" data-action="move-lesson" data-sv="${v.id}" data-id="${l.id}" data-dir="-1" aria-label="Chuyển lên: ${esc(l.title)}" ${l === v.lessons[0] ? 'disabled' : ''}>${icon('chevron-up')}</button><button class="icon-btn" data-action="move-lesson" data-sv="${v.id}" data-id="${l.id}" data-dir="1" aria-label="Chuyển xuống: ${esc(l.title)}" ${l === last ? 'disabled' : ''}>${icon('chevron-down')}</button><button class="icon-btn" data-action="edit-lesson" data-sv="${v.id}" data-id="${l.id}" aria-label="Sửa: ${esc(l.title)}">${icon('pencil')}</button><button class="icon-btn" data-action="delete-lesson" data-sv="${v.id}" data-id="${l.id}" aria-label="Xóa: ${esc(l.title)}">${icon('trash')}</button></div>` : ''}
+      </li>`; };
+    const unitsHtml = units.length ? units.map((u, i) => `<section class="unit" data-unit="${u.id}" aria-labelledby="unit-${u.id}">
+        <div class="unit-head"><span class="ord">${i + 1}</span><div class="grow"><h3 id="unit-${u.id}">${esc(u.title)}</h3><div class="meta small muted"><span>${u.lessons.length} học liệu · ${u.lessons.filter((l) => l.required).length} bắt buộc</span><span>key ${esc(u.key)}</span></div></div>
+          ${isDraft ? `<div class="inline-actions"><button class="un-btn un-btn-secondary un-btn-sm" data-action="new-lesson" data-sv="${v.id}" data-unit="${u.id}">${icon('plus')} Thêm học liệu</button><button class="icon-btn" data-action="move-unit" data-sv="${v.id}" data-id="${u.id}" data-dir="-1" aria-label="Chuyển bài học lên: ${esc(u.title)}" ${i === 0 ? 'disabled' : ''}>${icon('chevron-up')}</button><button class="icon-btn" data-action="move-unit" data-sv="${v.id}" data-id="${u.id}" data-dir="1" aria-label="Chuyển bài học xuống: ${esc(u.title)}" ${i === units.length - 1 ? 'disabled' : ''}>${icon('chevron-down')}</button><button class="icon-btn" data-action="edit-unit" data-sv="${v.id}" data-id="${u.id}" aria-label="Đổi tên bài học: ${esc(u.title)}">${icon('pencil')}</button><button class="icon-btn" data-action="delete-unit" data-sv="${v.id}" data-id="${u.id}" aria-label="Xóa bài học: ${esc(u.title)}">${icon('trash')}</button></div>` : ''}</div>
+        <ul class="list">${u.lessons.length ? u.lessons.map((l, j) => lessonRow(l, `${i + 1}.${j + 1}`)).join('') : `<li class="small muted">${isDraft ? 'Bài học chưa có học liệu. Bấm "Thêm học liệu" để thêm video, bài đọc, quiz hoặc bài tập.' : 'Bài học không có học liệu.'}</li>`}</ul></section>`).join('')
+      : `<div>${empty('Chưa có bài học', isDraft ? 'Tạo bài học trước, rồi thêm video, bài đọc, quiz hoặc bài tập vào từng bài học.' : 'Phiên bản này không có học liệu.')}</div>`;
     const blockersHtml = blockers.length ? `<div class="alert alert-warn">${icon('alert')}<div class="alert-body"><strong>Chưa phát hành được ${versionLabel(v)}:</strong><ul class="alert-list">${blockers.map((b) => `<li>${esc(b)}</li>`).join('')}</ul></div></div>` : '';
     const outdatedHtml = outdated.length ? `<section class="card"><div class="card-head"><h2>Khóa học đang dùng phiên bản cũ của chặng này</h2></div><ul class="list">${outdated.map((o) => `<li><div class="grow"><a class="title" href="#/admin/courses/${o.course.id}?v=${o.cv.id}">${esc(o.course.name)} ${versionLabel(o.cv)}</a><div class="meta"><span>Đang dùng ${esc(s.name)} ${versionLabel(o.used)}</span>${o.blocked ? `<span class="badge badge-warn">${esc(o.blocked)}</span>` : ''}</div></div><button class="un-btn un-btn-primary un-btn-sm" data-action="apply-sv" data-sv="${v.id}" data-course="${o.course.id}" ${o.blocked ? 'aria-disabled="true"' : ''}>Áp dụng ${versionLabel(v)}</button></li>`).join('')}</ul></section>` : (latest && v.id === latest.id && S.courses.length ? `<div class="alert alert-ok">${icon('check-circle')}<div class="alert-body">Mọi khóa học đã phát hành đều dùng phiên bản mới nhất của chặng này.</div></div>` : '');
     const usedHtml = `<section class="card"><div class="card-head"><h2>Đang được dùng ở</h2></div>${refs.length ? `<ul class="list">${refs.map((c) => `<li><div class="grow"><a class="title" href="#/admin/courses/${c.courseId}?v=${c.id}">${esc(course(c.courseId).name)} ${versionLabel(c)}</a><div class="meta">${badge(c.status)}<span>${classesUsingCV(c.id).map((x) => x.code).join(', ') || 'chưa có lớp'}</span></div></div></li>`).join('')}</ul>` : `<div class="card-body muted small">Chưa có khóa học nào dùng ${versionLabel(v)}.${classes.length ? '' : ''}</div>`}</section>`;
@@ -981,17 +1084,16 @@
       <div class="stack">
         <div class="card card-pad row-between"><div class="row"><span class="section-label">Phiên bản</span>${lineage(vs, href, v.id)}</div><div class="row small muted">${v.status === 'published' ? `Phát hành ${fmtDateTime(v.publishedAt)}` : v.status === 'draft' ? (v.clonedFrom ? `Nhân bản từ ${versionLabel(sv(v.clonedFrom))}` : 'Bản nháp đầu tiên') : 'Đã lưu trữ'}</div></div>
         ${blockersHtml}
-        <section class="card"><div class="card-head"><div class="row"><h2>Học liệu của ${versionLabel(v)}</h2>${badge(v.status)}</div><div class="row">${isDraft ? `<button class="un-btn un-btn-secondary un-btn-sm" data-action="new-lesson" data-sv="${v.id}">${icon('plus')} Thêm học liệu</button>` : `<span class="small muted">${icon('lock')} Không sửa được</span>`}</div></div><ul class="list">${lessons}</ul>
-          <div class="complete-bar"><span class="small muted">${v.lessons.filter((l) => l.required).length} bắt buộc · ${v.lessons.filter((l) => !l.required).length} tùy chọn</span><div class="row">${actions}</div></div></section>
+        <section class="card"><div class="card-head"><div class="row"><h2>Học liệu của ${versionLabel(v)}</h2>${badge(v.status)}</div><div class="row">${isDraft ? `<button class="un-btn un-btn-secondary un-btn-sm" data-action="new-unit" data-sv="${v.id}">${icon('plus')} Thêm bài học</button>` : `<span class="small muted">${icon('lock')} Không sửa được</span>`}</div></div><div class="units">${unitsHtml}</div>
+          <div class="complete-bar"><span class="small muted">${units.length} bài học · ${v.lessons.filter((l) => l.required).length} học liệu bắt buộc · ${v.lessons.filter((l) => !l.required).length} tùy chọn</span><div class="row">${actions}</div></div></section>
         ${outdatedHtml}
         ${usedHtml}
       </div>` };
   }
 
   function pageLessonEditor([stageId, lessonId]) {
-    const v = svOfLesson(lessonId); const s = stage(stageId);
+    const v = svOfLesson(lessonId); const s = stage(stageId); const l = v?.lessons.find((x) => x.id === lessonId);
     if (!v || !s || v.stageId !== s.id) { location.hash = s ? `#/admin/stages/${s.id}` : '#/admin/stages'; return null; }
-    const l = v.lessons.find((x) => x.id === lessonId);
     if (l.type !== 'quiz' && l.type !== 'homework') { location.hash = `#/admin/stages/${s.id}?v=${v.id}`; return null; }
     const isDraft = v.status === 'draft'; const blockers = isDraft ? lessonBlockers(l) : [];
     const data = `data-sv="${v.id}" data-lesson="${l.id}"`;
@@ -1000,7 +1102,7 @@
     let settings, body;
     if (l.type === 'quiz') {
       const z = l.quiz; const total = z.questions.reduce((a, x) => a + x.points, 0);
-      settings = `<dl class="facts">${fact('Chế độ', z.mode === 'assessment' ? 'Kiểm tra (tính vào tiến độ)' : 'Luyện tập')}${fact('Ngưỡng đạt', `${z.threshold}%`)}${fact('Số lượt', z.attempts == null ? 'Không giới hạn' : `${z.attempts} lượt`)}${fact('Thời gian', z.timeLimit ? `${z.timeLimit} phút` : 'Không giới hạn')}${fact('Xáo trộn', z.shuffle ? 'Câu hỏi và phương án' : 'Giữ thứ tự soạn')}${fact('Cách chấm', 'Đúng toàn bộ phương án mới được điểm câu')}</dl>
+      settings = `<dl class="facts">${fact('Loại quiz', z.mode === 'assessment' ? `${QUIZ_KIND.assessment} (tính vào tiến độ)` : `${QUIZ_KIND.practice} (luyện tập)`)}${fact('Ngưỡng đạt', `${z.threshold}%`)}${fact('Số lượt', z.attempts == null ? 'Không giới hạn' : `${z.attempts} lượt`)}${fact('Thời gian', z.timeLimit ? `${z.timeLimit} phút` : 'Không giới hạn')}${fact('Xáo trộn', z.shuffle ? 'Câu hỏi và phương án' : 'Giữ thứ tự soạn')}${fact('Cách chấm', 'Đúng toàn bộ phương án mới được điểm câu')}${fact('Giảng viên', z.mode === 'assessment' ? 'Xác nhận từng lượt nộp trong hàng chờ chấm' : 'Xem và nhận xét khi cần')}</dl>
         ${z.mode === 'assessment' ? `<p class="small muted">Sau khi nộp, học viên chỉ thấy điểm và kết quả Đạt hoặc Chưa đạt, không thấy đáp án <span class="badge badge-optional">đề xuất</span>. Lượt tốt nhất được tính.</p>` : '<p class="small muted">Sau khi nộp, học viên thấy đáp án đúng và giải thích từng câu.</p>'}`;
       body = `<section class="card"><div class="card-head"><h2>Câu hỏi <span class="muted small">${z.questions.length} câu · ${total} điểm</span></h2>${isDraft ? `<button class="un-btn un-btn-secondary un-btn-sm" data-action="new-question" ${data}>${icon('plus')} Thêm câu hỏi</button>` : ''}</div>
         ${z.questions.length ? `<ol class="list q-list">${z.questions.map((x, i) => `<li><span class="ord">${i + 1}</span><div class="grow stack-sm">
@@ -1021,7 +1123,8 @@
             <tfoot><tr><th></th><th>Tổng</th><th class="num">${max}</th>${isDraft ? '<th></th>' : ''}</tr></tfoot></table></div>`
           : empty('Chưa có tiêu chí', 'Bài tập cần ít nhất một tiêu chí chấm trước khi phát hành chặng.', isDraft ? `<button class="un-btn un-btn-primary un-btn-sm" data-action="new-criterion" ${data}>${icon('plus')} Thêm tiêu chí đầu tiên</button>` : '')}</section>`;
     }
-    return { title: l.title, html: `${pageHead(l.title, { crumbsHtml: crumbs([['Chặng', '#/admin/stages'], [`${s.name} ${versionLabel(v)}`, `#/admin/stages/${s.id}?v=${v.id}`], [l.title]]),
+    const trail = [['Chặng', '#/admin/stages'], [`${s.name} ${versionLabel(v)}`, `#/admin/stages/${s.id}?v=${v.id}`], [unitOf(v, l).title, `#/admin/stages/${s.id}?v=${v.id}`], [l.title]];
+    return { title: l.title, html: `${pageHead(l.title, { crumbsHtml: crumbs(trail),
         badges: `<span class="badge badge-optional">${TYPE_VI[l.type]}</span>${badge(v.status)}${l.required ? '' : '<span class="badge badge-optional">Không bắt buộc</span>'}`,
         lede: lessonMeta(l), actions: isDraft ? `<button class="un-btn un-btn-secondary" data-action="edit-lesson" data-sv="${v.id}" data-id="${l.id}">${icon('pencil')} Sửa thiết lập</button>` : '' })}
       <div class="stack">
@@ -1091,8 +1194,8 @@
   }
   const CLASS_TABS = { students: 'Học viên', report: 'Tiến độ', summary: 'Tổng kết', homework: 'Bài tập', quiz: 'Quiz', settings: 'Cài đặt' };
   function classTabs(c, base, keys, tab) {
-    const waiting = gradingQueue(me(), { classId: c.id }).length;
-    const count = (k) => k === 'students' ? `<span class="count">${activeMembersOf(c.id).length}</span>` : k === 'homework' && waiting ? `<span class="count">${waiting}<span class="sr-only"> bài chờ chấm</span></span>` : '';
+    const q_ = gradingQueue(me(), { classId: c.id }); const waiting = { homework: q_.filter((r) => r.kind === 'homework').length, quiz: q_.filter((r) => r.kind === 'quiz').length };
+    const count = (k) => k === 'students' ? `<span class="count">${activeMembersOf(c.id).length}</span>` : waiting[k] ? `<span class="count">${waiting[k]}<span class="sr-only"> ${k === 'quiz' ? 'lượt chờ xác nhận' : 'bài chờ chấm'}</span></span>` : '';
     return `<nav class="tabs" aria-label="Mục của lớp">${keys.map((k) => `<a href="${base}?tab=${k}" ${tab === k ? 'aria-current="page"' : ''}>${CLASS_TABS[k]}${count(k)}</a>`).join('')}</nav>`;
   }
   // Tabs shared by the admin and teacher views of a class; the teacher sees the same data for their own classes.
@@ -1195,13 +1298,18 @@
       const tried = ms.filter((m) => doneAttempts(m.id, l.id).length); const passed = ms.filter((m) => lessonStatus(m, l).done).length;
       const avg = tried.length ? Math.round(tried.reduce((a, m) => { const b = quizBest(m.id, l.id); return a + pctOf(b.score, b.max); }, 0) / tried.length) : null;
       const grants = S.attemptGrants.filter((g) => g.lessonId === l.id && ms.some((m) => m.id === g.memberId)).sort((a, b) => b.at.localeCompare(a.at));
-      const memberTable = z.mode !== 'assessment' ? '' : `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th class="num">Lượt đã dùng</th><th class="num">Tốt nhất</th><th>Trạng thái</th><th class="cell-actions">Thao tác</th></tr></thead><tbody>
-        ${ms.map((m) => { const stu = user(m.userId); const used = attemptsOf(m.id, l.id).length; const lim = attemptLimit(m.id, l); const b = quizBest(m.id, l.id); const status = lessonStatus(m, l); const out = used >= lim && !status.done;
-          return `<tr><td><div class="cell-2"><span class="primary">${esc(stu.name)}</span><span class="secondary">${esc(stu.email)}</span></div></td><td class="num">${used}/${lim}</td><td class="num">${b ? `${pctOf(b.score, b.max)}%` : '—'}</td><td>${stBadge(status)}</td>
-            <td class="cell-actions">${canGrade(u, c) && !status.done ? `<button class="un-btn ${out ? 'un-btn-secondary' : 'un-btn-ghost'} un-btn-sm" data-action="grant-attempts" data-member="${m.id}" data-lesson="${l.id}" ${c.status === 'active' ? '' : 'aria-disabled="true" title="Lớp không ở trạng thái đang chạy"'}>${icon('plus')} Cấp thêm lượt</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div>
+      const assess = z.mode === 'assessment';
+      const memberTable = `<div class="table-wrap"><table><thead><tr><th>Học viên</th><th class="num">Lượt đã dùng</th><th class="num">Tốt nhất</th><th>Trạng thái</th><th>Lượt gần nhất</th><th class="cell-actions">Thao tác</th></tr></thead><tbody>
+        ${ms.map((m) => { const stu = user(m.userId); const done = doneAttempts(m.id, l.id); const last = done[done.length - 1]; const used = attemptsOf(m.id, l.id).length; const lim = attemptLimit(m.id, l); const b = quizBest(m.id, l.id); const status = lessonStatus(m, l); const out = lim != null && used >= lim && !status.done;
+          const rs = last && reviewState(last); const waiting = last?.review?.status === 'pending';
+          const view = last && canGrade(u, c) ? `<a class="un-btn ${waiting ? 'un-btn-primary' : 'un-btn-ghost'} un-btn-sm" href="${quizReviewHref(last.id)}" aria-label="${waiting ? 'Xác nhận' : assess ? 'Xem' : 'Xem và nhận xét'} lượt #${last.no} của ${esc(stu.name)}">${waiting ? 'Xác nhận' : assess ? 'Xem' : 'Xem, nhận xét'}</a>` : '';
+          const grant = assess && canGrade(u, c) && !status.done ? `<button class="un-btn ${out ? 'un-btn-secondary' : 'un-btn-ghost'} un-btn-sm" data-action="grant-attempts" data-member="${m.id}" data-lesson="${l.id}" ${c.status === 'active' ? '' : 'aria-disabled="true" title="Lớp không ở trạng thái đang chạy"'}>${icon('plus')} Cấp thêm lượt</button>` : '';
+          return `<tr><td><div class="cell-2"><span class="primary">${esc(stu.name)}</span><span class="secondary">${esc(stu.email)}</span></div></td><td class="num">${used}${lim != null ? `/${lim}` : ''}</td><td class="num">${b ? `${pctOf(b.score, b.max)}%` : '—'}</td><td>${stBadge(status)}</td>
+            <td>${last ? `<div class="cell-2"><span>#${last.no} · ${pctOf(last.score, last.max)}% · ${rel(last.submittedAt)}</span><span class="secondary">${rs ? stBadge(rs) : 'Chưa nhận xét'}</span></div>` : '<span class="muted">—</span>'}</td>
+            <td class="cell-actions"><div class="inline-actions">${view}${grant}</div></td></tr>`; }).join('')}</tbody></table></div>
         ${grants.length ? `<div class="card-body"><div class="section-label">Lịch sử cấp thêm lượt</div><ul class="list compact">${grants.map((g) => `<li><div class="grow"><div class="title">+${g.extra} lượt cho ${esc(user(byId(S.members, g.memberId).userId).name)}</div><div class="meta"><span>${esc(g.reason)}</span><span>${esc(user(g.by)?.name || '')}</span></div></div><span class="when">${rel(g.at)}</span></li>`).join('')}</ul></div>` : ''}`;
-      return `<section class="card"><div class="card-head"><div><h2>${esc(l.title)}</h2><div class="small muted">${esc(stage(st.stageId).name)} · ${z.mode === 'assessment' ? `Kiểm tra · ${z.attempts} lượt · ${z.timeLimit} phút` : 'Luyện tập · không giới hạn lượt'} · đạt từ ${z.threshold}%</div></div><span class="badge ${z.mode === 'assessment' ? 'badge-info' : 'badge-optional'}">${z.mode === 'assessment' ? 'Tính vào tiến độ' : 'Luyện tập'}</span></div>
-        <div class="card-body hw-stats small"><span><b class="num">${tried.length}</b>/${ms.length} đã làm</span>${z.mode === 'assessment' ? `<span><b class="num">${passed}</b> đạt</span>` : ''}<span>Điểm TB lượt tốt nhất <b class="num">${avg == null ? '—' : avg + '%'}</b></span><span><b class="num">${rates.count}</b> lượt đã nộp</span></div>
+      return `<section class="card"><div class="card-head"><div><h2>${esc(l.title)}</h2><div class="small muted">${esc(stage(st.stageId).name)} · ${assess ? `${z.attempts} lượt · ${z.timeLimit} phút · giảng viên xác nhận từng lượt` : 'không giới hạn lượt · nhận xét khi cần'} · đạt từ ${z.threshold}%</div></div><span class="badge ${assess ? 'badge-info' : 'badge-optional'}">${QUIZ_KIND[z.mode]}</span></div>
+        <div class="card-body hw-stats small"><span><b class="num">${tried.length}</b>/${ms.length} đã làm</span>${assess ? `<span><b class="num">${passed}</b> đạt</span><span><b class="num">${ms.filter((m) => doneAttempts(m.id, l.id).some((a) => a.review?.status === 'pending')).length}</b> chờ xác nhận</span>` : ''}<span>Điểm TB lượt tốt nhất <b class="num">${avg == null ? '—' : avg + '%'}</b></span><span><b class="num">${rates.count}</b> lượt đã nộp</span></div>
         <div class="card-body"><div class="section-label">Tỉ lệ trả lời đúng từng câu</div>
           ${rates.count ? `<div class="rate-list">${rates.rows.map(({ x, pct }, i) => `<div class="rate-row"><span class="rate-q"><b>Câu ${i + 1}.</b> ${mdInline(x.text)}${pct < 30 ? ' <span class="badge badge-danger">Dưới 30%: xem lại câu hỏi</span>' : ''}</span><span class="rate-bar${pct < 30 ? ' is-low' : ''}" role="img" aria-label="${pct}% trả lời đúng"><i style="width:${pct}%"></i></span><span class="rate-pct num">${pct}%</span></div>`).join('')}</div>` : '<p class="small muted" style="margin-top:var(--sp-2)">Chưa có lượt nộp nào.</p>'}</div>
         ${memberTable}</section>`; }).join('')}</div>`;
@@ -1277,7 +1385,7 @@
   }
   function pageTeachClasses() {
     const u = me(); const classes = S.classes.filter((c) => c.teacherId === u.id); const queue = gradingQueue(u); const late = queue.filter((r) => r.overdue).length;
-    const alert = queue.length ? `<div class="alert ${late ? 'alert-danger' : 'alert-info'}">${icon(late ? 'alert' : 'inbox')}<div class="alert-body"><strong>${queue.length} bài đang chờ bạn chấm${late ? `, ${late} bài đã quá ${GRADING_SLA_DAYS} ngày` : ''}.</strong> Bài cũ nhất nộp ${rel(queue[0].s.submittedAt)}. <a href="#/teach/grading${late ? '?overdue=1' : ''}">Mở hàng chờ chấm</a></div></div>` : '';
+    const alert = queue.length ? `<div class="alert ${late ? 'alert-danger' : 'alert-info'}">${icon(late ? 'alert' : 'inbox')}<div class="alert-body"><strong>${queue.length} bài chờ chấm hoặc xác nhận${late ? `, ${late} bài đã quá ${GRADING_SLA_DAYS} ngày` : ''}.</strong> Bài cũ nhất nộp ${rel(queue[0].at)}. <a href="#/teach/grading${late ? '?overdue=1' : ''}">Mở hàng chờ chấm</a></div></div>` : '';
     return { title: 'Lớp của tôi', html: `${pageHead('Lớp của tôi', { lede: 'Các lớp bạn phụ trách. Vào lớp để xem tiến độ, tổng kết chặng, bài tập và quiz.' })}<div class="stack">${alert}${teacherClassCards(classes, (c) => `#/teach/classes/${c.id}`)}</div>` };
   }
   function pageTeachClass([classId], query) {
@@ -1291,29 +1399,36 @@
   function pageGrading(_, query) {
     const u = me(); const base = u.role === 'admin' ? '#/admin/grading' : '#/teach/grading';
     const myClasses = S.classes.filter((c) => canGrade(u, c) && c.status !== 'draft');
-    const f = { classId: query.class || '', lessonId: query.lesson || '', overdue: query.overdue === '1' };
-    const all = gradingQueue(u); let rows = gradingQueue(u, { classId: f.classId || undefined, lessonId: f.lessonId || undefined });
+    const f = { kind: ['homework', 'quiz'].includes(query.type) ? query.type : '', classId: query.class || '', lessonId: query.lesson || '', overdue: query.overdue === '1' };
+    const all = gradingQueue(u); let rows = gradingQueue(u, { kind: f.kind || undefined, classId: f.classId || undefined, lessonId: f.lessonId || undefined });
     if (f.overdue) rows = rows.filter((r) => r.overdue);
-    const anyFilter = f.classId || f.lessonId || f.overdue; const late = all.filter((r) => r.overdue).length;
-    const hwLessons = [...new Map(myClasses.filter((c) => !f.classId || c.id === f.classId).flatMap(classLessons).filter((l) => l.type === 'homework').map((l) => [l.id, l])).values()];
-    const recent = S.submissions.filter((s) => s.grades.length && canGrade(u, cls(byId(S.members, s.memberId).classId))).sort((a, b) => b.grades[b.grades.length - 1].at.localeCompare(a.grades[a.grades.length - 1].at)).slice(0, 6);
-    const table = `<div class="table-wrap"><table class="queue-table"><thead><tr><th>Học viên</th><th>Bài tập</th><th>Lớp</th><th>Nộp lúc</th><th class="num">Đã chờ</th><th class="cell-actions"><span class="sr-only">Thao tác</span></th></tr></thead><tbody>
-      ${rows.map((r) => `<tr class="is-clickable${r.overdue ? ' is-overdue' : ''}" data-href="${gradeHref(r.s.id)}" tabindex="0"><td><div class="cell-2"><span class="primary">${esc(r.student.name)}</span><span class="secondary">Lần nộp #${r.s.no}${r.s.late ? ' · <span class="text-danger">nộp muộn</span>' : ''}</span></div></td>
-        <td><div class="cell-2"><span>${esc(shortTitle(r.lesson))}</span><span class="secondary">${esc(stage(r.svx.stageId).name)}</span></div></td><td>${esc(r.c.code)}</td><td>${fmtDateTime(r.s.submittedAt)}</td>
-        <td class="num">${r.overdue ? `<span class="badge badge-danger">Quá ${GRADING_SLA_DAYS} ngày</span> ` : ''}${fmtWait(r.waited)}</td><td class="cell-actions"><a class="un-btn un-btn-primary un-btn-sm" href="${gradeHref(r.s.id)}">Chấm</a></td></tr>`).join('')
-      || `<tr><td colspan="6">${anyFilter ? empty('Không có bài khớp bộ lọc', 'Nới lỏng điều kiện hoặc xóa bộ lọc.', `<a class="un-btn un-btn-secondary un-btn-sm" href="${base}">Xóa bộ lọc</a>`) : empty('Không còn bài chờ chấm', 'Khi học viên nộp bài, bài sẽ hiện ở đây theo thứ tự nộp sớm nhất trước.')}</td></tr>`}</tbody></table></div>`;
-    return { title: 'Chấm bài', html: `${pageHead('Chấm bài', { lede: `Bài nộp chờ chấm, cũ nhất ở trên. Mục tiêu chấm trong ${GRADING_SLA_DAYS} ngày kể từ lúc nộp.`, badges: late ? `<span class="badge badge-danger">${late} bài quá ${GRADING_SLA_DAYS} ngày</span>` : '' })}
+    const anyFilter = f.kind || f.classId || f.lessonId || f.overdue; const late = all.filter((r) => r.overdue).length;
+    const queued = (l) => l.type === 'homework' || (l.type === 'quiz' && l.quiz.mode === 'assessment');
+    const lessons = [...new Map(myClasses.filter((c) => !f.classId || c.id === f.classId).flatMap(classLessons).filter((l) => queued(l) && (!f.kind || (f.kind === 'quiz') === (l.type === 'quiz'))).map((l) => [l.id, l])).values()];
+    const kindBadge = (r) => r.kind === 'quiz' ? `<span class="badge badge-info">${QUIZ_KIND.assessment}</span>` : '<span class="badge badge-optional">Bài tập</span>';
+    const detail = (r) => r.kind === 'quiz' ? `Lượt #${r.no} · ${pctOf(r.a.score, r.a.max)}%${r.a.autoSubmitted ? ' · tự nộp khi hết giờ' : ''}` : `Lần nộp #${r.no}${r.s.late ? ' · <span class="text-danger">nộp muộn</span>' : ''}`;
+    const mine = (memberId) => canGrade(u, cls(byId(S.members, memberId).classId));
+    const recent = [
+      ...S.submissions.filter((s) => s.grades.length && mine(s.memberId)).map((s) => { const g = s.grades[s.grades.length - 1]; return { at: g.at, by: g.by, href: gradeHref(s.id), m: byId(S.members, s.memberId), l: lessonById(s.lessonId), meta: `<span>Lần nộp #${s.no}</span><span>${g.total}/${g.max} điểm</span>`, st: g.result === 'passed' ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Cần làm lại' } }; }),
+      ...S.quizAttempts.filter((a) => a.review?.status === 'confirmed' && lessonById(a.lessonId).quiz.mode === 'assessment' && mine(a.memberId)).map((a) => { const l = lessonById(a.lessonId); return { at: a.review.at, by: a.review.by, href: quizReviewHref(a.id), m: byId(S.members, a.memberId), l, meta: `<span>Quiz · lượt #${a.no}</span><span>${a.score}/${a.max} điểm</span>`, st: pctOf(a.score, a.max) >= l.quiz.threshold ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Chưa đạt' } }; })
+    ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 6);
+    const table = `<div class="table-wrap"><table class="queue-table"><thead><tr><th>Học viên</th><th>Bài</th><th>Lớp</th><th>Nộp lúc</th><th class="num">Đã chờ</th><th class="cell-actions"><span class="sr-only">Thao tác</span></th></tr></thead><tbody>
+      ${rows.map((r) => `<tr class="is-clickable${r.overdue ? ' is-overdue' : ''}" data-href="${r.href}" tabindex="0"><td><div class="cell-2"><span class="primary">${esc(r.student.name)}</span><span class="secondary">${detail(r)}</span></div></td>
+        <td><div class="cell-2"><span>${esc(shortTitle(r.lesson))}</span><span class="secondary">${kindBadge(r)} ${esc(stage(r.svx.stageId).name)}</span></div></td><td>${esc(r.c.code)}</td><td>${fmtDateTime(r.at)}</td>
+        <td class="num">${r.overdue ? `<span class="badge badge-danger">Quá ${GRADING_SLA_DAYS} ngày</span> ` : ''}${fmtWait(r.waited)}</td><td class="cell-actions"><a class="un-btn un-btn-primary un-btn-sm" href="${r.href}">${r.kind === 'quiz' ? 'Xác nhận' : 'Chấm'}</a></td></tr>`).join('')
+      || `<tr><td colspan="6">${anyFilter ? empty('Không có mục khớp bộ lọc', 'Nới lỏng điều kiện hoặc xóa bộ lọc.', `<a class="un-btn un-btn-secondary un-btn-sm" href="${base}">Xóa bộ lọc</a>`) : empty('Không còn bài chờ xử lý', 'Bài tập học viên nộp và lượt Quiz bài tập đã nộp hiện ở đây, cũ nhất ở trên.')}</td></tr>`}</tbody></table></div>`;
+    return { title: 'Chấm bài', html: `${pageHead('Chấm bài', { lede: `Bài tập chờ chấm và lượt ${QUIZ_KIND.assessment} chờ xác nhận, cũ nhất ở trên. Mục tiêu xử lý trong ${GRADING_SLA_DAYS} ngày kể từ lúc nộp.`, badges: late ? `<span class="badge badge-danger">${late} mục quá ${GRADING_SLA_DAYS} ngày</span>` : '' })}
       <div class="stack"><section class="card" aria-label="Hàng chờ chấm">
         <form class="filter-bar" data-form="grading-filter" data-base="${base}">
+          ${field('Loại', `<select class="input" name="type">${selectOpts([{ value: '', label: 'Tất cả' }, { value: 'homework', label: 'Bài tập' }, { value: 'quiz', label: QUIZ_KIND.assessment }], f.kind)}</select>`)}
           ${field('Lớp', `<select class="input" name="class">${selectOpts([{ value: '', label: 'Tất cả lớp' }, ...myClasses.map((c) => ({ value: c.id, label: c.code }))], f.classId)}</select>`)}
-          ${field('Bài tập', `<select class="input" name="lesson">${selectOpts([{ value: '', label: 'Tất cả bài tập' }, ...hwLessons.map((l) => ({ value: l.id, label: shortTitle(l) }))], f.lessonId)}</select>`)}
-          <label class="check"><input type="checkbox" name="overdue" value="1" ${f.overdue ? 'checked' : ''}> Chỉ bài quá ${GRADING_SLA_DAYS} ngày</label>
+          ${field('Bài', `<select class="input" name="lesson">${selectOpts([{ value: '', label: 'Tất cả bài' }, ...lessons.map((l) => ({ value: l.id, label: `${shortTitle(l)} (${l.type === 'quiz' ? 'quiz' : 'bài tập'})` }))], f.lessonId)}</select>`)}
+          <label class="check"><input type="checkbox" name="overdue" value="1" ${f.overdue ? 'checked' : ''}> Chỉ mục quá ${GRADING_SLA_DAYS} ngày</label>
           <div class="row"><button class="un-btn un-btn-navy un-btn-sm" type="submit">Lọc</button>${anyFilter ? `<a class="un-btn un-btn-ghost un-btn-sm" href="${base}">Xóa bộ lọc</a>` : ''}</div>
         </form>
-        <div class="card-head" style="border-bottom:0;padding-bottom:0"><span class="small muted">${rows.length}/${all.length} bài chờ chấm</span></div>${table}</section>
+        <div class="card-head" style="border-bottom:0;padding-bottom:0"><span class="small muted">${rows.length}/${all.length} mục chờ xử lý · ${all.filter((r) => r.kind === 'quiz').length} lượt quiz chờ xác nhận</span></div>${table}</section>
         ${u.role === 'admin' ? backlogCard() : ''}
-        <section class="card"><div class="card-head"><h2>Đã chấm gần đây</h2></div>${recent.length ? `<ul class="list">${recent.map((s) => { const g = s.grades[s.grades.length - 1]; const m = byId(S.members, s.memberId); const l = lessonById(s.lessonId);
-          return `<li><div class="grow"><a class="title" href="${gradeHref(s.id)}">${esc(user(m.userId).name)} · ${esc(shortTitle(l))}</a><div class="meta"><span>${esc(cls(m.classId).code)}</span><span>Lần nộp #${s.no}</span><span>${g.total}/${g.max} điểm</span><span>${esc(user(g.by)?.name || '')} chấm ${rel(g.at)}</span></div></div>${stBadge(g.result === 'passed' ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Cần làm lại' })}</li>`; }).join('')}</ul>` : empty('Chưa chấm bài nào', 'Bài đã chấm sẽ hiện ở đây.')}</section></div>` };
+        <section class="card"><div class="card-head"><h2>Đã chấm và xác nhận gần đây</h2></div>${recent.length ? `<ul class="list">${recent.map((x) => `<li><div class="grow"><a class="title" href="${x.href}">${esc(user(x.m.userId).name)} · ${esc(shortTitle(x.l))}</a><div class="meta"><span>${esc(cls(x.m.classId).code)}</span>${x.meta}<span>${esc(user(x.by)?.name || '')} · ${rel(x.at)}</span></div></div>${stBadge(x.st)}</li>`).join('')}</ul>` : empty('Chưa xử lý bài nào', 'Bài đã chấm và lượt quiz đã xác nhận sẽ hiện ở đây.')}</section></div>` };
   }
   function pageGradeSubmission([subId]) {
     const u = me(); const s = byId(S.submissions, subId); const m = s && byId(S.members, s.memberId); const c = m && cls(m.classId); const base = u.role === 'admin' ? '#/admin/grading' : '#/teach/grading';
@@ -1357,6 +1472,54 @@
     out.innerHTML = `<span>Tổng <b class="num">${total}/${max}</b> (${pctOf(total, max)}%)</span>${filled.length < vals.length ? `<span class="muted small">Còn ${vals.length - filled.length} tiêu chí chưa nhập</span>` : `<span class="badge ${pass ? 'badge-ok' : 'badge-warn'}">${pass ? 'Đạt' : 'Cần làm lại'}</span>`}`;
   }
 
+  // Teacher view of one submitted quiz attempt: per-question answers against the key, overall comment and per-question notes.
+  function pageReviewAttempt([attemptId]) {
+    const u = me(); const base = u.role === 'admin' ? '#/admin/grading' : '#/teach/grading';
+    const a = byId(S.quizAttempts, attemptId); const m = a && byId(S.members, a.memberId); const c = m && cls(m.classId);
+    if (!a || a.status !== 'submitted' || !canGrade(u, c)) { toast('Bạn chỉ xem được lượt đã nộp của lớp mình phụ trách.', 'error'); location.hash = base; return null; }
+    const l = lessonById(a.lessonId); const z = l.quiz; const assess = z.mode === 'assessment'; const stu = user(m.userId);
+    const pct = pctOf(a.score, a.max); const pass = pct >= z.threshold; const rv = a.review?.status === 'confirmed' ? a.review : null; const sup = a.review?.status === 'superseded';
+    const done = doneAttempts(m.id, l.id); const latest = done[done.length - 1]; const lim = attemptLimit(m.id, l); const rs = reviewState(a);
+    const back = assess ? base : `${u.role === 'admin' ? '#/admin/classes' : '#/teach/classes'}/${c.id}?tab=quiz`;
+    const mins = Math.max(1, Math.round((new Date(a.submittedAt) - new Date(a.startedAt)) / 60e3));
+    const qs = (a.order || z.questions.map((x) => x.id)).map((id) => z.questions.find((x) => x.id === id)).filter(Boolean);
+    const key = (x) => x.options.filter((o) => o.correct).map((o) => o.id).sort().join();
+    const right = qs.filter((x) => (a.answers[x.id] || []).slice().sort().join() === key(x)).length;
+    const questions = qs.map((x, i) => { const given = a.answers[x.id] || []; const okQ = given.length > 0 && given.slice().sort().join() === key(x); const ids = a.optOrder?.[x.id] || x.options.map((o) => o.id);
+      return `<fieldset class="quiz-q is-review"><legend><span class="ord">${i + 1}</span><span>${mdInline(x.text)}</span></legend>
+        <p class="small ${okQ ? 'text-ok' : 'text-danger'}">${icon(okQ ? 'check-circle' : 'x-circle')} ${okQ ? `Đúng · ${x.points}/${x.points} điểm` : given.length ? `Sai · 0/${x.points} điểm` : `Bỏ trống · 0/${x.points} điểm`}</p>
+        ${ids.map((oid) => x.options.find((o) => o.id === oid)).filter(Boolean).map((o) => { const picked = given.includes(o.id); return `<div class="quiz-opt${o.correct ? ' is-correct' : picked ? ' is-wrong' : ''}">${icon(o.correct ? 'check-circle' : picked ? 'x-circle' : 'circle')}<span>${mdInline(o.text)}</span><span class="sr-only">${o.correct ? ' (đáp án đúng)' : ''}${picked ? ' (học viên chọn)' : ''}</span>${picked ? '<span class="badge badge-optional">Học viên chọn</span>' : ''}</div>`; }).join('')}
+        <div class="field qnote"><label>Ghi chú cho câu ${i + 1} <span class="muted">(không bắt buộc)</span><input class="input" name="qnote-${x.id}" form="review-form" value="${esc(rv?.notes?.[x.id] || '')}" placeholder="${okQ ? 'vd: Giải thích ngắn vì sao đúng' : 'vd: Xem lại phần … trong bài đọc'}" ${sup ? 'disabled' : ''}></label></div></fieldset>`; }).join('');
+    const left = `<div class="stack">${sup ? `<div class="alert alert-warn">${icon('alert')}<div class="alert-body">Học viên đã nộp lượt #${latest.no}; lượt này không cần xác nhận nữa. <a href="${quizReviewHref(latest.id)}">Mở lượt #${latest.no}</a></div></div>` : ''}
+      <section class="card"><div class="card-head"><h2>Lượt #${a.no}</h2>${rs ? stBadge(rs) : '<span class="badge badge-optional">Chưa nhận xét</span>'}</div>
+        <div class="card-body"><dl class="facts">
+          <dt>Học viên</dt><dd>${esc(stu.name)} <span class="muted small">${esc(stu.email)}</span></dd>
+          <dt>Lớp</dt><dd>${esc(c.code)} · ${esc(c.name)}</dd>
+          <dt>Bài</dt><dd>${esc(shortTitle(l))} <span class="badge ${assess ? 'badge-info' : 'badge-optional'}">${QUIZ_KIND[z.mode]}</span></dd>
+          <dt>Bắt đầu</dt><dd>${fmtDateTime(a.startedAt)}</dd>
+          <dt>Nộp lúc</dt><dd>${fmtDateTime(a.submittedAt)}${a.autoSubmitted ? ' <span class="badge badge-warn">Tự nộp khi hết giờ</span>' : ''}</dd>
+          <dt>Thời gian làm</dt><dd>${mins} phút${z.timeLimit && assess ? ` / ${z.timeLimit} phút` : ''}</dd>
+          <dt>Điểm tự động</dt><dd><b class="num">${a.score}/${a.max}</b> (${pct}%) · ${right}/${qs.length} câu đúng ${assess ? stBadge(pass ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: `Chưa đạt · cần ${z.threshold}%` }) : ''}</dd>
+          <dt>Lượt</dt><dd>#${a.no}${lim != null ? ` / ${lim} lượt` : ' · không giới hạn lượt'}</dd>
+        </dl></div></section>
+      <section class="card"><div class="card-head"><h2>Bài làm từng câu</h2><span class="small muted">Theo thứ tự học viên thấy</span></div><div class="card-body stack">${questions}</div></section>
+      <section class="card"><div class="card-head"><h2>Các lượt đã nộp</h2></div><ul class="list">${done.slice().reverse().map((x) => { const st = reviewState(x);
+        return `<li><div class="grow"><div class="title">${x.id === a.id ? `Lượt #${x.no} (đang xem)` : `<a class="title" href="${quizReviewHref(x.id)}">Lượt #${x.no}</a>`}</div><div class="meta"><span>${fmtDateTime(x.submittedAt)}</span><span>${x.score}/${x.max} · ${pctOf(x.score, x.max)}%</span>${x.review?.status === 'confirmed' ? `<span>${esc(user(x.review.by)?.name || '')}: "${esc(x.review.comment)}"</span>` : ''}</div></div>${st ? stBadge(st) : ''}</li>`; }).join('')}</ul></section></div>`;
+    const submit = rv ? 'Lưu nhận xét mới' : assess ? 'Xác nhận' : 'Gửi nhận xét';
+    const form = `<form id="review-form" class="card grade-form" data-form="quiz-review" data-id="${a.id}" novalidate>
+      <div class="card-head"><h2>${rv ? 'Sửa nhận xét' : assess ? 'Xác nhận kết quả' : 'Nhận xét cho học viên'}</h2>${assess && !rv && !sup ? `<span class="small muted">Đã chờ ${fmtWait(daysSince(a.submittedAt))}</span>` : ''}</div>
+      <fieldset class="card-body stack-sm" ${sup ? 'disabled' : ''}><legend class="sr-only">Nhận xét lượt #${a.no}</legend>
+        <div class="grade-total"><span>Điểm tự động <b class="num">${a.score}/${a.max}</b> (${pct}%)</span>${assess ? stBadge(pass ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Chưa đạt' }) : `<span class="badge badge-optional">${QUIZ_KIND.practice}</span>`}</div>
+        <p class="small muted">Điểm tự động đã tính vào tiến độ; giảng viên không sửa điểm.${assess ? ' Xác nhận để ghi nhận đã xem bài và gửi nhận xét cho học viên.' : ' Nhận xét là tùy chọn với quiz học liệu.'}</p>
+        ${rv ? `<p class="small">${icon('check-circle')} ${assess ? 'Đã xác nhận' : 'Đã nhận xét'} bởi ${esc(user(rv.by)?.name || '')} · ${fmtDateTime(rv.at)}${rv.history?.length ? ` · đã sửa ${rv.history.length} lần` : ''}</p>` : ''}
+        ${field('Nhận xét chung', `<textarea class="input input-prose" name="comment" rows="5" required>${esc(rv?.comment || '')}</textarea>`, { required: true, help: 'Học viên nhận email và thấy nhận xét này cùng ghi chú từng câu trong trang kết quả.' })}
+        <p class="small muted">Ghi chú từng câu nhập ngay dưới mỗi câu hỏi bên cạnh.</p>
+        <div class="alert alert-danger" data-form-error hidden>${icon('alert')}<div class="alert-body"></div></div>
+        <div class="form-actions"><a class="un-btn un-btn-ghost" href="${back}">${assess ? 'Về hàng chờ' : 'Về thống kê quiz'}</a><button class="un-btn un-btn-primary" type="submit">${icon(assess && !rv ? 'check' : 'send')} ${submit}</button></div>
+      </fieldset></form>`;
+    return { title: `Quiz · ${stu.name}`, html: `${pageHead(`${stu.name} · ${shortTitle(l)}`, { crumbsHtml: crumbs(assess ? [['Chấm bài', base], [`${stu.name} lượt #${a.no}`]] : [[u.role === 'admin' ? 'Lớp học' : 'Lớp của tôi', u.role === 'admin' ? '#/admin/classes' : '#/teach'], [c.code, back], [`${stu.name} lượt #${a.no}`]]), lede: `${esc(c.code)} · ${esc(stage(svOfLesson(l.id).stageId).name)} · ${QUIZ_KIND[z.mode]} · ${qs.length} câu, đạt từ ${z.threshold}%` })}<div class="grade-layout">${left}${form}</div>` };
+  }
+
   /* -------------------------------------------------- student pages */
   // Work the student still owes: homework not yet Đạt and assessments not yet passed, soonest deadline first.
   function todoItems(m) {
@@ -1373,7 +1536,7 @@
         ${progressBar(p.pct, true)}<p class="small muted" style="margin-top:6px">${p.done}/${p.total} học liệu bắt buộc</p>
         <div class="row" style="margin-top:16px">${c.status === 'draft' ? `<span class="small muted">Lớp bắt đầu ${fmtDate(c.startDate)}. Bạn sẽ vào học được khi lớp kích hoạt.</span>` : `<a class="un-btn ${next ? 'un-btn-primary' : 'un-btn-navy'}" href="${next ? `#/learn/classes/${c.id}/lessons/${next.id}` : `#/learn/classes/${c.id}`}">${next ? 'Học tiếp' : 'Xem lộ trình'}</a><a class="un-btn un-btn-ghost" href="#/learn/classes/${c.id}">Lộ trình</a><a class="un-btn un-btn-ghost" href="#/learn/classes/${c.id}/summary">Tổng kết</a>`}</div></div>`; }).join('');
     const todos = ms.flatMap((m) => todoItems(m).map((x) => ({ ...x, c: cls(m.classId) })));
-    const todoCard = todos.length ? `<section class="card"><div class="card-head"><h2>Việc cần làm</h2><span class="small muted">${todos.length} bài tập và bài kiểm tra chưa đạt</span></div><ul class="list">${todos.map(({ l, st, due, c }) => { const late = due && new Date(due) < new Date();
+    const todoCard = todos.length ? `<section class="card"><div class="card-head"><h2>Việc cần làm</h2><span class="small muted">${todos.length} bài tập và quiz bài tập chưa đạt</span></div><ul class="list">${todos.map(({ l, st, due, c }) => { const late = due && new Date(due) < new Date();
       return `<li><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span><div class="grow"><a class="title" href="#/learn/classes/${c.id}/lessons/${l.id}">${esc(l.title)}</a><div class="meta"><span>${esc(c.code)}</span>${due ? `<span class="${late ? 'text-danger' : ''}">${icon('calendar')} Hạn ${fmtDateTime(due)} · ${dueIn(due)}</span>` : l.type === 'quiz' ? `<span>Còn ${attemptLimit(memberOf(c.id, u.id).id, l) - attemptsOf(memberOf(c.id, u.id).id, l.id).length} lượt</span>` : '<span>Chưa đặt hạn</span>'}</div></div>${stBadge(st)}</li>`; }).join('')}</ul></section>` : '';
     return { title: 'Lớp của tôi', html: `${pageHead(`Xin chào, ${u.name.split(' ').pop()}`, { lede: 'Các lớp bạn đang tham gia.' })}<div class="stack">${todoCard}${cards ? `<div class="grid-2">${cards}</div>` : `<div class="card">${empty('Chưa có lớp', 'Khi được mời vào lớp, lớp sẽ hiện ở đây.')}</div>`}</div>` };
   }
@@ -1386,16 +1549,17 @@
     const ctx = learnerLesson(classId); if (!ctx) return null; const { c, m, v } = ctx;
     const p = memberProgress(m); const canTick = c.status === 'active';
     const stagesHtml = v.stages.map((id, i) => { const s = sv(id); const st = stage(s.stageId); const sp = p.stages[i];
-      return `<section class="card stage"><div class="stage-head"><span class="ord">${i + 1}</span><div class="grow"><h2>${esc(st.name)}</h2><div class="small muted">${s.lessons.length} học liệu · ${sp.done}/${sp.total} bắt buộc đã xong</div></div>${progressBar(sp.pct)}</div>
-        ${s.lessons.map((l) => { const status = lessonStatus(m, l); const done = status.done; const pr = progressOf(m.id, l.id); const opened = !!pr; const graded = l.type === 'quiz' || l.type === 'homework';
+      return `<section class="card stage"><div class="stage-head"><span class="ord">${i + 1}</span><div class="grow"><h2>${esc(st.name)}</h2><div class="small muted">${s.units.length} bài học · ${s.lessons.length} học liệu · ${sp.done}/${sp.total} bắt buộc đã xong</div></div>${progressBar(sp.pct)}</div>
+        ${unitsOf(s).map((u, j) => { const up = unitProgress(m, u); return `<div class="unit"><div class="unit-head"><h3>Bài ${i + 1}.${j + 1} · ${esc(u.title)}</h3><span class="small muted">${up.total ? `${up.done}/${up.total} bắt buộc` : 'Không bắt buộc'}</span>${up.complete ? '<span class="badge badge-ok">Hoàn thành</span>' : ''}</div>
+        ${u.lessons.map((l) => { const status = lessonStatus(m, l); const done = status.done; const pr = progressOf(m.id, l.id); const opened = !!pr; const graded = l.type === 'quiz' || l.type === 'homework';
           const due = l.type === 'homework' ? deadlineOf(c.id, l.id) : null;
           const sub = l.type === 'quiz' ? lessonMeta(l).replace(/^Quiz /, 'Quiz ') : l.type === 'homework' ? `Bài tập${due ? ` · hạn ${fmtDateTime(due)}${done ? '' : ` (${dueIn(due)})`}` : ' · chưa đặt hạn'}` : l.type === 'video' ? `Video · ${esc(l.duration || '')}` : 'Bài đọc';
           const right = graded ? `<div class="lesson-state">${stBadge(status)}</div>` : (() => { const disabled = !canTick || !opened; const why = !canTick ? (c.status === 'ended' ? 'Lớp đã kết thúc' : 'Lớp chưa bắt đầu') : !opened ? 'Mở học liệu trước khi tích' : '';
             return `<label class="check${disabled ? ' is-disabled' : ''}" title="${esc(why)}"><input type="checkbox" data-change="toggle-complete" data-class="${c.id}" data-lesson="${l.id}" ${done ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="Đã học xong: ${esc(l.title)}"><span class="small">Đã học xong</span></label>`; })();
-          return `<div class="lesson-row${done ? ' is-done' : ''}" data-kind="${l.type}"><a class="lesson-link" href="#/learn/classes/${c.id}/lessons/${l.id}"><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span><span><span class="t">${esc(l.title)}</span><br><span class="sub">${sub}${l.required ? '' : ' · không bắt buộc'}${!graded && opened && !done ? ' · đã mở' : ''}</span></span></a>${right}</div>`; }).join('')}</section>`; }).join('');
+          return `<div class="lesson-row${done ? ' is-done' : ''}" data-kind="${l.type}"><a class="lesson-link" href="#/learn/classes/${c.id}/lessons/${l.id}"><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span><span><span class="t">${esc(l.title)}</span><br><span class="sub">${sub}${l.required ? '' : ' · không bắt buộc'}${!graded && opened && !done ? ' · đã mở' : ''}</span></span></a>${right}</div>`; }).join('')}</div>`; }).join('')}</section>`; }).join('');
     return { title: c.code, html: `${pageHead(c.name, { crumbsHtml: crumbs([['Lớp của tôi', '#/learn'], [c.code]]), badges: `<span class="badge badge-${c.status}">${classStatusVi[c.status]}</span>`, lede: `${esc(course(v.courseId).name)} ${versionLabel(v)} · Giảng viên ${esc(user(c.teacherId)?.name || '')}`, actions: `<a class="un-btn un-btn-secondary" href="#/learn/classes/${c.id}/summary">${icon('bar-chart')} Xem tổng kết</a>` })}
       <div class="stack">
-        <div class="card card-pad"><div class="row-between"><div><div class="section-label">Tiến độ toàn khóa</div><div class="small muted">${p.done}/${p.total} học liệu bắt buộc. Video và bài đọc tính khi bạn tích; quiz kiểm tra tính khi đạt ngưỡng; bài tập tính khi được chấm Đạt.</div></div><div style="min-width:260px">${progressBar(p.pct, true)}</div></div>
+        <div class="card card-pad"><div class="row-between"><div><div class="section-label">Tiến độ toàn khóa</div><div class="small muted">${p.done}/${p.total} học liệu bắt buộc. Video và bài đọc tính khi bạn tích; Quiz bài tập tính khi đạt ngưỡng; bài tập tính khi được chấm Đạt.</div></div><div style="min-width:260px">${progressBar(p.pct, true)}</div></div>
           ${c.status !== 'active' ? `<div class="alert alert-info" style="margin-top:16px">${icon('info')}<div class="alert-body">${c.status === 'ended' ? 'Lớp đã kết thúc: bạn vẫn xem được học liệu và kết quả nhưng không tích, làm quiz hay nộp bài được nữa.' : 'Lớp chưa bắt đầu.'}</div></div>` : ''}</div>
         <div class="roadmap">${stagesHtml}</div>
       </div>` };
@@ -1405,7 +1569,7 @@
     const cards = courseSummary(m).map((x, i) => { const req = x.rows.filter((r) => r.l.required); const done = req.filter((r) => r.st.done).length; const rv = x.review;
       return `<section class="card"><div class="card-head"><div><h2>${i + 1}. ${esc(x.stage.name)}</h2><div class="small muted">${done}/${req.length} học liệu bắt buộc</div></div>${x.complete ? '<span class="badge badge-ok">Hoàn thành chặng</span>' : x.overdue ? '<span class="badge badge-danger">Có bài quá hạn</span>' : x.rework ? '<span class="badge badge-warn">Có bài cần làm lại</span>' : '<span class="badge badge-info">Đang học</span>'}</div>
         <div class="card-pad" style="padding-bottom:0">${progressBar(req.length ? Math.round(done * 100 / req.length) : 0)}</div>
-        <ul class="list">${x.rows.map(({ l, st }) => `<li><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span><div class="grow"><a class="title" href="#/learn/classes/${c.id}/lessons/${l.id}">${esc(l.title)}</a><div class="meta"><span>${lessonDetail(m, l)}</span>${l.required ? '' : '<span>không bắt buộc</span>'}</div></div>${stBadge(st)}</li>`).join('')}</ul>
+        <ul class="list">${x.rows.map(({ l, st }) => `<li><span class="type-icon" title="${TYPE_VI[l.type]}">${typeIcon(l)}</span><div class="grow"><a class="title" href="#/learn/classes/${c.id}/lessons/${l.id}">${esc(l.title)}</a><div class="meta"><span>${esc(unitOf(x.sv, l).title)}</span><span>${lessonDetail(m, l)}</span>${l.required ? '' : '<span>không bắt buộc</span>'}</div></div>${stBadge(st)}</li>`).join('')}</ul>
         ${rv ? `<div class="card-body review-box"><div class="section-label">Nhận xét của giảng viên</div><p>${esc(rv.text)}</p><div class="small muted">${esc(user(rv.by)?.name || '')} · ${fmtDateTime(rv.at)}</div></div>` : '<div class="card-body review-empty small muted">Chưa có nhận xét của giảng viên cho chặng này.</div>'}</section>`; }).join('');
     return { title: `Tổng kết · ${c.code}`, html: `${pageHead('Tổng kết khóa học', { crumbsHtml: crumbs([['Lớp của tôi', '#/learn'], [c.code, `#/learn/classes/${c.id}`], ['Tổng kết']]), lede: `${esc(c.name)} · ${esc(course(v.courseId).name)} ${versionLabel(v)}` })}
       <div class="stack"><div class="card card-pad"><div class="row-between"><div><div class="section-label">Toàn khóa</div><div class="small muted">${p.done}/${p.total} học liệu bắt buộc</div></div><div style="min-width:260px">${progressBar(p.pct, true)}</div></div></div>${cards}</div>` };
@@ -1417,10 +1581,12 @@
     if (!found) { location.hash = `#/learn/classes/${c.id}`; return null; }
     if (c.status === 'active') openLesson(c.id, lessonId); // first open is recorded once; later opens do not overwrite it
     const { s, st, l } = found; const status = lessonStatus(m, l);
-    const all = classLessons(c); const idx = all.findIndex((x) => x.id === l.id); const prev = all[idx - 1]; const next = all[idx + 1];
-    const navBtns = `<div class="row">${prev ? `<a class="un-btn un-btn-ghost un-btn-sm" href="#/learn/classes/${c.id}/lessons/${prev.id}">Bài trước</a>` : ''}${next ? `<a class="un-btn un-btn-ghost un-btn-sm" href="#/learn/classes/${c.id}/lessons/${next.id}">Bài tiếp ${icon('arrow-right')}</a>` : ''}</div>`;
-    let content; let after;
-    if (l.type === 'quiz') ({ content, after } = quizView(c, m, l, query, navBtns));
+    // Prev and next walk the học liệu of the bài học, then cross into the neighbouring bài học (and stage).
+    const unit = unitOf(s, l); const all = classLessons(c); const idx = all.findIndex((x) => x.id === l.id); const prev = all[idx - 1]; const next = all[idx + 1];
+    const nextUnit = next && next.unitId !== l.unitId ? unitOf(svOfLesson(next.id), next) : null;
+    const navBtns = `<div class="row">${prev ? `<a class="un-btn un-btn-ghost un-btn-sm" href="#/learn/classes/${c.id}/lessons/${prev.id}">Học liệu trước</a>` : ''}${next ? `<a class="un-btn un-btn-ghost un-btn-sm" href="#/learn/classes/${c.id}/lessons/${next.id}" ${nextUnit ? `title="${esc(nextUnit.title)}"` : ''}>${nextUnit ? 'Sang bài học tiếp' : 'Học liệu tiếp'} ${icon('arrow-right')}</a>` : ''}</div>`;
+    let content; let after; let focus = false;
+    if (l.type === 'quiz') ({ content, after, focus } = quizView(c, m, l, query, navBtns));
     else if (l.type === 'homework') content = homeworkView(c, m, l, navBtns);
     else {
       const pr = progressOf(m.id, l.id); const done = !!pr?.completedAt; const canTick = c.status === 'active';
@@ -1430,11 +1596,11 @@
         <div class="complete-bar">${navBtns}
           <div class="row">${done ? `<span class="dot dot-ok small">Đã tích ${fmtDateTime(pr.completedAt)}</span>` : ''}<button class="un-btn ${done ? 'un-btn-secondary' : 'un-btn-primary'}" data-action="complete" data-class="${c.id}" data-lesson="${l.id}" data-done="${done ? 0 : 1}" ${canTick ? '' : `aria-disabled="true" title="${c.status === 'ended' ? 'Lớp đã kết thúc' : 'Lớp chưa bắt đầu'}"`}>${done ? 'Bỏ tích' : `${icon('check')} Đã học xong`}</button></div></div></div>`;
     }
-    const side = `<aside class="card"><div class="card-head"><h2>${esc(st.name)} <span class="muted small">${versionLabel(s)}</span></h2></div><ul class="side-list">${s.lessons.map((x) => { const d = lessonStatus(m, x).done; return `<li><a href="#/learn/classes/${c.id}/lessons/${x.id}" ${x.id === l.id ? 'aria-current="page"' : ''}>${d ? icon('check-circle', 'done-mark') : '<span class="todo-mark"></span>'}<span>${esc(x.title)}</span>${d ? '<span class="sr-only"> (đã xong)</span>' : ''}</a></li>`; }).join('')}</ul>
+    const side = `<aside class="card"><div class="card-head"><h2>${esc(st.name)} <span class="muted small">${versionLabel(s)}</span></h2></div>${unitsOf(s).map((u) => `<h3 class="side-unit">${esc(u.title)}</h3><ul class="side-list">${u.lessons.map((x) => { const d = lessonStatus(m, x).done; return `<li><a href="#/learn/classes/${c.id}/lessons/${x.id}" ${x.id === l.id ? 'aria-current="page"' : ''}>${d ? icon('check-circle', 'done-mark') : '<span class="todo-mark"></span>'}<span>${esc(x.title)}</span>${d ? '<span class="sr-only"> (đã xong)</span>' : ''}</a></li>`; }).join('')}</ul>`).join('')}
       <div class="card-pad"><a class="un-btn un-btn-ghost un-btn-sm" href="#/learn/classes/${c.id}">${icon('layers')} Toàn bộ lộ trình</a></div></aside>`;
     const badges = `${l.type === 'quiz' || l.type === 'homework' ? stBadge(status) : ''}${l.required ? '' : ' <span class="badge badge-optional">Không bắt buộc</span>'}`;
-    return { title: l.title, html: `${pageHead(l.title, { crumbsHtml: crumbs([['Lớp của tôi', '#/learn'], [c.code, `#/learn/classes/${c.id}`], [st.name, `#/learn/classes/${c.id}`], [l.title]]), badges })}
-      <div class="viewer">${content}${side}</div>`, after };
+    return { title: l.title, html: `${pageHead(l.title, { crumbsHtml: crumbs([['Lớp của tôi', '#/learn'], [c.code, `#/learn/classes/${c.id}`], [st.name, `#/learn/classes/${c.id}`], [unit.title, `#/learn/classes/${c.id}`], [l.title]]), badges })}
+      <div class="viewer${focus ? ' is-focus' : ''}">${content}${focus ? '' : side}</div>`, after };
   }
   function quizView(c, m, l, query, navBtns) {
     const z = l.quiz; const base = `#/learn/classes/${c.id}/lessons/${l.id}`;
@@ -1445,44 +1611,59 @@
     const result = query.result && done.find((a) => a.id === query.result);
     if (open && !result) {
       const qs = (open.order || z.questions.map((x) => x.id)).map((id) => z.questions.find((x) => x.id === id)).filter(Boolean);
-      const answered = qs.filter((x) => (open.answers[x.id] || []).length).length;
+      const isDone = (x) => (open.answers[x.id] || []).length > 0; const answered = qs.filter(isDone).length; const n = qs.length;
+      // Focus mode: one question on screen; resume at the last viewed question, else the first unanswered one.
+      const firstOpen = qs.findIndex((x) => !isDone(x)); const pos = Math.min(n - 1, quizPos[open.id] ?? (firstOpen < 0 ? 0 : firstOpen));
       const body = qs.map((x, i) => { const ids = open.optOrder?.[x.id] || x.options.map((o) => o.id); const multi = x.type === 'multi'; const chosen = open.answers[x.id] || [];
-        return `<fieldset class="quiz-q" data-q="${x.id}"><legend><span class="ord">${i + 1}</span><span>${mdInline(x.text)}</span></legend><p class="small muted">${multi ? 'Chọn tất cả đáp án đúng' : 'Chọn một đáp án'} · ${x.points} điểm</p>
+        return `<fieldset class="quiz-q" data-q="${x.id}" tabindex="-1" ${i === pos ? '' : 'hidden'}><legend><span class="ord">${i + 1}</span><span>${mdInline(x.text)}</span></legend><p class="small muted">Câu ${i + 1}/${n} · ${multi ? 'Chọn tất cả đáp án đúng' : 'Chọn một đáp án'} · ${x.points} điểm</p>
           ${ids.map((oid) => x.options.find((o) => o.id === oid)).filter(Boolean).map((o) => `<label class="quiz-opt"><input type="${multi ? 'checkbox' : 'radio'}" name="q-${x.id}" value="${o.id}" ${chosen.includes(o.id) ? 'checked' : ''} data-change="quiz-answer" data-attempt="${open.id}" data-q="${x.id}"><span>${mdInline(o.text)}</span></label>`).join('')}</fieldset>`; }).join('');
-      return { content: `<div class="card quiz-take">
+      const submitAttrs = `data-action="submit-quiz" data-id="${open.id}" data-class="${c.id}" data-lesson="${l.id}"`;
+      const map = qs.map((x, i) => `<button type="button" class="qm-btn${isDone(x) ? ' is-answered' : ''}" data-action="quiz-goto" data-idx="${i}" data-q="${x.id}" aria-label="Câu ${i + 1}, ${isDone(x) ? 'đã trả lời' : 'chưa trả lời'}" ${i === pos ? 'aria-current="step"' : ''}>${i + 1}</button>`).join('');
+      return { focus: true, content: `<div class="card quiz-take" data-attempt="${open.id}">
         <div class="quiz-bar">${open.deadlineAt ? `<span class="timer-pill" role="timer" data-deadline="${open.deadlineAt}" aria-label="Thời gian còn lại">${icon('timer')}<span data-timer-text>--:--</span></span>` : '<span class="small muted">Không giới hạn thời gian</span>'}
-          <span class="small"><span data-answered data-total="${qs.length}">${answered}/${qs.length}</span> câu đã trả lời</span><span class="small muted" data-saved aria-live="polite">${open.savedAt ? `Đã lưu ${fmtDateTime(open.savedAt).slice(-5)}` : 'Câu trả lời được lưu tự động'}</span>
-          <button class="un-btn un-btn-primary un-btn-sm" data-action="submit-quiz" data-id="${open.id}" data-class="${c.id}" data-lesson="${l.id}">Nộp bài</button></div>
+          <span class="small quiz-pos">Câu <b data-pos>${pos + 1}</b>/${n}</span>
+          <span class="small"><span data-answered data-total="${n}">${answered}/${n}</span> đã trả lời</span><span class="small muted" data-saved aria-live="polite">${open.savedAt ? `Đã lưu ${fmtDateTime(open.savedAt).slice(-5)}` : 'Tự lưu khi chọn'}</span>
+          <button class="un-btn un-btn-secondary un-btn-sm" ${submitAttrs}>Nộp bài</button></div>
+        <nav class="quiz-map" aria-label="Chuyển nhanh đến câu hỏi">${map}</nav>
         <div class="card-body stack">${assess ? `<div class="alert alert-info">${icon('info')}<div class="alert-body">Lượt ${open.no}${lim != null ? `/${lim}` : ''}. Hết giờ, hệ thống tự nộp với các câu đã lưu. Rời trang không dừng đồng hồ.</div></div>` : ''}${body}</div>
-        <div class="complete-bar">${navBtns}<button class="un-btn un-btn-primary" data-action="submit-quiz" data-id="${open.id}" data-class="${c.id}" data-lesson="${l.id}">Nộp bài</button></div></div>`,
+        <div class="complete-bar quiz-step"><button type="button" class="un-btn un-btn-secondary" data-action="quiz-prev" ${pos === 0 ? 'disabled' : ''}>${icon('chevron-left')} Câu trước</button>
+          <button type="button" class="un-btn un-btn-primary" data-action="quiz-next" ${pos === n - 1 ? 'hidden' : ''}>Câu tiếp ${icon('chevron-right')}</button>
+          <button type="button" class="un-btn un-btn-primary" data-step-submit ${submitAttrs} ${pos === n - 1 ? '' : 'hidden'}>${icon('check')} Nộp bài</button></div></div>`,
         after: () => startQuizTimer(open.id, `${base}?result=${open.id}`) };
     }
     if (result) {
-      const pct = pctOf(result.score, result.max); const pass = pct >= z.threshold;
-      const review = assess ? `<p class="small muted">${icon('lock')} Bài kiểm tra chỉ hiện điểm và kết quả Đạt, không hiện đáp án <span class="badge badge-optional">đề xuất</span></p>`
+      const pct = pctOf(result.score, result.max); const pass = pct >= z.threshold; const rv = result.review?.status === 'confirmed' ? result.review : null; const notes = rv?.notes || {};
+      const noteHtml = (x) => notes[x.id] ? `<div class="qnote-view">${icon('message')}<div><strong>Ghi chú của giảng viên.</strong> ${esc(notes[x.id])}</div></div>` : '';
+      // Assessment keeps the key hidden, so per-question notes are listed by question text only.
+      const noted = z.questions.map((x, i) => ({ x, i })).filter(({ x }) => notes[x.id]);
+      const feedback = rv ? `<div class="review-box"><div class="section-label">${assess ? 'Giảng viên đã xác nhận' : 'Nhận xét của giảng viên'} · ${esc(user(rv.by)?.name || '')}</div><p>${esc(rv.comment)}</p>
+          ${assess && noted.length ? `<ul class="qnote-list">${noted.map(({ x, i }) => `<li><span class="small muted">Câu ${i + 1}. ${mdInline(x.text)}</span><span>${esc(notes[x.id])}</span></li>`).join('')}</ul>` : ''}<div class="small muted">${fmtDateTime(rv.at)}${rv.history?.length ? ' · đã cập nhật' : ''}</div></div>`
+        : result.review?.status === 'pending' ? `<div class="alert alert-info">${icon('clock')}<div class="alert-body"><strong>Chờ giảng viên xác nhận.</strong> Điểm đã tính vào tiến độ. Bạn nhận email khi giảng viên xác nhận và nhận xét.</div></div>` : '';
+      const review = assess ? `<p class="small muted">${icon('lock')} Quiz bài tập chỉ hiện điểm và kết quả Đạt, không hiện đáp án <span class="badge badge-optional">đề xuất</span></p>`
         : `<div class="stack">${z.questions.map((x, i) => { const right = x.options.filter((o) => o.correct).map((o) => o.id); const given = result.answers[x.id] || []; const okQ = given.length && given.slice().sort().join() === right.slice().sort().join();
           return `<fieldset class="quiz-q is-review"><legend><span class="ord">${i + 1}</span><span>${mdInline(x.text)}</span></legend><p class="small ${okQ ? 'text-ok' : 'text-danger'}">${icon(okQ ? 'check-circle' : 'x-circle')} ${okQ ? `Đúng · ${x.points} điểm` : given.length ? 'Sai · 0 điểm' : 'Chưa trả lời · 0 điểm'}</p>
             ${x.options.map((o) => { const picked = given.includes(o.id); const cls_ = o.correct ? ' is-correct' : picked ? ' is-wrong' : ''; return `<div class="quiz-opt${cls_}">${icon(o.correct ? 'check-circle' : picked ? 'x-circle' : 'circle')}<span>${mdInline(o.text)}</span><span class="sr-only">${o.correct ? ' (đáp án đúng)' : ''}${picked ? ' (bạn chọn)' : ''}</span>${picked ? '<span class="badge badge-optional">Bạn chọn</span>' : ''}</div>`; }).join('')}
-            ${x.explanation ? `<div class="quiz-explain"><strong>Giải thích.</strong> ${mdInline(x.explanation)}</div>` : ''}</fieldset>`; }).join('')}</div>`;
+            ${x.explanation ? `<div class="quiz-explain"><strong>Giải thích.</strong> ${mdInline(x.explanation)}</div>` : ''}${noteHtml(x)}</fieldset>`; }).join('')}</div>`;
       return { content: `<div class="card"><div class="card-body stack">
         <div class="quiz-score ${pass ? 'is-pass' : 'is-fail'}"><div><div class="section-label">Lượt ${result.no} · nộp ${fmtDateTime(result.submittedAt)}</div><div class="quiz-score-num num">${result.score}/${result.max} <span>(${pct}%)</span></div></div>
-          ${assess ? `<span class="badge ${pass ? 'badge-ok' : 'badge-warn'}">${pass ? 'Đạt' : `Chưa đạt · cần ${z.threshold}%`}</span>` : `<span class="badge badge-info">Luyện tập</span>`}</div>
+          ${assess ? `<span class="badge ${pass ? 'badge-ok' : 'badge-warn'}">${pass ? 'Đạt' : `Chưa đạt · cần ${z.threshold}%`}</span>` : `<span class="badge badge-info">${QUIZ_KIND.practice}</span>`}</div>
         ${result.autoSubmitted ? `<div class="alert alert-warn">${icon('clock')}<div class="alert-body">Lượt này được tự nộp khi hết giờ. Chỉ các câu đã lưu trước hạn được chấm.</div></div>` : ''}
+        ${feedback}
         ${assess && best ? `<p class="small muted">Kết quả tính vào tiến độ là lượt tốt nhất: ${pctOf(best.score, best.max)}%.${left != null ? ` Còn ${Math.max(0, left)} lượt.` : ''}</p>` : ''}
         ${review}</div>
         <div class="complete-bar"><a class="un-btn un-btn-ghost un-btn-sm" href="${base}">Về trang quiz</a><div class="row">${!passed || !assess ? startBtn('Làm lại') : ''}</div></div></div>` };
     }
     const facts = `<dl class="facts">
-      <dt>Hình thức</dt><dd>${assess ? 'Kiểm tra, tính vào tiến độ' : 'Luyện tập, làm bao nhiêu lần cũng được'}</dd>
+      <dt>Loại quiz</dt><dd>${QUIZ_KIND[z.mode]} · ${assess ? 'tính vào tiến độ, giảng viên xác nhận từng lượt' : 'luyện tập, làm bao nhiêu lần cũng được'}</dd>
       <dt>Số câu</dt><dd>${z.questions.length} câu · ${z.questions.reduce((a, x) => a + x.points, 0)} điểm</dd>
       <dt>Ngưỡng đạt</dt><dd>${z.threshold}%</dd>
       ${assess ? `<dt>Thời gian</dt><dd>${z.timeLimit} phút mỗi lượt</dd><dt>Số lượt</dt><dd>${attemptsOf(m.id, l.id).length}/${lim} đã dùng${grantsOf(m.id, l.id).length ? ' · đã được cấp thêm' : ''} · tính lượt tốt nhất <span class="badge badge-optional">đề xuất</span></dd>` : ''}
     </dl>`;
-    const hist = done.length ? `<section><div class="section-label" style="margin-bottom:var(--sp-2)">Các lượt đã nộp</div><ul class="list bordered attempt-list">${done.slice().reverse().map((a) => `<li><div class="grow"><a class="title" href="${base}?result=${a.id}">Lượt ${a.no}</a><div class="meta"><span>${fmtDateTime(a.submittedAt)}</span>${a.autoSubmitted ? '<span>tự nộp khi hết giờ</span>' : ''}</div></div><span class="num">${a.score}/${a.max} · ${pctOf(a.score, a.max)}%</span>${stBadge(pctOf(a.score, a.max) >= z.threshold ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Chưa đạt' })}</li>`).join('')}</ul></section>` : '';
+    const hist = done.length ? `<section><div class="section-label" style="margin-bottom:var(--sp-2)">Các lượt đã nộp</div><ul class="list bordered attempt-list">${done.slice().reverse().map((a) => `<li><div class="grow"><a class="title" href="${base}?result=${a.id}">Lượt ${a.no}</a><div class="meta"><span>${fmtDateTime(a.submittedAt)}</span>${a.autoSubmitted ? '<span>tự nộp khi hết giờ</span>' : ''}</div></div><span class="num">${a.score}/${a.max} · ${pctOf(a.score, a.max)}%</span>${stBadge(pctOf(a.score, a.max) >= z.threshold ? { tone: 'ok', label: 'Đạt' } : { tone: 'warn', label: 'Chưa đạt' })}${reviewState(a) && a.review.status !== 'superseded' ? stBadge(reviewState(a)) : ''}</li>`).join('')}</ul></section>` : '';
     return { content: `<div class="card"><div class="card-body stack">${facts}
-      ${passed && assess ? `<div class="alert alert-ok">${icon('check-circle')}<div class="alert-body">Bạn đã đạt bài kiểm tra này với ${pctOf(best.score, best.max)}%.${left > 0 ? ' Bạn vẫn có thể làm thêm; kết quả tính theo lượt tốt nhất.' : ''}</div></div>` : ''}
+      ${passed && assess ? `<div class="alert alert-ok">${icon('check-circle')}<div class="alert-body">Bạn đã đạt quiz bài tập này với ${pctOf(best.score, best.max)}%.${left > 0 ? ' Bạn vẫn có thể làm thêm; kết quả tính theo lượt tốt nhất.' : ''}</div></div>` : ''}
       ${blocked && c.status === 'active' ? `<div class="alert alert-warn">${icon('alert')}<div class="alert-body">${esc(blocked)} mà chưa đạt. Liên hệ giảng viên nếu cần cấp thêm lượt.</div></div>` : ''}
-      ${!blocked && c.status === 'active' ? `<p class="hint-line">${icon(assess ? 'timer' : 'info')}<span>${assess ? `Đồng hồ ${z.timeLimit} phút bắt đầu khi bạn bấm làm bài và vẫn chạy nếu bạn rời trang. Câu trả lời được lưu ngay khi chọn; hết giờ, bài tự nộp.` : 'Câu trả lời được lưu ngay khi chọn. Nộp xong, bạn xem được đáp án và giải thích từng câu.'}</span></p>` : ''}
+      ${!blocked && c.status === 'active' ? `<p class="hint-line">${icon(assess ? 'timer' : 'info')}<span>${assess ? `Đồng hồ ${z.timeLimit} phút bắt đầu khi bạn bấm làm bài và vẫn chạy nếu bạn rời trang. Mỗi lần chỉ hiện một câu; câu trả lời được lưu ngay khi chọn; hết giờ, bài tự nộp.` : 'Mỗi lần chỉ hiện một câu và câu trả lời được lưu ngay khi chọn. Nộp xong, bạn xem được đáp án và giải thích từng câu.'}</span></p>` : ''}
       ${hist}</div>
       <div class="complete-bar">${navBtns}${startBtn(done.length ? 'Làm lượt mới' : 'Bắt đầu làm bài')}</div></div>` };
   }
@@ -1496,6 +1677,19 @@
       if (left === 0) { clearInterval(quizTimer); quizTimer = null; const r = submitAttempt(attemptId, { auto: true }); if (r.ok) { toast('Hết giờ: hệ thống đã tự nộp bài với các câu đã lưu.', 'warn'); go(resultHash); } }
     };
     tick(); quizTimer = setInterval(tick, 1000);
+  }
+  // Focus mode navigation: swap the visible question in place, keep the map and step buttons in sync, move focus to the question.
+  const quizCurrent = () => [...document.querySelectorAll('.quiz-take .quiz-q')].findIndex((f) => !f.hidden);
+  function quizGoto(i) {
+    const take = $('.quiz-take'); if (!take) return; const fs = [...take.querySelectorAll('.quiz-q')]; const n = fs.length; if (i < 0 || i >= n) return;
+    quizPos[take.dataset.attempt] = i;
+    fs.forEach((f, k) => { f.hidden = k !== i; });
+    take.querySelectorAll('.qm-btn').forEach((b, k) => { if (k === i) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current'); });
+    take.querySelector('[data-pos]').textContent = i + 1;
+    take.querySelector('[data-action="quiz-prev"]').disabled = i === 0;
+    take.querySelector('[data-action="quiz-next"]').hidden = i === n - 1; take.querySelector('[data-step-submit]').hidden = i !== n - 1;
+    fs[i].focus({ preventScroll: true }); take.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    const ann = $('#announcer'); if (ann) ann.textContent = `Câu ${i + 1} trên ${n}`;
   }
   function homeworkView(c, m, l, navBtns) {
     const hw = l.homework; const subs = subsOf(m.id, l.id); const latest = subs[subs.length - 1]; const due = deadlineOf(c.id, l.id); const max = hwMax(hw);
@@ -1528,16 +1722,22 @@
   }
 
   /* -------------------------------------------------------- dialogs */
-  function lessonForm(l = {}) {
+  const unitForm = (u = {}) => field('Tên bài học', `<input class="input" name="title" value="${esc(u.title || '')}" placeholder="vd: Cài đặt và Hello World" required>`, { required: true, help: 'Một bài học gom nhiều học liệu: video, bài đọc, quiz và bài tập. Học viên hoàn thành bài học khi xong mọi học liệu bắt buộc trong đó.' });
+  // One "Loại" select lists every lesson kind, both quiz kinds included, so no second quiz-kind select is needed.
+  const LESSON_KINDS = [{ value: 'video', label: 'Video' }, { value: 'markdown', label: 'Bài đọc (Markdown)' },
+    { value: 'quiz:practice', label: 'Quiz học liệu (luyện tập, chấm tự động)' }, { value: 'quiz:assessment', label: 'Quiz bài tập (giới hạn lượt và giờ, giảng viên xác nhận)' },
+    { value: 'homework', label: 'Bài tập nộp repo hoặc file (giảng viên chấm)' }];
+  function lessonForm(v, l = {}, unitId = l.unitId) {
     const type = l.type || 'video'; const z = l.quiz || { mode: 'practice', threshold: 70, attempts: 2, timeLimit: 20, shuffle: true }; const hw = l.homework || { brief: '', threshold: 70, attachments: [] };
     const sec = (k, html) => `<div class="stack-sm" data-lesson-section="${k}" ${type === k ? '' : 'hidden'}>${html}</div>`;
     return `<div class="stack-sm">
-      ${field('Tiêu đề', `<input class="input" name="title" value="${esc(l.title || '')}" required>`, { required: true })}
-      <div class="form-grid">${field('Loại', `<select class="input" name="type" data-change="lesson-type">${selectOpts([{ value: 'video', label: 'Video' }, { value: 'markdown', label: 'Bài đọc (Markdown)' }, { value: 'quiz', label: 'Quiz' }, { value: 'homework', label: 'Bài tập' }], type)}</select>`, { help: l.id ? 'Đổi loại sẽ bỏ nội dung của loại cũ.' : '' })}
+      <div class="form-grid">${field('Tiêu đề', `<input class="input" name="title" value="${esc(l.title || '')}" required>`, { required: true })}
+        ${field('Bài học', `<select class="input" name="unitId">${selectOpts(v.units.map((u, i) => ({ value: u.id, label: `${i + 1}. ${u.title}` })), unitId)}</select>`, { help: l.id ? 'Đổi bài học sẽ đưa học liệu xuống cuối bài học mới.' : 'Học liệu mới nằm cuối bài học đã chọn.' })}</div>
+      <div class="form-grid">${field('Loại', `<select class="input" name="type" data-change="lesson-type">${selectOpts(LESSON_KINDS, type === 'quiz' ? `quiz:${z.mode}` : type)}</select>`, { help: l.id ? 'Đổi giữa hai loại quiz giữ nguyên câu hỏi. Đổi sang loại khác sẽ bỏ nội dung của loại cũ.' : 'Quiz học liệu tính hoàn thành khi nộp một lượt. Quiz bài tập tính khi đạt ngưỡng.' })}
         <label class="check" style="align-self:end"><input type="checkbox" name="required" ${l.required !== false ? 'checked' : ''}> Bắt buộc (tính vào %)</label></div>
       ${sec('video', `${field('File video', `<input class="input" name="video" value="${esc(l.video || '')}" placeholder="vd: db-02-join.mp4">`, { help: 'Bản mẫu chỉ ghi tên file; hệ thống thật upload lên kho lưu trữ và phát qua đường dẫn có chữ ký.' })}${field('Thời lượng', `<input class="input" name="duration" value="${esc(l.duration || '')}" placeholder="mm:ss">`)}`)}
       ${sec('markdown', field('Nội dung Markdown', `<textarea class="input input-prose" name="content" rows="10">${esc(l.content || '')}</textarea>`, { help: 'Hỗ trợ tiêu đề, danh sách, khối mã, trích dẫn, **đậm** và `mã`. HTML được lọc khi hiển thị.' }))}
-      ${sec('quiz', `<div class="form-grid">${field('Hình thức', `<select class="input" name="mode" data-change="quiz-mode">${selectOpts([{ value: 'practice', label: 'Luyện tập: không giới hạn, không tính tiến độ' }, { value: 'assessment', label: 'Kiểm tra: giới hạn lượt và giờ, tính tiến độ' }], z.mode)}</select>`)}
+      ${sec('quiz', `<div class="form-grid">
           ${field('Ngưỡng đạt (%)', `<input class="input" type="number" inputmode="numeric" name="quizThreshold" min="1" max="100" value="${z.threshold}">`)}</div>
         <div class="form-grid" data-quiz-limits ${z.mode === 'assessment' ? '' : 'hidden'}>${field('Số lượt làm bài', `<input class="input" type="number" inputmode="numeric" name="attempts" min="1" max="10" value="${z.attempts ?? 2}">`, { help: 'Tính lượt tốt nhất <span class="badge badge-optional">đề xuất</span>' })}
           ${field('Thời gian mỗi lượt (phút)', `<input class="input" type="number" inputmode="numeric" name="timeLimit" min="1" max="180" value="${z.timeLimit ?? 20}">`)}</div>
@@ -1570,10 +1770,14 @@
     'archive-sv': (btn) => { const v = sv(btn.dataset.id); confirmAction({ title: `Lưu trữ ${versionLabel(v)}?`, text: 'Phiên bản lưu trữ không gắn mới vào khóa học được, nhưng các khóa học và lớp đang dùng vẫn hoạt động bình thường.', confirm: 'Lưu trữ', onConfirm: () => handle(archiveStageVersion(v.id), 'Đã lưu trữ.') && ok() }); },
     'delete-sv': (btn) => { const v = sv(btn.dataset.id); const st = stage(v.stageId); const refs = cvsUsingSV(v.id); if (v.status !== 'draft' && refs.length) { toast(`Không xóa được: đang dùng trong ${refs.map((c) => `${course(c.courseId).name} ${versionLabel(c)}`).join(', ')}.`, 'error'); return; }
       confirmAction({ title: `Xóa ${st.name} ${versionLabel(v)}?`, text: v.status === 'draft' ? `Bản nháp và ${v.lessons.length} học liệu trong đó sẽ bị xóa. Không hoàn tác được.` : 'Phiên bản này không được khóa học nào tham chiếu. Xóa sẽ không hoàn tác được.', confirm: 'Xóa phiên bản', danger: true, onConfirm: () => { const r = deleteStageVersion(v.id); if (r.ok) { closeModal(); toast('Đã xóa.'); location.hash = r.stageGone ? '#/admin/stages' : `#/admin/stages/${st.id}`; render(); } return r; } }); },
-    'new-lesson': (btn) => openModal({ title: 'Thêm học liệu', confirm: 'Thêm', body: lessonForm(), onSubmit: (d) => { const r = saveLesson(btn.dataset.sv, null, { ...d, required: d.required === 'on', shuffle: d.shuffle === 'on' });
-      const authored = d.type === 'quiz' || d.type === 'homework';
-      return handle(r, authored ? `Đã thêm học liệu. Tiếp theo: soạn ${d.type === 'quiz' ? 'câu hỏi' : 'tiêu chí chấm'}.` : 'Đã thêm học liệu.', authored ? () => go(`#/admin/stages/${sv(btn.dataset.sv).stageId}/lessons/${r.id}`) : null) && ok(); } }),
-    'edit-lesson': (btn) => { const l = sv(btn.dataset.sv).lessons.find((x) => x.id === btn.dataset.id); openModal({ title: 'Sửa học liệu', body: lessonForm(l), onSubmit: (d) => handle(saveLesson(btn.dataset.sv, l.id, { ...d, required: d.required === 'on', shuffle: d.shuffle === 'on' }), 'Đã lưu học liệu.') && ok() }); },
+    'new-unit': (btn) => openModal({ title: 'Thêm bài học', confirm: 'Thêm', body: unitForm(), onSubmit: (d) => handle(saveUnit(btn.dataset.sv, null, d), 'Đã thêm bài học. Tiếp theo: thêm học liệu vào bài học.') && ok() }),
+    'edit-unit': (btn) => { const u = sv(btn.dataset.sv).units.find((x) => x.id === btn.dataset.id); openModal({ title: 'Đổi tên bài học', body: unitForm(u), onSubmit: (d) => handle(saveUnit(btn.dataset.sv, u.id, d), 'Đã lưu bài học.') && ok() }); },
+    'delete-unit': (btn) => { const v = sv(btn.dataset.sv); const u = unitsOf(v).find((x) => x.id === btn.dataset.id); confirmAction({ title: `Xóa bài học "${u.title}"?`, text: u.lessons.length ? `Bài học và ${u.lessons.length} học liệu trong đó bị xóa khỏi bản nháp này. Muốn giữ học liệu nào, hãy chuyển nó sang bài học khác trước. Các phiên bản đã phát hành không bị ảnh hưởng.` : 'Bài học trống bị xóa khỏi bản nháp này.', confirm: 'Xóa bài học', danger: true, onConfirm: () => handle(deleteUnit(v.id, u.id), 'Đã xóa bài học.') && ok() }); },
+    'move-unit': (btn) => { moveUnit(btn.dataset.sv, btn.dataset.id, Number(btn.dataset.dir)); render(); },
+    'new-lesson': (btn) => openModal({ title: 'Thêm học liệu', confirm: 'Thêm', body: lessonForm(sv(btn.dataset.sv), {}, btn.dataset.unit), onSubmit: (d) => { const r = saveLesson(btn.dataset.sv, null, { ...d, required: d.required === 'on', shuffle: d.shuffle === 'on' });
+      const isQuiz = d.type.startsWith('quiz'); const authored = isQuiz || d.type === 'homework';
+      return handle(r, authored ? `Đã thêm học liệu. Tiếp theo: soạn ${isQuiz ? 'câu hỏi' : 'tiêu chí chấm'}.` : 'Đã thêm học liệu.', authored ? () => go(`#/admin/stages/${sv(btn.dataset.sv).stageId}/lessons/${r.id}`) : null) && ok(); } }),
+    'edit-lesson': (btn) => { const l = sv(btn.dataset.sv).lessons.find((x) => x.id === btn.dataset.id); openModal({ title: 'Sửa học liệu', body: lessonForm(sv(btn.dataset.sv), l), onSubmit: (d) => handle(saveLesson(btn.dataset.sv, l.id, { ...d, required: d.required === 'on', shuffle: d.shuffle === 'on' }), 'Đã lưu học liệu.') && ok() }); },
     'delete-lesson': (btn) => { const l = sv(btn.dataset.sv).lessons.find((x) => x.id === btn.dataset.id); confirmAction({ title: `Xóa "${l.title}"?`, text: 'Học liệu bị xóa khỏi bản nháp này. Các phiên bản đã phát hành không bị ảnh hưởng.', confirm: 'Xóa học liệu', danger: true, onConfirm: () => handle(deleteLesson(btn.dataset.sv, l.id), 'Đã xóa học liệu.') && ok() }); },
     'move-lesson': (btn) => { moveLesson(btn.dataset.sv, btn.dataset.id, Number(btn.dataset.dir)); render(); },
     'apply-sv': (btn) => { const v = sv(btn.dataset.id || btn.dataset.sv); const co = course(btn.dataset.course); const latest = latestPublished(courseVersionsOf(co.id)); const used = latest.stages.map(sv).find((x) => x.stageId === v.stageId);
@@ -1617,6 +1821,9 @@
     'submit-quiz': (btn) => { const left = [...document.querySelectorAll('.quiz-take .quiz-q')].filter((f) => !f.querySelector('input:checked')).length;
       confirmAction({ title: 'Nộp bài?', text: left ? `Bạn còn <strong>${left} câu chưa trả lời</strong>; các câu này tính 0 điểm. Sau khi nộp không sửa được nữa.` : 'Bạn đã trả lời tất cả câu hỏi. Sau khi nộp không sửa được nữa.', confirm: 'Nộp bài',
         onConfirm: () => { const r = submitAttempt(btn.dataset.id); if (r.ok) { toast(r.late ? 'Đã quá giờ: lượt được chấm với các câu đã lưu trước hạn.' : 'Đã nộp bài.', r.late ? 'warn' : 'ok'); go(`#/learn/classes/${btn.dataset.class}/lessons/${btn.dataset.lesson}?result=${btn.dataset.id}`); } return r; } }); },
+    'quiz-goto': (btn) => quizGoto(Number(btn.dataset.idx)),
+    'quiz-prev': () => quizGoto(quizCurrent() - 1),
+    'quiz-next': () => quizGoto(quizCurrent() + 1),
     'set-deadline': (btn) => { if (btn.getAttribute('aria-disabled') === 'true') { toast(btn.title, 'error'); return; }
       const c = cls(btn.dataset.class); const l = lessonById(btn.dataset.lesson); const cur = deadlineOf(c.id, l.id);
       openModal({ title: `Hạn nộp: ${shortTitle(l)}`, confirm: 'Lưu hạn nộp', body: `<div class="stack-sm"><p class="small muted">Lớp ${esc(c.code)}. Hạn nộp chỉ áp dụng cho lớp này. Học viên chưa nộp nhận email nhắc 24 giờ trước hạn.</p>
@@ -1645,11 +1852,15 @@
     'first-login': (form) => { const r = changePassword(form.password.value, form.confirm.value); if (!r.ok) { formError(form, r.error); return; } toast('Đã lưu mật khẩu. Chào mừng bạn vào lớp.'); location.hash = homeFor(me()); render(); },
     'class-settings': (form) => { const d = inputs(form); const c = cls(form.dataset.id); if (!('courseVersionId' in d)) d.courseVersionId = c.courseVersionId; const r = updateClass(c.id, d); if (!r.ok) { formError(form, r.error); return; } toast('Đã lưu cài đặt lớp.'); render(); },
     'summary-filter': (form) => { const d = inputs(form); location.hash = withQuery(form.dataset.base, { incomplete: d.incomplete, nocomment: d.nocomment, rework: d.rework ? 1 : '', overdue: d.overdue ? 1 : '' }); },
-    'grading-filter': (form) => { const d = inputs(form); location.hash = withQuery(form.dataset.base, { class: d.class, lesson: d.lesson, overdue: d.overdue ? 1 : '' }); },
+    'grading-filter': (form) => { const d = inputs(form); location.hash = withQuery(form.dataset.base, { type: d.type, class: d.class, lesson: d.lesson, overdue: d.overdue ? 1 : '' }); },
     grade: (form) => { const id = form.dataset.id; const r = gradeSubmission(id, inputs(form)); if (!r.ok) { formError(form, r.error); return; }
       const msg = `Đã lưu ${r.total}/${r.max} · ${r.result === 'passed' ? 'Đạt' : 'Cần làm lại'}. Email kết quả đã gửi cho học viên.`;
       const next = r.edit ? null : gradingQueue(me())[0];
-      if (r.edit) { toast(msg); render(); } else if (next) { toast(`${msg} Chuyển sang bài tiếp theo.`); go(gradeHref(next.s.id)); } else { toast(`${msg} Đã chấm hết hàng chờ.`); go(me().role === 'admin' ? '#/admin/grading' : '#/teach/grading'); } },
+      if (r.edit) { toast(msg); render(); } else if (next) { toast(`${msg} Chuyển sang bài tiếp theo.`); go(next.href); } else { toast(`${msg} Đã chấm hết hàng chờ.`); go(me().role === 'admin' ? '#/admin/grading' : '#/teach/grading'); } },
+    'quiz-review': (form) => { const r = reviewAttempt(form.dataset.id, inputs(form)); if (!r.ok) { formError(form, r.error); return; }
+      const msg = r.edit ? 'Đã lưu nhận xét mới. Học viên nhận email cập nhật.' : r.assess ? 'Đã xác nhận kết quả. Email nhận xét đã gửi cho học viên.' : 'Đã gửi nhận xét cho học viên.';
+      const next = r.assess && !r.edit ? gradingQueue(me())[0] : null;
+      if (!r.assess || r.edit) { toast(msg); render(); } else if (next) { toast(`${msg} Chuyển sang mục tiếp theo.`); go(next.href); } else { toast(`${msg} Đã xử lý hết hàng chờ.`); go(me().role === 'admin' ? '#/admin/grading' : '#/teach/grading'); } },
     'submit-homework': (form) => { const d = inputs(form); const files = [...form.querySelector('input[type=file]').files].map((f) => ({ name: f.name, size: f.size }));
       const r = submitHomework(form.dataset.class, form.dataset.lesson, { repoUrl: d.repoUrl, commitRef: d.commitRef, files }); if (!r.ok) { formError(form, r.error); return; }
       toast(`Đã nộp lần #${r.no}${r.late ? ' (nộp muộn)' : ''}${r.replaced ? `, thay lần #${r.replaced} đang chờ chấm` : ''}. Bạn sẽ nhận email khi có kết quả.`); render(); },
@@ -1676,13 +1887,14 @@
   document.addEventListener('change', (e) => {
     const el = e.target.closest('[data-change]'); if (!el) return;
     if (el.dataset.change === 'switch-role') { switchRole(el.value); location.hash = homeFor(me()); render(); }
-    if (el.dataset.change === 'lesson-type') el.closest('.modal-body').querySelectorAll('[data-lesson-section]').forEach((x) => { x.hidden = x.dataset.lessonSection !== el.value; });
-    if (el.dataset.change === 'quiz-mode') el.closest('.modal-body').querySelector('[data-quiz-limits]').hidden = el.value !== 'assessment';
+    if (el.dataset.change === 'lesson-type') { const body = el.closest('.modal-body'); const [type, mode] = el.value.split(':');
+      body.querySelectorAll('[data-lesson-section]').forEach((x) => { x.hidden = x.dataset.lessonSection !== type; }); body.querySelector('[data-quiz-limits]').hidden = mode !== 'assessment'; }
     if (el.dataset.change === 'quiz-answer') {
       const fs = el.closest('fieldset'); const oids = [...fs.querySelectorAll('input:checked')].map((x) => x.value);
       const r = saveAnswer(el.dataset.attempt, el.dataset.q, oids); if (!r.ok) { toast(r.error, 'error'); render(); return; }
       const saved = $('[data-saved]'); if (saved) saved.textContent = `Đã lưu ${new Date(r.savedAt).toTimeString().slice(0, 8)}`;
       const ans = $('[data-answered]'); if (ans) ans.textContent = `${[...document.querySelectorAll('.quiz-take .quiz-q')].filter((f) => f.querySelector('input:checked')).length}/${ans.dataset.total}`;
+      const mb = $(`.quiz-map [data-q="${el.dataset.q}"]`); if (mb) { const yes = oids.length > 0; mb.classList.toggle('is-answered', yes); mb.setAttribute('aria-label', `Câu ${Number(mb.dataset.idx) + 1}, ${yes ? 'đã trả lời' : 'chưa trả lời'}`); }
     }
     if (el.dataset.change === 'toggle-complete') { const r = setComplete(el.dataset.class, el.dataset.lesson, el.checked); if (!r.ok) { el.checked = !el.checked; toast(r.error, 'error'); } else render(); }
   });

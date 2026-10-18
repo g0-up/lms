@@ -92,6 +92,33 @@ func sum(xs []int) int {
 \`\`\`
 
 Hàm có thể trả về nhiều giá trị, thường là \`(kết quả, error)\`.`,
+    goHello: `# Hello World từng bước
+
+## 1. Tạo module
+
+\`\`\`bash
+mkdir hello && cd hello
+go mod init example.com/hello
+\`\`\`
+
+## 2. Viết chương trình
+
+\`\`\`go
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Xin chào, Go!")
+}
+\`\`\`
+
+## 3. Chạy và biên dịch
+
+- \`go run .\` biên dịch vào thư mục tạm rồi chạy.
+- \`go build\` tạo file nhị phân \`hello\` để chạy lại nhiều lần.
+
+> Chạy \`go fmt ./...\` trước khi nộp bài để code đúng định dạng chuẩn.`,
     goExercise: `# Bài tập tổng hợp Go
 
 Viết chương trình đọc file CSV danh sách học viên và in ra số học viên theo từng lớp.
@@ -190,7 +217,7 @@ basic02  5
       ] } })
     ] },
     { id: 'sv-go-1', stageId: 'st-go', no: 1, status: 'published', clonedFrom: null, publishedAt: ago(66), lessons: [
-      L('go-setup', 'video', 'Cài đặt và Hello World', true, { video: 'go-01-cai-dat.mp4', duration: '12:02' }),
+      L('go-setup', 'video', 'Video: Cài đặt Go', true, { video: 'go-01-cai-dat.mp4', duration: '12:02' }),
       L('go-types', 'markdown', 'Kiểu dữ liệu và hàm', true, { content: md.goTypes }),
       L('go-routine', 'video', 'Goroutine cơ bản', true, { video: 'go-03-goroutine.mp4', duration: '25:31' }),
       L('go-exercise', 'markdown', 'Bài tập tổng hợp', false, { content: md.goExercise }),
@@ -216,6 +243,110 @@ basic02  5
       L('web-js', 'video', 'JavaScript và DOM', true, { video: 'web-03-js-dom.mp4', duration: '19:50' })
     ] }
   ];
+  // Draft v2 of the Go stage, cloned from v1 like the app's clone action: new ids, same keys.
+  // The admin authors quizzes in this draft and publishes it.
+  const cloneLesson = (l) => {
+    const c = JSON.parse(JSON.stringify(l)); c.id = 'l' + (++lessonSeq);
+    if (c.quiz) c.quiz.questions.forEach((x) => { x.id = 'q' + (++qSeq); x.options.forEach((o) => { o.id = 'o' + (++oSeq); }); });
+    if (c.homework) c.homework.criteria.forEach((x) => { x.id = 'c' + (++cSeq); });
+    return c;
+  };
+  stageVersions.push({ id: 'sv-go-2', stageId: 'st-go', no: 2, status: 'draft', clonedFrom: 'sv-go-1', publishedAt: null,
+    lessons: stageVersions.find((v) => v.id === 'sv-go-1').lessons.map(cloneLesson) });
+
+  // A practice quiz and an assessment quiz for every stage. They are built after the lessons above so
+  // existing ids stay stable, then placed after the lesson with the given key (or at the end of the stage).
+  const place = (svId, afterKey, lesson) => {
+    const ls = stageVersions.find((v) => v.id === svId).lessons;
+    ls.splice(afterKey ? ls.findIndex((x) => x.key === afterKey) + 1 : ls.length, 0, lesson);
+    return lesson;
+  };
+  const practice = (questions) => ({ quiz: { mode: 'practice', attempts: null, timeLimit: null, threshold: 70, shuffle: true, questions } });
+  const assessment = (attempts, timeLimit, threshold, questions) => ({ quiz: { mode: 'assessment', attempts, timeLimit, threshold, shuffle: true, questions } });
+  place('sv-db-1', 'db-table', L('db-practice', 'quiz', 'Luyện tập: Truy vấn SQL cơ bản', true, practice([
+    Q('qk-db-select', 'single', 'Lệnh nào dùng để **đọc** dữ liệu từ bảng?', [['`SELECT`', 1], ['`INSERT`'], ['`UPDATE`'], ['`GRANT`']], 'SELECT đọc dữ liệu; INSERT và UPDATE thay đổi dữ liệu; GRANT phân quyền.'),
+    Q('qk-db-where', 'single', 'Mệnh đề nào lọc các dòng theo điều kiện?', [['`WHERE`', 1], ['`ORDER BY`'], ['`GROUP BY`'], ['`LIMIT`']], 'WHERE giữ lại các dòng thỏa điều kiện trước khi sắp xếp hay gom nhóm.'),
+    Q('qk-db-ddl', 'multi', 'Những lệnh nào thay đổi **cấu trúc** bảng? Chọn tất cả đáp án đúng.', [['`CREATE`', 1], ['`ALTER`', 1], ['`DELETE`'], ['`SELECT`']], 'CREATE và ALTER thuộc nhóm DDL. DELETE chỉ xóa dữ liệu, cấu trúc giữ nguyên.'),
+    Q('qk-db-pk', 'single', 'Mỗi bảng nên có bao nhiêu khóa chính?', [['Đúng một', 1], ['Không cần khóa chính'], ['Hai'], ['Tùy số cột']], 'Khóa chính có thể gồm nhiều cột, nhưng mỗi bảng chỉ có một khóa chính.')
+  ])));
+  place('sv-db-1', null, L('db-test', 'quiz', 'Kiểm tra cuối chặng Database', true, assessment(2, 10, 70, [
+    Q('qk-db-fk', 'single', 'Khóa ngoại tham chiếu tới cột nào của bảng khác?', [['Khóa chính (hoặc cột UNIQUE)', 1], ['Cột bất kỳ'], ['Cột có index'], ['Cột kiểu text']], 'Khóa ngoại phải trỏ tới cột định danh duy nhất một dòng, thường là khóa chính.'),
+    Q('qk-db-restrict', 'single', '`ON DELETE RESTRICT` làm gì khi xóa một dòng đang được tham chiếu?', [['Từ chối lệnh xóa', 1], ['Xóa luôn các dòng tham chiếu'], ['Đặt khóa ngoại về NULL'], ['Bỏ qua ràng buộc']], 'RESTRICT chặn việc xóa; CASCADE mới xóa dây chuyền, SET NULL mới đặt về NULL.'),
+    Q('qk-db-unique', 'single', '`UNIQUE (class_id, user_id)` đảm bảo điều gì?', [['Một học viên chỉ có một dòng trong mỗi lớp', 1], ['Mỗi lớp chỉ có một học viên'], ['user_id không trùng trên toàn bảng'], ['class_id không được NULL']], 'Ràng buộc trên cặp cột: cùng một cặp (lớp, học viên) không được lặp lại.'),
+    Q('qk-db-index', 'multi', 'Nên đánh index cho những cột nào? Chọn tất cả đáp án đúng.', [['Cột thường xuất hiện trong `WHERE`', 1], ['Cột dùng để `JOIN`', 1], ['Mọi cột của bảng'], ['Cột chỉ được ghi, không bao giờ đọc']], 'Index tăng tốc đọc nhưng làm chậm ghi, nên chỉ đánh cho cột hay dùng để lọc, nối hoặc sắp xếp.'),
+    Q('qk-db-gin', 'single', 'Loại index nào phù hợp cho cột JSONB?', [['GIN', 1], ['B-tree'], ['Hash'], ['Không đánh index được']], 'GIN đánh index từng phần tử bên trong mảng và JSONB.')
+  ])));
+  place('sv-ds-1', null, L('ds-test', 'quiz', 'Kiểm tra cuối chặng Data structure', true, assessment(2, 10, 70, [
+    Q('qk-ds-bfs', 'single', 'BFS dùng cấu trúc nào để lưu các đỉnh chờ duyệt?', [['Queue', 1], ['Stack'], ['Hash table'], ['Cây nhị phân']], 'BFS duyệt theo lớp: đỉnh phát hiện trước được duyệt trước, đúng thứ tự FIFO.'),
+    Q('qk-ds-paren', 'single', 'Kiểm tra chuỗi `({[]})` có ngoặc hợp lệ nên dùng cấu trúc nào?', [['Stack', 1], ['Queue'], ['Mảng đã sắp xếp'], ['Hash table']], 'Ngoặc mở gần nhất phải đóng trước: đúng nguyên tắc LIFO của stack.'),
+    Q('qk-ds-linked', 'single', 'Ưu điểm của danh sách liên kết so với mảng là gì?', [['Chèn hoặc xóa ở giữa không phải dời phần tử', 1], ['Truy cập phần tử thứ i trong O(1)'], ['Tốn ít bộ nhớ hơn'], ['Luôn được sắp xếp']], 'Chỉ cần đổi con trỏ; đổi lại, truy cập theo chỉ số là O(n).'),
+    Q('qk-ds-collide', 'multi', 'Những cách nào xử lý xung đột trong hash table? Chọn tất cả đáp án đúng.', [['Chaining', 1], ['Open addressing', 1], ['Sắp xếp lại mảng'], ['Bỏ qua khóa mới']], 'Chaining nối các khóa trùng vị trí thành danh sách; open addressing tìm ô trống khác.'),
+    Q('qk-ds-worst', 'single', 'Khi nào tra cứu trong hash table rơi vào O(n)?', [['Khi rất nhiều khóa xung đột cùng một vị trí', 1], ['Khi bảng rỗng'], ['Khi khóa là chuỗi'], ['Khi dùng chaining']], 'Nếu mọi khóa dồn vào một vị trí, tra cứu phải duyệt cả danh sách.')
+  ])));
+  const goPractice = place('sv-go-1', 'go-routine', L('go-practice', 'quiz', 'Luyện tập: Goroutine và channel', false, practice([
+    Q('qk-go-go', 'single', 'Từ khóa nào chạy một hàm trong goroutine mới?', [['`go`', 1], ['`async`'], ['`thread`'], ['`defer`']], '`go f()` chạy f đồng thời; defer chỉ hoãn lời gọi tới cuối hàm.'),
+    Q('qk-go-chan', 'single', 'Gửi giá trị `v` vào channel `ch` viết thế nào?', [['`ch <- v`', 1], ['`v <- ch`'], ['`ch.send(v)`'], ['`ch = v`']], 'Mũi tên chỉ hướng dữ liệu đi: từ v vào ch.'),
+    Q('qk-go-wg', 'multi', 'Những bước nào cần khi dùng `sync.WaitGroup`? Chọn tất cả đáp án đúng.', [['Gọi `Add` trước khi chạy goroutine', 1], ['Gọi `Done` khi goroutine xong', 1], ['Gọi `Wait` để chờ', 1], ['Gọi `time.Sleep` sau `Wait`']], 'Add, Done và Wait là đủ; Sleep không cần và không đảm bảo gì.'),
+    Q('qk-go-deadlock', 'single', 'Hàm `main` chỉ có `ch := make(chan int); ch <- 1` sẽ thế nào?', [['Bị deadlock vì không ai nhận', 1], ['In ra 1'], ['Chạy xong bình thường'], ['Lỗi biên dịch']], 'Channel không đệm chặn người gửi cho tới khi có người nhận; không có ai nên runtime báo deadlock.')
+  ])));
+  place('sv-go-2', 'go-routine', cloneLesson(goPractice));
+  place('sv-re-1', 're-state', L('re-practice', 'quiz', 'Luyện tập: Component, props và state', true, practice([
+    Q('qk-re-props', 'single', 'Props trong React là gì?', [['Dữ liệu component cha truyền xuống component con', 1], ['State nội bộ của component'], ['Hàm gọi API'], ['Thuộc tính CSS']], 'Props chỉ đọc ở component con; muốn đổi thì component cha đổi.'),
+    Q('qk-re-setstate', 'single', 'Gọi `setCount(count + 1)` sẽ làm gì?', [['Cập nhật state và render lại component', 1], ['Đổi biến count ngay mà không render'], ['Tải lại trang'], ['Không làm gì']], 'Hàm set lên lịch cập nhật; React render lại với giá trị mới.'),
+    Q('qk-re-key', 'single', 'Khi render một danh sách, mỗi phần tử cần prop nào?', [['`key`', 1], ['`id`'], ['`index`'], ['`ref`']], 'key giúp React nhận ra phần tử nào thêm, bớt hay đổi chỗ.'),
+    Q('qk-re-immut', 'multi', 'Cách nào cập nhật mảng trong state đúng? Chọn tất cả đáp án đúng.', [['`setItems([...items, x])`', 1], ['`setItems(items.filter(fn))`', 1], ['`items.push(x)`'], ['`items[0] = x`']], 'Luôn tạo mảng mới; sửa trực tiếp mảng cũ thì React không biết để render lại.')
+  ])));
+  place('sv-re-1', null, L('re-test', 'quiz', 'Kiểm tra cuối chặng ReactJS', true, assessment(2, 15, 70, [
+    Q('qk-re-effect', 'single', '`useEffect(fn, [])` chạy `fn` khi nào?', [['Một lần sau lần render đầu tiên', 1], ['Sau mỗi lần render'], ['Trước lần render đầu tiên'], ['Không bao giờ']], 'Mảng phụ thuộc rỗng nghĩa là không có gì thay đổi để chạy lại.'),
+    Q('qk-re-hookrule', 'single', 'Quy tắc nào đúng khi dùng hook?', [['Chỉ gọi hook ở cấp cao nhất của component', 1], ['Gọi hook trong vòng lặp'], ['Gọi hook trong điều kiện if'], ['Gọi hook trong hàm thường']], 'React dựa vào thứ tự gọi hook ở mỗi lần render, nên thứ tự đó không được đổi.'),
+    Q('qk-re-lift', 'single', 'Hai component anh em cần dùng chung một state thì làm gì?', [['Đưa state lên component cha chung', 1], ['Sao chép state vào cả hai'], ['Dùng biến toàn cục'], ['Đọc DOM của nhau']], 'Lifting state up: cha giữ state và truyền xuống bằng props.'),
+    Q('qk-re-memo', 'multi', 'Những hook nào giúp tránh tính lại hoặc tạo lại giá trị không cần thiết? Chọn tất cả đáp án đúng.', [['`useMemo`', 1], ['`useCallback`', 1], ['`useState`'], ['`useEffect`']], 'useMemo nhớ kết quả tính toán, useCallback nhớ hàm giữa các lần render.'),
+    Q('qk-re-controlled', 'single', 'Input "được điều khiển" (controlled) là input như thế nào?', [['Giá trị lấy từ state và đổi qua `onChange`', 1], ['Không có thuộc tính value'], ['Đọc giá trị bằng `document.querySelector`'], ['Chỉ dùng trong form submit']], 'State là nguồn sự thật duy nhất của giá trị input.')
+  ])));
+  place('sv-web-1', 'web-css', L('web-practice', 'quiz', 'Luyện tập: HTML ngữ nghĩa và CSS layout', true, practice([
+    Q('qk-web-nav', 'single', 'Thẻ nào dành cho khối điều hướng chính?', [['`<nav>`', 1], ['`<div class="menu">`'], ['`<section>`'], ['`<aside>`']], 'nav báo cho trình đọc màn hình đây là vùng điều hướng.'),
+    Q('qk-web-flex', 'single', 'Thuộc tính nào căn các phần tử theo trục chính trong flexbox?', [['`justify-content`', 1], ['`align-items`'], ['`text-align`'], ['`vertical-align`']], 'justify-content theo trục chính, align-items theo trục phụ.'),
+    Q('qk-web-a11y', 'multi', 'HTML ngữ nghĩa mang lại lợi ích gì? Chọn tất cả đáp án đúng.', [['Trình đọc màn hình hiểu cấu trúc trang', 1], ['Công cụ tìm kiếm đánh giá nội dung tốt hơn', 1], ['Trang tải nhanh gấp đôi'], ['Không cần viết CSS nữa']], 'Thẻ đúng nghĩa giúp máy hiểu trang; tốc độ và giao diện không đổi.'),
+    Q('qk-web-grid', 'single', '`grid-template-columns: repeat(3, 1fr)` tạo ra gì?', [['Ba cột rộng bằng nhau', 1], ['Ba hàng cao bằng nhau'], ['Một cột rộng 3fr'], ['Lưới 3×3']], '1fr là một phần không gian còn lại; ba cột chia đều.')
+  ])));
+  place('sv-web-1', null, L('web-test', 'quiz', 'Kiểm tra cuối chặng HTML CSS JS', true, assessment(3, 15, 80, [
+    Q('qk-web-dom', 'single', 'Lấy phần tử **đầu tiên** khớp selector `.card` bằng cách nào?', [["`document.querySelector('.card')`", 1], ["`document.querySelectorAll('.card')`"], ["`document.getElementsByClassName('card')`"], ["`document.getElementById('card')`"]], 'querySelector trả về phần tử đầu tiên; querySelectorAll trả về cả danh sách.'),
+    Q('qk-web-event', 'single', 'Gắn sự kiện click cho nút `btn` đúng cách là?', [["`btn.addEventListener('click', fn)`", 1], ['`btn.click = fn()`'], ["`btn.on('click')`"], ["`btn.event = 'click'`"]], 'addEventListener cho phép gắn nhiều listener và gỡ ra khi cần.'),
+    Q('qk-web-main', 'single', 'Mỗi trang nên có bao nhiêu thẻ `<main>` đang hiển thị?', [['Một', 1], ['Không giới hạn'], ['Một cho mỗi section'], ['Không cần thẻ main']], 'main đánh dấu nội dung chính duy nhất của trang.'),
+    Q('qk-web-box', 'multi', 'Những thành phần nào thuộc box model của CSS? Chọn tất cả đáp án đúng.', [['content', 1], ['padding', 1], ['border', 1], ['z-index']], 'Box model gồm content, padding, border và margin; z-index là thứ tự xếp lớp.'),
+    Q('qk-web-delegation', 'single', 'Event delegation là gì?', [['Gắn một listener ở phần tử cha để xử lý sự kiện của các con', 1], ['Gắn listener cho từng phần tử con'], ['Chặn sự kiện lan ra ngoài'], ['Gọi sự kiện bằng `setTimeout`']], 'Sự kiện nổi bọt lên cha, nên một listener ở cha xử lý được cả các con thêm sau.')
+  ])));
+
+  // More học liệu for the first Go bài học, built last so every older id stays stable.
+  const goHello = [
+    L('go-hello-read', 'markdown', 'Hello World từng bước', false, { content: md.goHello }),
+    L('go-hello-practice', 'quiz', 'Luyện tập: Lệnh go và cấu trúc chương trình', false, practice([
+      Q('qk-go-main', 'single', 'Chương trình Go bắt đầu chạy từ đâu?', [['Hàm `main` trong `package main`', 1], ['Hàm `init` của mọi package'], ['Dòng đầu tiên của file'], ['Hàm `start`']], 'Lệnh go run và go build tìm package main và gọi hàm main.'),
+      Q('qk-go-mod', 'single', 'Lệnh nào tạo file `go.mod` cho một dự án mới?', [['`go mod init`', 1], ['`go get`'], ['`go new`'], ['`go mod tidy`']], 'go mod init ghi tên module; go mod tidy chỉ dọn và bổ sung phụ thuộc.'),
+      Q('qk-go-fmt', 'multi', 'Những lệnh nào có sẵn trong bộ công cụ Go? Chọn tất cả đáp án đúng.', [['`go fmt`', 1], ['`go test`', 1], ['`go vet`', 1], ['`go lint`']], 'go fmt, go test và go vet đi kèm Go; linter là công cụ bên ngoài.')
+    ]))
+  ];
+  goHello.forEach((l) => { place('sv-go-1', null, l); place('sv-go-2', null, cloneLesson(l)); });
+
+  // Bài học group the học liệu of a stage version: [key, title, học liệu keys in order]. The flat
+  // lessons list is re-ordered to follow the bài học, so lookups by học liệu id keep working.
+  // Bài học keys stay the same when a stage version is cloned, like lesson keys.
+  let unitSeq = 0;
+  const group = (svId, defs) => {
+    const v = stageVersions.find((x) => x.id === svId);
+    v.units = defs.map(([key, title]) => ({ id: 'un' + (++unitSeq), key, title }));
+    v.lessons = defs.flatMap(([, , keys], i) => keys.map((k) => Object.assign(v.lessons.find((l) => l.key === k), { unitId: v.units[i].id })));
+  };
+  const FINAL = 'Kiểm tra cuối chặng';
+  const goUnits = [['ux-go-hello', 'Cài đặt và Hello World', ['go-setup', 'go-hello-read', 'go-hello-practice']], ['ux-go-basics', 'Kiểu dữ liệu và hàm', ['go-types', 'go-exercise']],
+    ['ux-go-concurrency', 'Goroutine và channel', ['go-routine', 'go-practice']], ['ux-go-final', FINAL, ['go-hw', 'go-quiz']]];
+  group('sv-db-1', [['ux-db-sql', 'Nhập môn SQL', ['db-intro', 'db-practice']], ['ux-db-design', 'Thiết kế bảng', ['db-table', 'db-index']], ['ux-db-final', FINAL, ['db-test']]]);
+  group('sv-ds-1', [['ux-ds-linear', 'Mảng, Stack và Queue', ['ds-array', 'ds-stack']], ['ux-ds-hash', 'Hash table', ['ds-hash', 'ds-quiz']], ['ux-ds-final', FINAL, ['ds-hw', 'ds-test']]]);
+  group('sv-go-1', goUnits);
+  group('sv-go-2', goUnits);
+  group('sv-re-1', [['ux-re-basics', 'Component, props và state', ['re-component', 're-state', 're-practice']], ['ux-re-hooks', 'Hooks', ['re-hooks']], ['ux-re-final', FINAL, ['re-test']]]);
+  group('sv-web-1', [['ux-web-layout', 'HTML và CSS', ['web-html', 'web-css', 'web-practice']], ['ux-web-dom', 'JavaScript và DOM', ['web-js']], ['ux-web-final', FINAL, ['web-test']]]);
+
   // Prepared lesson content for the scenario walk-through: the Database v2 draft the
   // admin will create can swap in this updated article.
   const extraContent = { 'db-table': md.tableDesignV2 };
@@ -391,6 +522,78 @@ basic02  5
   attempt(an, 'go-quiz', 1, [1, 1, 0, 0, 1], 0.3, 12);
   attempt(cuong, 'go-quiz', 1, [1, 0, 0, 0, 1], 1.4, 14);
   attempt(cuong, 'go-quiz', 2, [1, 1, 1, 0, 0], 1.2, 13);
+  // Attempts on the per-stage quizzes (qa10 onwards).
+  attempt(an, 'db-practice', 1, [1, 1, 0, 1], 50, 4);          // qa10
+  attempt(an, 'db-test', 1, [1, 1, 1, 1, 0], 48, 8);           // qa11
+  attempt(bich, 'db-practice', 1, [1, 0, 1, 1], 47, 5);        // qa12
+  attempt(bich, 'db-test', 1, [1, 1, 1, 0, 1], 46, 9);         // qa13
+  attempt(cuong, 'db-test', 1, [1, 1, 1, 1, 1], 49, 6);        // qa14
+  attempt(ha, 'db-test', 1, [1, 0, 1, 0, 0], 40, 10);          // qa15
+  attempt(ha, 'db-test', 2, [1, 1, 1, 0, 1], 3.5, 9);          // qa16
+  attempt(khang, 'db-test', 1, [1, 0, 0, 1, 0], 22, 10);       // qa17
+  attempt(phong1, 'db-test', 1, [1, 1, 1, 1, 0], 9, 7);        // qa18
+  attempt(phong2, 'db-test', 1, [1, 1, 0, 1, 1], 15, 8);       // qa19
+  attempt(linh, 'db-practice', 1, [0, 1, 1, 0], 2, 6);         // qa20
+  attempt(linh, 'db-test', 1, [1, 1, 0, 0, 1], 1.5, 9);        // qa21
+  attempt(nhan, 'db-practice', 1, [1, 0, 0, 1], 5.5, 7);       // qa22
+  attempt(an, 'ds-test', 1, [1, 1, 1, 1, 1], 15, 7);           // qa23
+  attempt(cuong, 'ds-test', 1, [1, 1, 0, 1, 1], 19, 9);        // qa24
+  attempt(bich, 'ds-test', 1, [1, 0, 0, 1, 0], 1.8, 10);       // qa25
+  attempt(phong2, 'ds-test', 1, [1, 1, 1, 1, 0], 0.35, 8);     // qa26
+  attempt(an, 'go-practice', 1, [1, 0, 1, 1], 1.5, 5);         // qa27
+  attempt(cuong, 'go-practice', 1, [1, 1, 1, 0], 6.5, 4);      // qa28
+  attempt(cuong, 're-practice', 1, [1, 1, 0, 1], 4, 5);        // qa29
+  attempt(an, 're-practice', 1, [1, 1, 1, 0], 0.18, 6);        // qa30
+  attempt(cuong, 're-test', 1, [1, 1, 1, 1, 0], 2.5, 11);      // qa31
+  attempt(cuong, 'web-practice', 1, [1, 1, 1, 1], 1.05, 4);    // qa32
+  // Bích is halfway through the Go practice quiz: opening it resumes at the first unanswered question.
+  (() => {
+    const lesson = findLesson('go-practice'), qs = lesson.quiz.questions;
+    quizAttempts.push({ id: 'qa' + (++attSeq), memberId: bich.id, lessonId: lesson.id, no: 1, startedAt: ago(0, 1), deadlineAt: null,
+      submittedAt: null, savedAt: ago(0, 0.9), answers: { [qs[0].id]: qs[0].options.filter((o) => o.correct).map((o) => o.id), [qs[1].id]: [qs[1].options[1].id] },
+      order: qs.map((q) => q.id), score: null, max: null, status: 'open' });
+    opened(bich, ['go-practice'], 0.04);
+  })();
+
+  // Teacher review of quiz attempts. Assessment attempts wait in the grading queue until a teacher
+  // confirms them; a newer submit replaces one still waiting. Practice feedback is optional.
+  function review(no, daysAgo, comment, notesByIndex = {}, by = 'u-gv') {
+    const a = quizAttempts[no - 1], qs = byLessonId(a.lessonId).quiz.questions;
+    const notes = Object.fromEntries(Object.entries(notesByIndex).map(([i, t]) => [qs[i].id, t]));
+    a.review = { status: 'confirmed', by, at: ago(daysAgo), comment, notes, history: [] };
+  }
+  const pending = (...nos) => nos.forEach((no) => { quizAttempts[no - 1].review = { status: 'pending' }; });
+  review(1, 8.95, 'Lượt đầu bạn nhầm stack với queue ở câu 1. Đọc lại bài Stack và Queue rồi làm lại, lượt sau sẽ ổn.',
+    { 0: 'LIFO là stack: phần tử vào sau cùng được lấy ra trước.', 3: 'Cắt slice bỏ phần tử cuối là pop, không phải peek.' });
+  quizAttempts[6].review = { status: 'pending' };
+  quizAttempts[7].review = { status: 'superseded' };
+  review(9, 1.1, 'Bạn nắm chắc cú pháp, cách báo lỗi và đồng bộ goroutine. Hai câu cuối sai do nhầm phiên bản Go và lệnh chạy; ôn lại bài Cài đặt và Hello World trước khi xin thêm lượt.',
+    { 3: 'Range trên số nguyên có từ Go 1.22, xem ghi chú phát hành.', 4: 'go build để lại file nhị phân; go run thì không.' });
+  review(11, 47.5, 'Nắm chắc khóa chính, khóa ngoại và ràng buộc. Câu về index cho JSONB sai, đọc lại bài Đọc thêm: chỉ mục.',
+    { 4: 'JSONB và mảng dùng GIN; B-tree hợp với so sánh và sắp xếp.' });
+  review(13, 45.5, 'Đạt ngưỡng. Lưu ý không đánh index tràn lan.', { 3: 'Mỗi index làm chậm INSERT và UPDATE, chỉ đánh cho cột hay lọc hoặc JOIN.' });
+  review(14, 48.5, 'Đúng cả năm câu trong 6 phút. Rất tốt.');
+  review(15, 39, 'Bạn còn nhầm giữa các kiểu ràng buộc khóa ngoại. Xem lại bài Thiết kế bảng và khóa, làm lại phần luyện tập rồi dùng lượt thứ hai.',
+    { 1: 'RESTRICT từ chối xóa; CASCADE mới xóa dây chuyền.', 3: 'Index cho cột hay lọc và JOIN, không phải mọi cột.', 4: 'JSONB dùng GIN.' });
+  pending(16);
+  review(17, 21, 'Bạn mới học xong hai bài đầu của chặng. Học hết bài Đọc thêm: chỉ mục trước khi dùng lượt còn lại nhé.',
+    { 1: 'Xem lại mục ON DELETE trong bài Thiết kế bảng và khóa.', 2: 'UNIQUE trên cặp cột chặn trùng cặp, không chặn từng cột.' });
+  review(18, 8, 'Vào lớp muộn nhưng bắt kịp nhanh. Câu GIN sai, phần còn lại chắc.', { 4: 'Cột JSONB dùng GIN.' });
+  review(19, 14, 'Đạt. Câu UNIQUE trên cặp cột cần đọc kỹ đề hơn.', { 2: 'Ràng buộc áp lên cặp (lớp, học viên), không áp lên từng cột riêng.' }, 'u-gv2');
+  pending(21);
+  review(23, 14, 'Đúng hết, phần BFS và xử lý xung đột trả lời rất chắc.');
+  review(24, 18, 'Đạt. Câu danh sách liên kết: nhớ đổi lại là truy cập theo chỉ số chậm.', { 2: 'Ưu điểm là chèn, xóa ở giữa nhanh; truy cập phần tử thứ i là O(n).' });
+  pending(25, 26);
+  review(28, 6, 'Phần goroutine và WaitGroup ổn. Câu deadlock là lỗi hay gặp khi làm bài tập, chạy thử đoạn code đó một lần cho nhớ.',
+    { 3: 'Channel không đệm chặn người gửi cho tới khi có người nhận.' });
+  pending(31);
+  const emails = [
+    { id: 'em-s2', to: 'cuong.le@outlook.com', kind: 'quizReview', subject: 'Giảng viên đã xác nhận kết quả: Kiểm tra cuối chặng Go lượt #2 · 60% · Chưa đạt', at: ago(1.1) },
+    { id: 'em-s1', to: 'an.nguyen@gmail.com', kind: 'quizReview', subject: 'Giảng viên đã nhận xét: Stack, Queue và Hash lượt #1', at: ago(8.95) },
+    { id: 'em-s3', to: 'phong.dang@gmail.com', kind: 'quizReview', subject: 'Giảng viên đã xác nhận kết quả: Kiểm tra cuối chặng Database lượt #1 · 80% · Đạt', at: ago(8) },
+    { id: 'em-s4', to: 'cuong.le@outlook.com', kind: 'quizReview', subject: 'Giảng viên đã nhận xét: Goroutine và channel lượt #1', at: ago(6) },
+    { id: 'em-s5', to: 'phong.dang@gmail.com', kind: 'quizReview', subject: 'Giảng viên đã xác nhận kết quả: Kiểm tra cuối chặng Database lượt #1 · 80% · Đạt', at: ago(14) }
+  ];
 
   // Teacher comment on a student's stage summary: "memberId:stageVersionId" -> { text, by, at }.
   const stageReviews = {
@@ -411,13 +614,19 @@ basic02  5
     { at: ago(17), by: 'u-gv', action: 'Chấm bài', target: 'Nguyễn Hoàng An · Cài đặt Stack và Queue #2 · Đạt' },
     { at: ago(16), by: 'u-gv', action: 'Nhận xét tổng kết chặng', target: 'Nguyễn Hoàng An · Data structure' },
     { at: ago(15), by: 'u-admin', action: 'Vô hiệu hóa tài khoản', target: 'thao.vo@gmail.com' },
+    { at: ago(14), by: 'u-gv2', action: 'Xác nhận quiz', target: 'Đặng Hải Phong · Kiểm tra cuối chặng Database #1 · 80% · Đạt' },
     { at: ago(12), by: 'u-admin', action: 'Mời học viên', target: 'basic01 · phong.dang@gmail.com' },
+    { at: ago(8.95), by: 'u-gv', action: 'Nhận xét quiz', target: 'Nguyễn Hoàng An · Stack, Queue và Hash #1' },
+    { at: ago(8), by: 'u-gv', action: 'Xác nhận quiz', target: 'Đặng Hải Phong · Kiểm tra cuối chặng Database #1 · 80% · Đạt' },
+    { at: ago(6), by: 'u-gv', action: 'Nhận xét quiz', target: 'Lê Văn Cường · Goroutine và channel #1' },
     { at: ago(3), by: 'u-admin', action: 'Tạo lớp', target: 'basic03' },
+    { at: ago(2.8), by: 'u-admin', action: 'Nhân bản chặng', target: 'Golang basic v1 → v2' },
     { at: ago(2.5), by: 'u-gv', action: 'Đặt hạn nộp', target: 'basic01 · Đọc CSV và thống kê' },
     { at: ago(1.5), by: 'u-admin', action: 'Gửi lại lời mời', target: 'quyen.ly@gmail.com' },
+    { at: ago(1.1), by: 'u-gv', action: 'Xác nhận quiz', target: 'Lê Văn Cường · Kiểm tra cuối chặng Go #2 · 60% · Chưa đạt' },
     { at: ago(0.2), by: 'u-admin', action: 'Mời học viên', target: 'basic03 · 2 học viên' }
   ];
 
   return { session: null, users, stages, stageVersions, courses, courseVersions, classes, members, invitations, progress, audit, extraContent,
-    deadlines, submissions, quizAttempts, attemptGrants: [], stageReviews, emails: [], jobRuns: {}, seededAt: new Date(now).toISOString() };
+    deadlines, submissions, quizAttempts, attemptGrants: [], stageReviews, emails, jobRuns: {}, seededAt: new Date(now).toISOString() };
 };
