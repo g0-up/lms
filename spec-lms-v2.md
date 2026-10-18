@@ -3,6 +3,8 @@
 - **Ngày:** 08/10/2026
 - **Tác giả:** Nguyễn Văn Thược
 - **Trạng thái:** Draft – chờ review
+- **Cập nhật 13/10/2026:** hai loại quiz (quiz học liệu, quiz bài tập), chỉ Admin soạn quiz, giảng viên xác nhận và nhận xét lượt quiz, làm quiz từng câu một (FR-74 → FR-77). OQ-8 đã chốt: giảng viên không soạn quiz.
+- **Cập nhật 13/10/2026 (2):** thêm cấp **bài học** giữa chặng và học liệu (Chặng → Bài học → Học liệu), mỗi chặng kết thúc bằng bài học "Kiểm tra cuối chặng" (FR-78).
 - **Phạm vi:** Luyện tập → Homework → Đánh giá → Tổng kết cho từng chặng
 - **Phụ thuộc:** Spec MVP ([`spec-lms-mvp.md`](http://spec-lms-mvp.md)) – Sprint 1
 
@@ -40,6 +42,8 @@ Nếu không giải quyết, báo cáo tiến độ MVP chỉ phản ánh mức 
 | Câu hỏi tự luận trong quiz                         | Bài tự luận đi qua Homework                                                                          |
 | Chống gian lận nâng cao (camera, khóa trình duyệt) | Chi phí cao, giá trị thấp với chương trình miễn phí                                                  |
 | Học viên chấm chéo bài nhau                        | Chưa có nhu cầu                                                                                      |
+| Giảng viên sửa điểm quiz khi xác nhận              | Điểm quiz do hệ thống chấm; xử lý đáp án sai thuộc OQ-7                                              |
+| Quiz riêng hoặc hạn làm quiz theo từng lớp         | Quiz thuộc phiên bản chặng, mọi lớp dùng chung; hạn làm quiz theo lớp ghi ở OQ-9                     |
 
 
 ## 4. Quyết định đã chốt
@@ -53,23 +57,45 @@ Nếu không giải quyết, báo cáo tiến độ MVP chỉ phản ánh mức 
 | Luyện tập              | Quiz trắc nghiệm chấm tự động                                                                |
 | Luyện tập và Đánh giá  | Dùng chung một quiz engine, khác cấu hình                                                    |
 | Versioning             | Đề bài, câu hỏi, tiêu chí chấm, ngưỡng đạt thuộc phiên bản chặng, bất biến sau khi phát hành |
+| Hai loại quiz          | **Quiz học liệu** (chế độ Luyện tập) và **Quiz bài tập** (chế độ Đánh giá). Xem bảng thuật ngữ ở mục 5 |
+| Soạn quiz              | Chỉ Admin soạn cả hai loại quiz trong phiên bản chặng nháp và phát hành. Giảng viên không tạo, sửa, xóa hay sắp xếp quiz |
+| Chấm quiz              | Hệ thống chấm ngay khi nộp; điểm có hiệu lực ngay, không chờ giảng viên                      |
+| Xác nhận quiz bài tập  | Mỗi lượt nộp vào hàng chờ chấm ở trạng thái "Chờ xác nhận". Giảng viên xem từng câu, viết nhận xét và xác nhận. Không chặn hoàn thành |
+| Nhận xét quiz học liệu | Giảng viên xem được mọi lượt và nhận xét khi cần. Không vào hàng chờ                         |
+| Làm quiz               | Học viên làm từng câu một ở cả hai loại quiz                                                 |
+| Bài học                | Cấp nội dung giữa chặng và học liệu: Chặng → Bài học → Học liệu. Mỗi học liệu thuộc đúng một bài học. Bài học hoàn thành khi mọi học liệu bắt buộc trong đó hoàn thành; % chặng và % khóa vẫn tính theo học liệu (FR-78) |
 
 
 ## 5. Mô hình chặng
 
 ```
 Phiên bản chặng
- ├─ Học liệu nội dung (video, markdown)   → học viên tự tích
- ├─ Luyện tập  (quiz, chế độ practice)     → hệ thống ghi nhận
- ├─ Homework   (đề bài + tiêu chí chấm)    → giảng viên chấm
- ├─ Đánh giá   (quiz, chế độ assessment)   → hệ thống chấm
- └─ Tổng kết   (không phải học liệu)       → bảng trạng thái + nhận xét giảng viên
+ ├─ Bài học 1..n (có thứ tự, giữ unit_key qua các phiên bản)
+ │   ├─ Học liệu nội dung (video, markdown)   → học viên tự tích
+ │   ├─ Quiz học liệu (quiz, chế độ practice)   → hệ thống chấm, giảng viên nhận xét khi cần
+ │   ├─ Homework      (đề bài + tiêu chí chấm)  → giảng viên chấm
+ │   └─ Quiz bài tập  (quiz, chế độ assessment) → hệ thống chấm, giảng viên xác nhận
+ ├─ Bài học cuối "Kiểm tra cuối chặng"          → thường gồm homework và quiz bài tập
+ └─ Tổng kết   (không phải học liệu)           → bảng trạng thái + nhận xét giảng viên
 
 ```
 
 - `lessons.type` mở rộng thành {`video`, `markdown`, `quiz`, `homework`}. Tổng kết là dữ liệu tổng hợp, không phải học liệu.
 - Một chặng có 0 hoặc nhiều học liệu mỗi loại. Admin sắp xếp theo thứ tự chu trình; hệ thống không bắt buộc làm theo thứ tự.
+- Học liệu được nhóm thành **bài học** (FR-78). Thứ tự học liệu trong chặng là thứ tự bài học, rồi thứ tự học liệu trong bài học. Trên giao diện, "Bài học" là cấp nhóm; từng video, bài đọc, quiz, homework vẫn gọi là "học liệu".
 - Lớp học cùng một phiên bản chặng được chấm theo cùng một chuẩn.
+
+**Thuật ngữ quiz**
+
+
+| Trên giao diện                                  | Trong spec               | Giá trị kỹ thuật                                                           |
+| ----------------------------------------------- | ------------------------ | -------------------------------------------------------------------------- |
+| Quiz học liệu                                   | Luyện tập                | `quiz_settings.mode = practice`                                            |
+| Quiz bài tập                                    | Đánh giá, bài đánh giá   | `quiz_settings.mode = assessment`                                          |
+| Chờ xác nhận / Đã xác nhận / Đã có lượt mới hơn | Trạng thái xác nhận lượt | `quiz_attempts.review_status = pending / confirmed / superseded`           |
+| Đã nhận xét                                     | Nhận xét quiz học liệu   | `review_status = confirmed` trên lượt practice; lượt practice không có `pending` |
+| Chấm bài                                        | Hàng đợi chấm (FR-64)    | Gồm bản nộp homework chờ chấm và lượt quiz bài tập chờ xác nhận            |
+
 
 **Định nghĩa "hoàn thành" theo loại học liệu**
 
@@ -77,8 +103,8 @@ Phiên bản chặng
 | Loại             | Hoàn thành khi                                            | Ai xác định |
 | ---------------- | --------------------------------------------------------- | ----------- |
 | Video, markdown  | Học viên tích "Đã học xong"                               | Học viên    |
-| Quiz – Luyện tập | Nộp ít nhất 1 lượt **\[đề xuất\]**                        | Hệ thống    |
-| Quiz – Đánh giá  | Điểm của lượt cao nhất ≥ ngưỡng đạt                       | Hệ thống    |
+| Quiz học liệu    | Nộp ít nhất 1 lượt **\[đề xuất\]**                        | Hệ thống    |
+| Quiz bài tập     | Điểm của lượt cao nhất ≥ ngưỡng đạt. Không chờ xác nhận   | Hệ thống    |
 | Homework         | Bài nộp gần nhất được chấm **Đạt** **\[đề xuất – OQ-2\]** | Giảng viên  |
 
 
@@ -97,20 +123,26 @@ Thay đổi so với MVP: nút "Đã học xong" (FR-32) chỉ áp dụng cho vi
 5. Là Giảng viên, tôi muốn viết nhận xét tổng kết cho từng học viên ở mỗi chặng, để học viên có đánh giá tổng thể.
 6. Là Giảng viên, tôi muốn cấp thêm lượt làm bài đánh giá cho một học viên gặp sự cố, để xử lý ngoại lệ mà không phải sửa nội dung.
 7. Là Giảng viên, tôi muốn xem tỉ lệ trả lời đúng của từng câu hỏi trong lớp, để phát hiện câu hỏi có vấn đề hoặc phần kiến thức cả lớp còn yếu.
+8. Là Giảng viên, tôi muốn xem học viên trả lời đúng hay sai từng câu ở mỗi lượt quiz bài tập, viết nhận xét chung và ghi chú từng câu rồi xác nhận, để học viên biết vì sao mình sai.
+9. Là Giảng viên, tôi muốn xem lượt quiz học liệu của học viên và gửi nhận xét khi cần, mà không phải xử lý chúng trong hàng chờ.
 
 ### Học viên
 
-8. Là Học viên, tôi muốn nộp homework bằng link repo hoặc file, để nộp theo cách phù hợp với bài.
-9. Là Học viên, tôi muốn nộp lại khi bài bị đánh giá "Cần làm lại", để sửa và hoàn thành bài.
-10. Là Học viên, tôi muốn nhận email khi bài được chấm và xem điểm từng tiêu chí cùng nhận xét, để biết cần cải thiện gì.
-11. Là Học viên, tôi muốn làm bài luyện tập không giới hạn lần và xem đáp án kèm giải thích, để tự ôn trước khi làm bài đánh giá.
-12. Là Học viên, tôi muốn làm bài đánh giá có giới hạn thời gian và biết ngay kết quả, để biết mình đã đạt chặng hay chưa.
-13. Là Học viên, tôi muốn xem tổng kết của mình ở từng chặng, để biết còn thiếu mục nào.
+10. Là Học viên, tôi muốn nộp homework bằng link repo hoặc file, để nộp theo cách phù hợp với bài.
+11. Là Học viên, tôi muốn nộp lại khi bài bị đánh giá "Cần làm lại", để sửa và hoàn thành bài.
+12. Là Học viên, tôi muốn nhận email khi bài được chấm và xem điểm từng tiêu chí cùng nhận xét, để biết cần cải thiện gì.
+13. Là Học viên, tôi muốn làm quiz học liệu không giới hạn lần và xem đáp án kèm giải thích, để tự ôn trước khi làm quiz bài tập.
+14. Là Học viên, tôi muốn làm quiz bài tập có giới hạn thời gian và biết ngay kết quả, để biết mình đã đạt chặng hay chưa.
+15. Là Học viên, tôi muốn làm quiz từng câu một và chuyển nhanh giữa các câu qua bản đồ câu hỏi, để tập trung và không bỏ sót câu.
+16. Là Học viên, tôi muốn nhận email và thấy nhận xét của giảng viên ngay trong trang kết quả quiz, để biết cần ôn lại phần nào.
+17. Là Học viên, tôi muốn xem tổng kết của mình ở từng chặng, để biết còn thiếu mục nào.
+18. Là Học viên, tôi muốn thấy chặng chia thành các bài học, biết mình đang ở bài học nào và đã xong bài học nào, để học theo từng phần nhỏ.
 
 ### Admin
 
-14. Là Admin, tôi muốn soạn đề homework kèm tiêu chí chấm và soạn quiz trong phiên bản chặng nháp, để mọi lớp dùng chung chuẩn đánh giá.
-15. Là Admin, tôi muốn xem tồn đọng chấm bài theo từng giảng viên, để can thiệp khi có giảng viên chấm trễ.
+19. Là Admin, tôi muốn soạn đề homework kèm tiêu chí chấm, soạn quiz học liệu và quiz bài tập trong phiên bản chặng nháp, để mọi lớp dùng chung chuẩn đánh giá.
+20. Là Admin, tôi muốn xem tồn đọng chấm bài theo từng giảng viên, để can thiệp khi có giảng viên chấm trễ.
+21. Là Admin, tôi muốn nhóm học liệu thành bài học, sắp xếp bài học và chuyển học liệu giữa các bài học, để biết chính xác mỗi quiz nằm ở đâu trong chặng.
 
 ### Trường hợp biên
 
@@ -121,6 +153,11 @@ Thay đổi so với MVP: nút "Đã học xong" (FR-32) chỉ áp dụng cho vi
 - Học viên đã dùng hết lượt làm bài đánh giá.
 - Phát hiện đáp án sai trong bài đánh giá khi lớp đang chạy.
 - Giảng viên sửa điểm sau khi đã chấm.
+- Học viên nộp lượt quiz bài tập mới khi lượt trước còn chờ xác nhận.
+- Giảng viên sửa nhận xét quiz sau khi đã xác nhận.
+- Giảng viên mở đường dẫn trình soạn quiz.
+- Admin xóa bài học còn học liệu.
+- Admin phát hành chặng có bài học chưa có học liệu.
 - Link repo hợp lệ nhưng giảng viên không truy cập được (repo private).
 - Học viên ở trạng thái bỏ học (`dropped`) cố nộp bài.
 
@@ -184,18 +221,21 @@ Chưa nộp ──nộp──> Chờ chấm ──chấm (≥ ngưỡng)──> 
 - \[ \] Giảng viên có màn hình danh sách bài "Chờ chấm" của mọi lớp mình phụ trách, sắp theo thời gian nộp, bài cũ nhất lên trước.
 - \[ \] Mỗi dòng hiển thị: học viên, lớp, chặng, homework, thời điểm nộp, số ngày đã chờ, nhãn nộp muộn.
 - \[ \] Lọc theo lớp và theo homework.
+- \[ \] Hàng đợi gồm cả lượt quiz bài tập chờ xác nhận (FR-75), cùng thứ tự theo thời điểm nộp. Mỗi dòng có nhãn loại (Homework / Quiz bài tập); lọc thêm theo loại. Lọc "Bài" gồm homework và quiz bài tập.
 
 #### B. Quiz engine (Luyện tập và Đánh giá)
 
-**FR-70 – Soạn quiz** (trong phiên bản chặng nháp)
+**FR-70 – Soạn quiz** (trong phiên bản chặng nháp; chỉ Admin soạn, theo FR-74)
 
+- \[ \] Form thêm và sửa học liệu chọn loại trong một danh sách: Video, Bài đọc, Quiz học liệu, Quiz bài tập, Bài tập (homework). Đổi giữa hai loại quiz giữ nguyên câu hỏi; đổi sang loại khác bỏ nội dung của loại cũ.
+- \[ \] Form có trường "Bài học" bắt buộc (FR-78). Quiz được thêm vào cuối bài học đã chọn.
 - \[ \] Loại câu hỏi: một đáp án đúng; nhiều đáp án đúng. Nội dung câu hỏi và giải thích dạng markdown (hỗ trợ code block).
 - \[ \] Điểm mỗi câu, mặc định 1.
 - \[ \] Câu nhiều đáp án chỉ được điểm khi chọn đúng toàn bộ, không tính điểm một phần **\[đề xuất\]**.
 - \[ \] Cấu hình theo chế độ:
 
 
-| Cấu hình                       | Luyện tập (mặc định)          | Đánh giá (mặc định)                         |
+| Cấu hình                       | Quiz học liệu – Luyện tập     | Quiz bài tập – Đánh giá                     |
 | ------------------------------ | ----------------------------- | ------------------------------------------- |
 | Số lượt làm                    | Không giới hạn                | 2 **\[đề xuất – OQ-3\]**                    |
 | Giới hạn thời gian             | Không                         | Có, Admin đặt                               |
@@ -204,6 +244,7 @@ Chưa nộp ──nộp──> Chờ chấm ──chấm (≥ ngưỡng)──> 
 | Ngưỡng đạt                     | Không áp dụng                 | 70% **\[đề xuất\]**                         |
 | Sau khi nộp, học viên thấy     | Điểm, đáp án đúng, giải thích | Điểm và Đạt/Chưa đạt **\[đề xuất – OQ-4\]** |
 | Điểm ghi nhận                  | Không áp dụng                 | Lượt cao nhất **\[đề xuất – OQ-3\]**        |
+| Giảng viên                     | Nhận xét khi cần (FR-76)      | Xác nhận từng lượt nộp (FR-75)              |
 
 
 - \[ \] Điều kiện phát hành chặng: mỗi quiz có ít nhất 1 câu; mỗi câu có ít nhất 1 đáp án đúng.
@@ -219,14 +260,79 @@ Chưa nộp ──nộp──> Chờ chấm ──chấm (≥ ngưỡng)──> 
 - \[ \] Mỗi học viên chỉ có tối đa một lượt đang làm cho mỗi quiz (ràng buộc ở database).
 - \[ \] Chỉ làm được khi lớp `active` và học viên đang học.
 
+**FR-74 – Quyền soạn quiz**
+
+- \[ \] Chỉ Admin tạo, sửa, xóa và sắp xếp quiz (cả quiz học liệu lẫn quiz bài tập) và câu hỏi, trong trình soạn chặng (FR-70). Vị trí quiz do Admin đặt: chọn bài học, rồi sắp xếp trong bài học (FR-78).
+- \[ \] Giảng viên không có màn hình soạn quiz. Giảng viên chỉ làm việc với lượt làm bài: xác nhận và nhận xét lượt quiz bài tập (FR-75), nhận xét lượt quiz học liệu khi cần (FR-76), xem thống kê câu hỏi và cấp thêm lượt.
+- Given giảng viên gọi API tạo, sửa, xóa hoặc sắp xếp học liệu hay câu hỏi, When backend xử lý, Then từ chối vì không đủ quyền.
+- Given giảng viên mở đường dẫn trình soạn quiz của Admin, When trang tải, Then chuyển về trang chủ giảng viên.
+
+**FR-75 – Xác nhận quiz bài tập**
+
+Vòng đời xác nhận một lượt quiz bài tập:
+
+```
+Nộp ──> Chờ xác nhận ──giảng viên xác nhận──> Đã xác nhận ──sửa nhận xét──> Đã xác nhận (lưu lịch sử)
+             │
+             └──học viên nộp lượt mới──> Đã có lượt mới hơn (rời hàng chờ)
+```
+
+- \[ \] Điểm tự động có hiệu lực ngay khi nộp (tiến độ, tổng kết, Đạt/Chưa đạt). Xác nhận không đổi điểm và không chặn hoàn thành.
+- \[ \] Trang xác nhận hiển thị: thông tin lượt (học viên, lớp, bài, giờ bắt đầu, giờ nộp, thời gian làm, điểm tự động, lượt thứ mấy); từng câu theo thứ tự học viên thấy, đáp án học viên chọn, đáp án đúng, đúng hay sai; lịch sử các lượt đã nộp.
+- \[ \] Nhận xét chung bắt buộc; ghi chú từng câu không bắt buộc. Giảng viên không sửa điểm (OQ-7).
+- \[ \] Sau khi xác nhận, hệ thống chuyển sang mục tiếp theo trong hàng chờ.
+- \[ \] Học viên nhận email "Giảng viên đã xác nhận kết quả" và thấy nhận xét chung cùng ghi chú từng câu trong trang kết quả. Ghi chú hiển thị kèm nội dung câu hỏi, không lộ đáp án (giữ quy tắc FR-70 về hiển thị đáp án).
+- \[ \] Thời hạn xử lý 3 ngày (FR-65), nhắc giảng viên (FR-66) và tồn đọng (FR-67) áp dụng cho lượt chờ xác nhận như bài chờ chấm.
+- Given lượt trước còn "Chờ xác nhận", When học viên nộp lượt mới, Then lượt trước chuyển "Đã có lượt mới hơn", rời hàng chờ, và trang của lượt đó không cho xác nhận mà dẫn tới lượt mới nhất.
+- Given lượt đã xác nhận, When giảng viên lưu nhận xét mới, Then nhận xét cũ vào lịch sử (người, thời điểm, nội dung) và học viên nhận email cập nhật.
+- Given giảng viên không phụ trách lớp, When mở hoặc gửi xác nhận, Then bị từ chối. Admin xác nhận được mọi lớp.
+
+**FR-76 – Nhận xét quiz học liệu**
+
+- \[ \] Từ thống kê quiz của lớp, giảng viên mở được mọi lượt quiz học liệu đã nộp, xem từng câu như FR-75.
+- \[ \] Nhận xét là tùy chọn; lượt quiz học liệu không vào hàng chờ và không tính thời hạn xử lý.
+- \[ \] Khi giảng viên gửi nhận xét, học viên nhận email và thấy nhận xét chung cùng ghi chú dưới từng câu trong trang kết quả (đã có đáp án và giải thích).
+
+**FR-77 – Làm quiz từng câu một**
+
+- \[ \] Áp dụng cho cả quiz học liệu và quiz bài tập. Mỗi màn hình hiển thị một câu, kèm "Câu x/n", số câu đã trả lời, trạng thái tự lưu và đồng hồ (nếu có giới hạn thời gian).
+- \[ \] Nút "Câu trước" và "Câu tiếp"; ở câu cuối, "Câu tiếp" đổi thành "Nộp bài". Nút "Nộp bài" phụ luôn có trên thanh trạng thái để nộp sớm.
+- \[ \] Bản đồ câu hỏi: mỗi câu một nút ≥ 44px, đánh dấu câu đã trả lời và câu đang xem; bấm để chuyển thẳng tới câu đó.
+- \[ \] Trong lúc làm bài, ẩn danh sách học liệu bên cạnh để học viên tập trung.
+- \[ \] Khi quay lại lượt đang làm, mở câu đang xem nếu vẫn trong phiên trình duyệt đó; nếu không, mở câu chưa trả lời đầu tiên.
+- \[ \] Chuyển câu đưa focus bàn phím tới câu mới và thông báo cho trình đọc màn hình ("Câu x trên n"); tôn trọng chế độ giảm chuyển động.
+- Given còn câu chưa trả lời, When học viên nộp bài, Then hộp xác nhận nêu số câu chưa trả lời.
+
+#### B2. Cấu trúc chặng
+
+**FR-78 – Bài học**
+
+Một phiên bản chặng gồm các bài học có thứ tự; mỗi bài học gồm các học liệu có thứ tự. Cấp bài học thay đổi mô hình chặng của MVP (FR-11, FR-30).
+
+- \[ \] Mỗi bài học có: tiêu đề (không trùng trong cùng phiên bản chặng), `unit_key`, thứ tự. Bài học không có cờ bắt buộc riêng; tính bắt buộc nằm ở học liệu.
+- \[ \] Mỗi học liệu thuộc đúng một bài học của cùng phiên bản chặng.
+- \[ \] Trong phiên bản nháp, Admin thêm, đổi tên, xóa và sắp xếp bài học; thêm học liệu vào một bài học; chuyển học liệu sang bài học khác (học liệu vào cuối bài học mới). Sắp xếp học liệu đi qua ranh giới bài học: đưa học liệu đầu bài học lên thì nó vào cuối bài học trước; đưa học liệu cuối bài học xuống thì nó vào đầu bài học sau.
+- \[ \] Xóa bài học xóa luôn các học liệu trong đó, sau hộp xác nhận nêu số học liệu sẽ bị xóa **\[đề xuất – OQ-12\]**.
+- \[ \] Mỗi chặng kết thúc bằng bài học **"Kiểm tra cuối chặng"**, chứa homework và quiz bài tập của chặng. Đây là quy ước nội dung, hệ thống không chặn phát hành nếu thiếu **\[đề xuất\]**.
+- \[ \] Điều kiện phát hành chặng (bổ sung FR-12): có ít nhất 1 bài học; mọi bài học có ít nhất 1 học liệu.
+- \[ \] Bài học **hoàn thành** khi mọi học liệu bắt buộc trong đó hoàn thành (theo định nghĩa ở mục 5). Bài học chỉ có học liệu không bắt buộc không có trạng thái hoàn thành và hiển thị "Không bắt buộc" **\[đề xuất – OQ-13\]**. Trạng thái bài học là số liệu tính toán, không lưu.
+- \[ \] % chặng và % khóa (FR-33) vẫn tính theo học liệu bắt buộc, không theo số bài học.
+- \[ \] Lộ trình học viên (FR-30): trong mỗi chặng, học liệu nhóm theo bài học. Mỗi bài học hiển thị "Bài i.j · tiêu đề", số học liệu bắt buộc đã xong trên tổng và nhãn "Hoàn thành" khi hoàn thành. Thẻ chặng ghi số bài học, số học liệu và số học liệu bắt buộc đã xong.
+- \[ \] Mỗi học liệu mở trên trang riêng. Đường dẫn vị trí (breadcrumb): Lớp của tôi / lớp / chặng / bài học / học liệu. Danh sách bên cạnh nhóm học liệu theo bài học.
+- \[ \] Nút "Học liệu trước" và "Học liệu tiếp" đi theo thứ tự học liệu trong bài học. Ở học liệu cuối của bài học, nút tiếp đổi thành "Sang bài học tiếp" và mở học liệu đầu của bài học sau; ở học liệu đầu, nút trước mở học liệu cuối của bài học trước.
+- \[ \] Tổng kết chặng (FR-80) ghi bài học của từng học liệu.
+- Given bài học chưa có học liệu, When Admin phát hành chặng, Then bị chặn với thông báo nêu tên bài học đó.
+- Given Admin đặt tên bài học trùng một bài học khác trong cùng phiên bản, When lưu, Then bị từ chối.
+- Given học viên ở học liệu cuối của bài học, When bấm "Sang bài học tiếp", Then mở học liệu đầu của bài học kế tiếp trong cùng chặng.
+
 #### C. Tổng kết
 
 **FR-80 – Tổng kết chặng của học viên**
 
 - \[ \] Liệt kê từng học liệu bắt buộc với trạng thái Hoàn thành / Chưa hoàn thành và chi tiết:
   - Homework: Chưa nộp / Chờ chấm / Cần làm lại / Đạt; điểm; số lần nộp; nộp muộn.
-  - Đánh giá: điểm cao nhất; số lượt đã dùng trên tổng số lượt.
-  - Luyện tập: số lượt đã làm; điểm lượt gần nhất.
+  - Quiz bài tập: điểm cao nhất; số lượt đã dùng trên tổng số lượt; trạng thái xác nhận của lượt gần nhất.
+  - Quiz học liệu: số lượt đã làm; điểm lượt gần nhất.
   - Video, markdown: đã tích hay chưa.
 - \[ \] Trạng thái chặng: **Hoàn thành** khi mọi học liệu bắt buộc đã hoàn thành; ngược lại là **Chưa hoàn thành**, kèm danh sách mục còn thiếu.
 - \[ \] Nhận xét của giảng viên cho học viên ở chặng đó: văn bản tự do, sửa được, ghi người viết và thời điểm.
@@ -245,25 +351,28 @@ Chưa nộp ──nộp──> Chờ chấm ──chấm (≥ ngưỡng)──> 
 
 - \[ \] Nhân bản chặng (FR-13) sao chép sâu thêm: cấu hình quiz, câu hỏi, đáp án, đề homework, tiêu chí chấm. File đính kèm chỉ sao chép tham chiếu.
 - \[ \] Câu hỏi giữ `question_key` qua các phiên bản, giống `lesson_key`.
+- \[ \] Nhân bản chặng sao chép bài học (FR-78): bài học mới có id mới, giữ `unit_key`, tiêu đề và thứ tự; mỗi học liệu được sao chép trỏ tới bài học tương ứng trong phiên bản mới.
+- \[ \] Bài học của phiên bản đã phát hành bất biến như học liệu.
 - \[ \] Câu hỏi, đáp án, tiêu chí của phiên bản đã phát hành được bảo vệ bất biến ở tầng service và database, cùng cơ chế với học liệu.
 
 **FR-91 – Tiến độ**
 
 - \[ \] Nút "Đã học xong" chỉ hiển thị với video và markdown.
 - \[ \] % chặng và % khóa (FR-33) tính theo định nghĩa hoàn thành ở mục 5.
+- \[ \] Trạng thái hoàn thành bài học (FR-78) chỉ để hiển thị; không thay đổi công thức %.
 
 **FR-92 – Nhật ký thao tác bổ sung**
 
-- \[ \] Ghi nhật ký cho: đổi hạn nộp, chấm điểm, sửa điểm, cấp thêm lượt làm bài, sửa nhận xét tổng kết.
+- \[ \] Ghi nhật ký cho: đổi hạn nộp, chấm điểm, sửa điểm, cấp thêm lượt làm bài, sửa nhận xét tổng kết, xác nhận quiz bài tập, nhận xét quiz học liệu, sửa nhận xét quiz.
 
 ### 7.2 P1 – Làm ngay sau P0
 
 
 | Mã    | Yêu cầu                        | Tiêu chí chấp nhận                                                                                                                               |
 | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| FR-65 | Theo dõi thời hạn chấm         | Thời hạn chấm 3 ngày kể từ khi nộp **\[đề xuất – OQ-5\]**; bài quá hạn chấm được đánh dấu nổi bật trong hàng đợi                                 |
+| FR-65 | Theo dõi thời hạn chấm         | Thời hạn chấm hoặc xác nhận 3 ngày kể từ khi nộp **\[đề xuất – OQ-5\]**; bài và lượt quiz quá hạn được đánh dấu nổi bật trong hàng đợi             |
 | FR-66 | Nhắc giảng viên chấm trễ       | Email gửi giảng viên mỗi ngày khi có bài quá hạn chấm **\[đề xuất\]**; không gửi khi không có bài quá hạn                                        |
-| FR-67 | Tồn đọng chấm cho Admin        | Theo từng giảng viên: số bài chờ, số bài quá hạn chấm, thời gian chấm trung bình                                                                 |
+| FR-67 | Tồn đọng chấm cho Admin        | Theo từng giảng viên: số mục chờ (bài và lượt quiz bài tập), số mục quá hạn, thời gian xử lý trung bình                                          |
 | FR-68 | Nhắc hạn nộp cho học viên      | Email trước hạn 24 giờ cho học viên chưa nộp **\[đề xuất\]**; không gửi nếu homework không có hạn                                                |
 | FR-72 | Cấp thêm lượt làm bài đánh giá | Giảng viên hoặc Admin cấp thêm lượt cho từng học viên, bắt buộc nhập lý do, có ghi lịch sử                                                       |
 | FR-73 | Thống kê câu hỏi               | Theo lớp: tỉ lệ trả lời đúng từng câu; đánh dấu câu có tỉ lệ đúng &lt; 30%                                                                       |
@@ -327,7 +436,14 @@ Lý do để ở P1: thiếu các mục này thì quy trình vẫn chạy đư�
 | OQ-5 | Thời hạn chấm 3 ngày tính theo ngày lịch hay ngày làm việc? Ai nhận cảnh báo khi giảng viên chấm trễ?                     | Nghiệp vụ           | Không (P1)          |
 | OQ-6 | Giới hạn file nộp (dung lượng, định dạng) và có cần quét mã độc không?                                                    | Kỹ thuật, Bảo mật   | Không               |
 | OQ-7 | Bài đánh giá có đáp án sai khi lớp đang chạy: chỉ cấp thêm lượt, hay cho phép loại câu đó khỏi tính điểm cho lớp?         | Nghiệp vụ, Kỹ thuật | Không               |
-| OQ-8 | Giảng viên có quyền soạn đề homework và quiz không, hay chỉ Admin? (liên quan Q2 của spec MVP)                            | Nghiệp vụ           | **Chặn phân quyền** |
+| OQ-8 | Giảng viên có quyền soạn đề homework và quiz không, hay chỉ Admin? (liên quan Q2 của spec MVP). **Đã chốt 13/10/2026 phần quiz:** chỉ Admin soạn cả hai loại quiz; giảng viên chỉ xác nhận và nhận xét lượt làm bài (FR-74). Homework vẫn do Admin soạn cho tới khi nghiệp vụ trả lời phần còn lại | Nghiệp vụ           | Không (quiz đã chốt) |
+| OQ-9 | Có cần hạn làm quiz bài tập theo từng lớp như hạn nộp homework (FR-61) không?                                             | Nghiệp vụ           | Không               |
+| OQ-10 | ~~Giảng viên được soạn quiz ở mọi chặng hay chỉ ở chặng thuộc khóa học mình đang dạy?~~ **Không còn áp dụng 13/10/2026:** giảng viên không soạn quiz (FR-74) | Nghiệp vụ           | Không               |
+| OQ-11 | ~~Giảng viên có được tự nhân bản chặng để có bản nháp, hay luôn nhờ Admin?~~ **Không còn áp dụng 13/10/2026:** chỉ Admin nhân bản và soạn chặng (FR-74) | Nghiệp vụ           | Không               |
+| OQ-12 | Xóa bài học còn học liệu: xóa luôn học liệu (sau xác nhận) hay từ chối cho tới khi bài học trống? | Nghiệp vụ           | Không               |
+| OQ-13 | Bài học chỉ có học liệu không bắt buộc có cần trạng thái hoàn thành (ví dụ khi đã mở hoặc tích mọi học liệu) không? | Nghiệp vụ           | Không               |
+| OQ-14 | Giảng viên có cần báo cáo tiến độ theo bài học (ngoài theo chặng) không? | Nghiệp vụ           | Không               |
+| OQ-15 | Dữ liệu hiện có: khi thêm cấp bài học, mỗi phiên bản chặng đã phát hành được gán một bài học mặc định chứa mọi học liệu, hay Admin chia lại qua bản nháp mới? | Nghiệp vụ, Kỹ thuật | **Chặn migration FR-78** |
 
 
 ---
@@ -339,20 +455,21 @@ Lý do để ở P1: thiếu các mục này thì quy trình vẫn chạy đư�
 - **Sprint 1 (MVP) hoàn thành:** học liệu, versioning chặng và khóa học, lớp học, tiến độ, email.
 - **Kho lưu trữ file** (Q5 của spec MVP): cần cho file nộp homework.
 - **Dịch vụ email** (Q6 của spec MVP): cần cho email bài đã được chấm.
-- **Câu hỏi chặn** OQ-1, OQ-2, OQ-8 phải có câu trả lời trước khi bắt đầu.
+- **Câu hỏi chặn** OQ-1, OQ-2 phải có câu trả lời trước khi bắt đầu. OQ-8 đã chốt phần quiz.
 
 ### Thứ tự trong sprint
 
 
 | Thứ tự | Nội dung                                                        | Kết quả kiểm chứng                                          |
 | ------ | --------------------------------------------------------------- | ----------------------------------------------------------- |
-| 1      | Homework P0: FR-60 → FR-64, FR-90 phần homework                 | Học viên nộp bài và nhận điểm, nhận xét                     |
-| 2      | Quiz engine P0: FR-70, FR-71, FR-90 phần quiz                   | Học viên làm luyện tập và bài đánh giá                      |
-| 3      | Tổng kết P0: FR-80, FR-82, FR-91, FR-92                         | Giảng viên xem được học viên còn thiếu gì trên một màn hình |
-| 4      | P1 theo thứ tự: FR-65, FR-72, FR-66, FR-67, FR-68, FR-73, FR-81 | —                                                           |
+| 1      | Bài học P0: FR-78, FR-90 phần bài học                           | Admin nhóm học liệu thành bài học; học viên học theo bài học |
+| 2      | Homework P0: FR-60 → FR-64, FR-90 phần homework                 | Học viên nộp bài và nhận điểm, nhận xét                     |
+| 3      | Quiz engine P0: FR-70, FR-71, FR-74 → FR-77, FR-90 phần quiz    | Học viên làm quiz từng câu; giảng viên xác nhận quiz         |
+| 4      | Tổng kết P0: FR-80, FR-82, FR-91, FR-92                         | Giảng viên xem được học viên còn thiếu gì trên một màn hình |
+| 5      | P1 theo thứ tự: FR-65, FR-72, FR-66, FR-67, FR-68, FR-73, FR-81 | —                                                           |
 
 
-Homework làm trước vì giá trị cao nhất với khóa lập trình và không phụ thuộc quiz engine. Tổng kết làm cuối vì chỉ tổng hợp dữ liệu của hai phần trước.
+Bài học làm đầu tiên vì homework và quiz đều cần biết mình thuộc bài học nào. Homework làm tiếp theo vì giá trị cao nhất với khóa lập trình và không phụ thuộc quiz engine. Tổng kết làm cuối vì chỉ tổng hợp dữ liệu của hai phần trước.
 
 ### Rủi ro về quy mô
 
@@ -365,11 +482,14 @@ Chưa ước lượng vì chưa có thông tin về số người trong nhóm v�
 
 | Bảng                     | Trường chính                                                                                                      |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `lessons`                | `type` thêm `quiz`, `homework`                                                                                    |
+| `stage_units`            | stage\_version, unit\_key, tiêu đề, thứ tự (bài học, FR-78)                                                        |
+| `lessons`                | `type` thêm `quiz`, `homework`; thêm `unit_id` (bắt buộc, trỏ `stage_units`)                                        |
 | `quiz_settings`          | lesson, chế độ (practice / assessment), số lượt, giới hạn thời gian, trộn câu, ngưỡng đạt, chế độ hiển thị đáp án |
 | `questions`              | lesson, question\_key, loại, nội dung, giải thích, điểm, thứ tự                                                   |
 | `question_options`       | question, nội dung, là đáp án đúng, thứ tự                                                                        |
-| `quiz_attempts`          | class\_member, lesson, số thứ tự lượt, started\_at, deadline\_at, submitted\_at, điểm, trạng thái                 |
+| `quiz_attempts`          | class\_member, lesson, số thứ tự lượt, started\_at, deadline\_at, submitted\_at, điểm, trạng thái, review\_status (null / pending / confirmed / superseded) |
+| `quiz_attempt_reviews`   | attempt, người nhận xét, nhận xét chung, created\_at. Mỗi lần lưu là một dòng mới; dòng mới nhất là nhận xét hiện hành, các dòng cũ là lịch sử |
+| `quiz_review_notes`      | review, question, ghi chú                                                                                         |
 | `quiz_attempt_answers`   | attempt, question, các lựa chọn, đúng hay sai                                                                     |
 | `quiz_attempt_grants`    | class\_member, lesson, số lượt cấp thêm, người cấp, lý do (P1)                                                    |
 | `homework_settings`      | lesson, đề bài, ngưỡng đạt                                                                                        |
@@ -387,4 +507,9 @@ Ràng buộc chính:
 - `UNIQUE(class_member_id, lesson_id, attempt_no)` cho `quiz_attempts` và `submissions`.
 - Partial unique index: mỗi (class_member, lesson) chỉ có một lượt quiz ở trạng thái đang làm.
 - `UNIQUE(class_member_id, stage_version_id)` cho `stage_reviews`.
+- `quiz_attempts.review_status = pending` chỉ cho lượt quiz bài tập đã nộp; partial unique index: mỗi (class_member, lesson) tối đa một lượt `pending`. Nộp lượt mới chuyển lượt `pending` cũ sang `superseded` trong cùng transaction.
+- `UNIQUE(review_id, question_id)` cho `quiz_review_notes`.
+- `UNIQUE(stage_version_id, unit_key)`, `UNIQUE(stage_version_id, title)` và `UNIQUE(stage_version_id, sort_order)` cho `stage_units`.
+- `lessons.unit_id` phải thuộc cùng phiên bản chặng với học liệu (khóa ngoại kép `(unit_id, stage_version_id)`). Thứ tự học liệu duy nhất trong mỗi bài học.
+- Bảng `lessons` của app hiện tại (`apps/`, `docs/database.md`) chưa có `unit_id`; cần migration tạo `stage_units`, gán học liệu hiện có vào bài học theo câu trả lời OQ-15, rồi đặt `unit_id` là bắt buộc.
 - `UNIQUE(class_id, lesson_id)` cho `class_lesson_deadlines`.

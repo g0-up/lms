@@ -7,7 +7,11 @@ Run before calling a prototype change done. Every line is observable.
 - `node --check prototype/app.js && node --check prototype/seed.js` passes.
 - `node prototype/check-flows.mjs` prints `N/N checks passed`, `console issues: none`
   and exits 0. It covers spec scenario 7.3, invites, first login, report filters,
-  lesson ticks, 320px reflow on ten routes, reduced motion, route announcement, the
+  lesson ticks, bài học grouping (stage editor, publish blockers, cloning, roadmap,
+  breadcrumb and prev/next across bài học), quiz focus mode (one question, map,
+  prev/next), quiz review and confirmation, admin-only quiz authoring (teachers get no
+  authoring route), 320px reflow on 26 routes plus an open quiz in
+  focus mode, reduced motion, route announcement, the
   guide panel, tab semantics, modal naming, Escape, toast dismissal and draft-class
   warnings.
 - Render-check screenshots at 1440×900, 768×1024 and 375×812 of every changed route
@@ -18,11 +22,30 @@ Run before calling a prototype change done. Every line is observable.
 - Redirect check-flows output to a file instead of piping it into `head`; a closed
   pipe leaves its headless Chrome running.
 
+## Bài học (Chặng → Bài học → Học liệu)
+
+- Stage editor (`#/admin/stages/st-go?v=sv-go-2&as=u-admin`): every học liệu sits under
+  one bài học with an ord like "1.2"; each bài học header has Thêm học liệu, move, edit
+  and delete; the stage ends with "Kiểm tra cuối chặng"; nothing scrolls sideways at
+  320px.
+- Roadmap (`#/learn/classes/cl-basic01?as=u-bich`): each stage lists "Bài i.j · title",
+  "x/y bắt buộc" or "Không bắt buộc", and a Hoàn thành badge only when every required
+  học liệu is done.
+- Lesson page: the breadcrumb names the bài học, the side list groups by bài học, and
+  the last học liệu of a bài học offers "Sang bài học tiếp".
+
 ## Assessment flows (quiz, homework, grading)
 
-- Learner: quiz intro states the rules (timer, autosave) before the start button; past
-  attempts show score and Đạt/Chưa đạt; results deep-link with `?result=<attemptId>`.
-- Teacher: the grading queue, a superseded submission (`sub4`) and the class summary
+- Learner: quiz intro states the rules (timer, autosave, one question at a time) before
+  the start button; past attempts show score, Đạt/Chưa đạt and the confirmation state;
+  results deep-link with `?result=<attemptId>`.
+- Focus mode: only one question is visible, the lesson list is gone, the map buttons are
+  44px at 320px and Tab reaches the map, the options and the step buttons in order.
+- Teacher feedback: `qa9` (u-cuong) shows the comment and notes by question text without
+  the key; `qa1` (u-an, practice) shows notes under the reviewed questions.
+- Teacher quiz review: pending `qa7`, confirmed `qa9`, practice `qa1` and superseded `qa8`
+  (form disabled, link to the newest attempt) each render at three viewports.
+- Teacher: the grading queue (homework and quiz rows), a superseded submission (`sub4`) and the class summary
   matrix each render at three viewports without the page scrolling sideways.
 - Admin dashboard: the backlog and the email outbox stack in one column at 768px.
 

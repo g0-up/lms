@@ -50,15 +50,18 @@ Assessment surfaces (quiz, homework, grading) add, all built from the same token
 
 | Component | Use |
 |---|---|
+| `.units`, `.unit`, `.unit-head`, `.side-unit` | Bài học grouping: each bài học is a `section.unit` with a header (h3 title, `.ord` "Bài i.j" or index, muted count, actions or progress badge) above its `.list` of học liệu; on the lesson page the side list repeats the bài học title as a small `.side-unit` heading. At 720px and below the row actions wrap onto their own line |
 | `.lesson-state`, `stBadge({tone,label})` | One status vocabulary (ok, warn, danger, info, muted) for lessons, submissions and quiz results |
 | `.quiz-bar`, `.timer-pill`, `.quiz-q`, `.quiz-opt`, `.quiz-explain`, `.quiz-score` | Taking and reviewing a quiz; the timer pill turns warn at 5 minutes left and danger at 1 minute, each with a toast |
+| `.viewer.is-focus`, `.quiz-pos`, `.quiz-map`, `.qm-btn`, `.quiz-step` | Focus mode while an attempt is open: one centred column (max 800px) without the lesson list, one visible `.quiz-q` at a time, "Câu x/n", a map of 44px buttons (filled when answered, outlined when current, `aria-current="step"`), and a footer with Câu trước on the left and Câu tiếp or Nộp bài on the right. Changing question moves focus to the question and announces "Câu x trên n" |
+| `.qnote`, `.qnote-view`, `.qnote-list` | Per-question teacher notes: an optional input under each answer on the review page, a note under each question on a practice result, and a list by question text on an assessment result (no answer key) |
 | `.hint-line` | One muted sentence with a leading icon that states the rules before an action (timer, autosave) |
 | `.attempt-list` | Past quiz attempts; the whole row is a stretched link, with a pass/fail badge |
-| `.grade-layout`, `.facts`, `.rubric-row`, `.grade-total`, `.grade-form` | Grading: evidence and history on the left, rubric and total on the right; page alerts sit inside the left column |
+| `.grade-layout`, `.facts`, `.rubric-row`, `.grade-total`, `.grade-form` | Grading and quiz review: evidence and history on the left, rubric or comment form and total on the right; page alerts sit inside the left column. A superseded item keeps the form but disables it and links to the newest one |
 | `.queue-table`, `.hw-table` | Grading queue and per-homework tables; fixed column widths so stacked tables align, sideways scroll inside `.table-wrap` on phones |
 | `.matrix`, `.matrix-cell`, `.matrix-legend` | Class summary: one cell per student and stage, colour plus text label, opens the stage summary |
 | `.rate-list`, `.rate-bar` | Per-question correct rate on the class quiz tab |
-| `.review-box`, `.review-empty` | Teacher stage review: highlighted when present, one muted line when not yet written |
+| `.review-box`, `.review-empty` | Teacher feedback (stage review, quiz confirmation): highlighted when present, one muted line when not yet written |
 | `.file-chip`, `.input-file` | Homework attachments |
 | `.nav-count` | Count bubble on a nav item (grading backlog) |
 
