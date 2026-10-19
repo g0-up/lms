@@ -36,6 +36,9 @@ var knownActions = map[string]struct{}{
 	ActionClassActivated: {}, ActionClassEnded: {}, ActionClassMemberInvited: {}, ActionClassInvitationResent: {}, ActionClassMemberDropped: {},
 	ActionUserDisabled: {}, ActionUserEnabled: {},
 	ActionStageCreated: {}, ActionCourseCreated: {}, ActionClassCreated: {},
+	ActionClassDeadlineChanged: {}, ActionHomeworkGraded: {}, ActionHomeworkGradeUpdated: {},
+	ActionQuizAttemptConfirmed: {}, ActionQuizAttemptCommented: {}, ActionQuizAttemptReviewUpdated: {},
+	ActionStageReviewSaved: {}, ActionQuizAttemptsGranted: {},
 }
 
 // IsKnownAction cho biết action thuộc danh sách trong actions.go.

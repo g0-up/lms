@@ -1,0 +1,394 @@
+{
+  "filters": {
+    "classes": [
+      {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      {
+        "code": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 2"
+      }
+    ],
+    "lessons": [
+      {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "kind": "quiz",
+        "title": "Kiểm tra cuối chặng Database"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "kind": "homework",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "kind": "quiz",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000006",
+        "kind": "homework",
+        "title": "Bài tập: Đọc CSV và thống kê"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000007",
+        "kind": "quiz",
+        "title": "Kiểm tra cuối chặng Go"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000008",
+        "kind": "quiz",
+        "title": "Kiểm tra cuối chặng ReactJS"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000009",
+        "kind": "quiz",
+        "title": "Kiểm tra cuối chặng HTML CSS JS"
+      }
+    ]
+  },
+  "items": [
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": true,
+      "itemId": "0199ffff-0000-7000-8000-000000000010",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      "no": 1,
+      "overdue": true,
+      "scorePercent": null,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000011",
+        "name": "Trần Thị Bích"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 108
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 2"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000012",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      "no": 1,
+      "overdue": true,
+      "scorePercent": null,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000013",
+        "name": "Đặng Hải Phong"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 84
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000014",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "title": "Kiểm tra cuối chặng Database"
+      },
+      "no": 2,
+      "overdue": true,
+      "scorePercent": 80,
+      "stage": {
+        "code": "DB",
+        "name": "Database"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000015",
+        "name": "Hoàng Thu Hà"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 83
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000016",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000008",
+        "title": "Kiểm tra cuối chặng ReactJS"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": 80,
+      "stage": {
+        "code": "RE",
+        "name": "ReactJS basic"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000017",
+        "name": "Lê Văn Cường"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 59
+    },
+    {
+      "autoSubmitted": true,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000018",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000009",
+        "title": "Kiểm tra cuối chặng HTML CSS JS"
+      },
+      "no": 2,
+      "overdue": false,
+      "scorePercent": 70,
+      "stage": {
+        "code": "WEB",
+        "name": "HTML CSS JS"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000019",
+        "name": "Nguyễn Hoàng An"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 50
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000020",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": 40,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000011",
+        "name": "Trần Thị Bích"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 43
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 2"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000021",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "title": "Kiểm tra cuối chặng Database"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": 60,
+      "stage": {
+        "code": "DB",
+        "name": "Database"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000022",
+        "name": "Đỗ Ngọc Linh"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 35
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": true,
+      "itemId": "0199ffff-0000-7000-8000-000000000023",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": null,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000013",
+        "name": "Đặng Hải Phong"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 24
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000024",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000006",
+        "title": "Bài tập: Đọc CSV và thống kê"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": null,
+      "stage": {
+        "code": "GO",
+        "name": "Golang basic"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000017",
+        "name": "Lê Văn Cường"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 12
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 2"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000025",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": null,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000022",
+        "name": "Đỗ Ngọc Linh"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 12
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 2"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000026",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": 80,
+      "stage": {
+        "code": "DS",
+        "name": "Data structure"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000013",
+        "name": "Đặng Hải Phong"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 8
+    },
+    {
+      "autoSubmitted": false,
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "isLate": false,
+      "itemId": "0199ffff-0000-7000-8000-000000000027",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000007",
+        "title": "Kiểm tra cuối chặng Go"
+      },
+      "no": 1,
+      "overdue": false,
+      "scorePercent": 60,
+      "stage": {
+        "code": "GO",
+        "name": "Golang basic"
+      },
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000019",
+        "name": "Nguyễn Hoàng An"
+      },
+      "submittedAt": "2026-10-05T08:00:00Z",
+      "waitedHours": 7
+    }
+  ],
+  "overdueCount": 3,
+  "quizPending": 7,
+  "total": 12
+}

@@ -1,0 +1,33 @@
+{
+  "attemptsLeft": 0,
+  "autoSubmitted": false,
+  "best": {
+    "percent": 70
+  },
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "maxScore": 10,
+  "mode": "assessment",
+  "no": 2,
+  "passPercent": 70,
+  "passed": true,
+  "percent": 70,
+  "review": {
+    "comment": "Đạt ngưỡng. Lượt sau chú ý câu về chỉ mục kết hợp.",
+    "notes": [
+      {
+        "bodyHtml": "\u003cp\u003eChỉ mục (a, b) dùng được cho điều kiện nào?\u003c/p\u003e",
+        "note": "Tiền tố trái quyết định chỉ mục có dùng được không.",
+        "position": 1,
+        "questionId": "01990000-0000-7000-8000-000000000733"
+      }
+    ],
+    "reviewedAt": "2026-10-05T08:00:00Z",
+    "reviewerName": "Lê Thu Hương",
+    "updated": true
+  },
+  "reviewStatus": "confirmed",
+  "score": 7,
+  "startedAt": "2026-10-05T08:00:00Z",
+  "status": "submitted",
+  "submittedAt": "2026-10-05T08:00:00Z"
+}

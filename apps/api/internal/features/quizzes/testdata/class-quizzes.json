@@ -1,0 +1,1535 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "items": [
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "title": "Luyện tập: Truy vấn SQL cơ bản"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000005",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000008",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 4,
+      "questionStats": {
+        "attempts": 2,
+        "rows": [
+          {
+            "bodyText": "Lệnh nào dùng để đọc dữ liệu từ bảng?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000012"
+          },
+          {
+            "bodyText": "Mệnh đề nào lọc các dòng theo điều kiện?",
+            "correctPercent": 50,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000013"
+          },
+          {
+            "bodyText": "Những lệnh nào thay đổi cấu trúc bảng? Chọn tất cả đáp án đúng.",
+            "correctPercent": 50,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000014"
+          },
+          {
+            "bodyText": "Mỗi bảng nên có bao nhiêu khóa chính?",
+            "correctPercent": 100,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000015"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000016",
+        "name": "Database"
+      },
+      "stats": {
+        "attempted": 2,
+        "avgBestPercent": 75,
+        "members": 7,
+        "passed": 2,
+        "pending": 0,
+        "submittedAttempts": 2
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000017",
+        "title": "Kiểm tra cuối chặng Database"
+      },
+      "maxAttempts": 2,
+      "members": [
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000018",
+            "no": 2,
+            "percent": 80,
+            "reviewStatus": "pending",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "passed",
+          "used": 2
+        },
+        {
+          "bestPercent": 100,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000019",
+            "no": 1,
+            "percent": 100,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000020",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000021",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": 40,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000022",
+            "no": 1,
+            "percent": 40,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "failed",
+          "used": 1
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000023",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "passed",
+          "used": 1
+        }
+      ],
+      "mode": "assessment",
+      "passPercent": 70,
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 7,
+        "rows": [
+          {
+            "bodyText": "Khóa ngoại tham chiếu tới cột nào của bảng khác?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000024"
+          },
+          {
+            "bodyText": "ON DELETE RESTRICT làm gì khi xóa một dòng đang được tham chiếu?",
+            "correctPercent": 71,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000025"
+          },
+          {
+            "bodyText": "UNIQUE (class_id, user_id) đảm bảo điều gì?",
+            "correctPercent": 86,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000026"
+          },
+          {
+            "bodyText": "Nên đánh index cho những cột nào? Chọn tất cả đáp án đúng.",
+            "correctPercent": 57,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000027"
+          },
+          {
+            "bodyText": "Loại index nào phù hợp cho cột JSONB?",
+            "correctPercent": 43,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000028"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000016",
+        "name": "Database"
+      },
+      "stats": {
+        "attempted": 6,
+        "avgBestPercent": 77,
+        "members": 7,
+        "passed": 5,
+        "pending": 1,
+        "submittedAttempts": 7
+      },
+      "timeLimitMinutes": 10
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000029",
+        "title": "Luyện tập: Stack, Queue và Hash"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 100,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000030",
+            "no": 1,
+            "percent": 100,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": 100,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000031",
+            "no": 2,
+            "percent": 100,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "done",
+          "used": 2
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 40,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000032",
+            "no": 1,
+            "percent": 40,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000033",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "done",
+          "used": 1
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 5,
+        "rows": [
+          {
+            "bodyText": "Cấu trúc nào hoạt động theo nguyên tắc vào sau ra trước (LIFO)?",
+            "correctPercent": 80,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000034"
+          },
+          {
+            "bodyText": "Độ phức tạp trung bình khi tra cứu một khóa trong hash table là gì?",
+            "correctPercent": 80,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000035"
+          },
+          {
+            "bodyText": "Những bài toán nào thường dùng Queue? Chọn tất cả đáp án đúng.",
+            "correctPercent": 60,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000036"
+          },
+          {
+            "bodyText": "Trong Go, câu lệnh stack = stack[:len(stack)-1] làm gì?",
+            "correctPercent": 80,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000037"
+          },
+          {
+            "bodyText": "Hai khóa khác nhau cho cùng một giá trị băm được gọi là gì?",
+            "correctPercent": 80,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000038"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000039",
+        "name": "Data structure"
+      },
+      "stats": {
+        "attempted": 4,
+        "avgBestPercent": 80,
+        "members": 7,
+        "passed": 4,
+        "pending": 0,
+        "submittedAttempts": 5
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000040",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      "maxAttempts": 2,
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000041",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": 100,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000042",
+            "no": 1,
+            "percent": 100,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 40,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000043",
+            "no": 1,
+            "percent": 40,
+            "reviewStatus": "pending",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "failed",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "assessment",
+      "passPercent": 70,
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 3,
+        "rows": [
+          {
+            "bodyText": "BFS dùng cấu trúc nào để lưu các đỉnh chờ duyệt?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000044"
+          },
+          {
+            "bodyText": "Kiểm tra chuỗi ({[]}) có ngoặc hợp lệ nên dùng cấu trúc nào?",
+            "correctPercent": 67,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000045"
+          },
+          {
+            "bodyText": "Ưu điểm của danh sách liên kết so với mảng là gì?",
+            "correctPercent": 33,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000046"
+          },
+          {
+            "bodyText": "Những cách nào xử lý xung đột trong hash table? Chọn tất cả đáp án đúng.",
+            "correctPercent": 100,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000047"
+          },
+          {
+            "bodyText": "Khi nào tra cứu trong hash table rơi vào O(n)?",
+            "correctPercent": 67,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000048"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000039",
+        "name": "Data structure"
+      },
+      "stats": {
+        "attempted": 3,
+        "avgBestPercent": 73,
+        "members": 7,
+        "passed": 2,
+        "pending": 1,
+        "submittedAttempts": 3
+      },
+      "timeLimitMinutes": 10
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000049",
+        "title": "Luyện tập: Lệnh go và cấu trúc chương trình"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 3,
+      "questionStats": {
+        "attempts": 0,
+        "rows": [
+          {
+            "bodyText": "Chương trình Go bắt đầu chạy từ đâu?",
+            "correctPercent": null,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000050"
+          },
+          {
+            "bodyText": "Lệnh nào tạo file go.mod cho một dự án mới?",
+            "correctPercent": null,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000051"
+          },
+          {
+            "bodyText": "Những lệnh nào có sẵn trong bộ công cụ Go? Chọn tất cả đáp án đúng.",
+            "correctPercent": null,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000052"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000053",
+        "name": "Golang basic"
+      },
+      "stats": {
+        "attempted": 0,
+        "avgBestPercent": null,
+        "members": 7,
+        "passed": 0,
+        "pending": 0,
+        "submittedAttempts": 0
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000054",
+        "title": "Luyện tập: Goroutine và channel"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000055",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000056",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "inProgress",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 4,
+      "questionStats": {
+        "attempts": 2,
+        "rows": [
+          {
+            "bodyText": "Từ khóa nào chạy một hàm trong goroutine mới?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000057"
+          },
+          {
+            "bodyText": "Gửi giá trị v vào channel ch viết thế nào?",
+            "correctPercent": 50,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000058"
+          },
+          {
+            "bodyText": "Những bước nào cần khi dùng sync.WaitGroup? Chọn tất cả đáp án đúng.",
+            "correctPercent": 100,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000059"
+          },
+          {
+            "bodyText": "Hàm main chỉ có ch := make(chan int); ch \u003c- 1 sẽ thế nào?",
+            "correctPercent": 50,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000060"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000053",
+        "name": "Golang basic"
+      },
+      "stats": {
+        "attempted": 2,
+        "avgBestPercent": 75,
+        "members": 7,
+        "passed": 2,
+        "pending": 0,
+        "submittedAttempts": 2
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000061",
+        "title": "Kiểm tra cuối chặng Go"
+      },
+      "maxAttempts": 2,
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 60,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000062",
+            "no": 2,
+            "percent": 60,
+            "reviewStatus": "confirmed",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "outOfAttempts",
+          "used": 2
+        },
+        {
+          "bestPercent": 60,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000063",
+            "no": 1,
+            "percent": 60,
+            "reviewStatus": "pending",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "failed",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "assessment",
+      "passPercent": 70,
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 3,
+        "rows": [
+          {
+            "bodyText": "Cú pháp nào khai báo và gán biến ngắn gọn bên trong hàm?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000064"
+          },
+          {
+            "bodyText": "Theo quy ước, hàm Go báo lỗi bằng cách nào?",
+            "correctPercent": 67,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000065"
+          },
+          {
+            "bodyText": "Những cách nào dùng để đồng bộ các goroutine? Chọn tất cả đáp án đúng.",
+            "correctPercent": 33,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000066"
+          },
+          {
+            "bodyText": "Vòng lặp for i := range 3 hợp lệ từ phiên bản Go nào?",
+            "correctPercent": 0,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000067"
+          },
+          {
+            "bodyText": "Lệnh nào biên dịch và chạy chương trình mà không để lại file nhị phân?",
+            "correctPercent": 67,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000068"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000053",
+        "name": "Golang basic"
+      },
+      "stats": {
+        "attempted": 2,
+        "avgBestPercent": 60,
+        "members": 7,
+        "passed": 0,
+        "pending": 1,
+        "submittedAttempts": 3
+      },
+      "timeLimitMinutes": 15
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000069",
+        "title": "Luyện tập: Component, props và state"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000070",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": 75,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000071",
+            "no": 1,
+            "percent": 75,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 4,
+      "questionStats": {
+        "attempts": 2,
+        "rows": [
+          {
+            "bodyText": "Props trong React là gì?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000072"
+          },
+          {
+            "bodyText": "Gọi setCount(count + 1) sẽ làm gì?",
+            "correctPercent": 100,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000073"
+          },
+          {
+            "bodyText": "Khi render một danh sách, mỗi phần tử cần prop nào?",
+            "correctPercent": 50,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000074"
+          },
+          {
+            "bodyText": "Cách nào cập nhật mảng trong state đúng? Chọn tất cả đáp án đúng.",
+            "correctPercent": 50,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000075"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000076",
+        "name": "ReactJS basic"
+      },
+      "stats": {
+        "attempted": 2,
+        "avgBestPercent": 75,
+        "members": 7,
+        "passed": 2,
+        "pending": 0,
+        "submittedAttempts": 2
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000077",
+        "title": "Kiểm tra cuối chặng ReactJS"
+      },
+      "maxAttempts": 2,
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 80,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000078",
+            "no": 1,
+            "percent": 80,
+            "reviewStatus": "pending",
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "passed",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 2,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "assessment",
+      "passPercent": 70,
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 1,
+        "rows": [
+          {
+            "bodyText": "useEffect(fn, []) chạy fn khi nào?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000079"
+          },
+          {
+            "bodyText": "Quy tắc nào đúng khi dùng hook?",
+            "correctPercent": 100,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000080"
+          },
+          {
+            "bodyText": "Hai component anh em cần dùng chung một state thì làm gì?",
+            "correctPercent": 100,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000081"
+          },
+          {
+            "bodyText": "Những hook nào giúp tránh tính lại hoặc tạo lại giá trị không cần thiết? Chọn tất cả đáp án đúng.",
+            "correctPercent": 100,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000082"
+          },
+          {
+            "bodyText": "Input \"được điều khiển\" (controlled) là input như thế nào?",
+            "correctPercent": 0,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000083"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000076",
+        "name": "ReactJS basic"
+      },
+      "stats": {
+        "attempted": 1,
+        "avgBestPercent": 80,
+        "members": 7,
+        "passed": 1,
+        "pending": 1,
+        "submittedAttempts": 1
+      },
+      "timeLimitMinutes": 15
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000084",
+        "title": "Luyện tập: HTML ngữ nghĩa và CSS layout"
+      },
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": 100,
+          "granted": 0,
+          "latest": {
+            "attemptId": "0199ffff-0000-7000-8000-000000000085",
+            "no": 1,
+            "percent": 100,
+            "reviewStatus": null,
+            "submittedAt": "2026-10-05T08:00:00Z"
+          },
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "done",
+          "used": 1
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": null,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "practice",
+      "questionCount": 4,
+      "questionStats": {
+        "attempts": 1,
+        "rows": [
+          {
+            "bodyText": "Thẻ nào dành cho khối điều hướng chính?",
+            "correctPercent": 100,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000086"
+          },
+          {
+            "bodyText": "Thuộc tính nào căn các phần tử theo trục chính trong flexbox?",
+            "correctPercent": 100,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000087"
+          },
+          {
+            "bodyText": "HTML ngữ nghĩa mang lại lợi ích gì? Chọn tất cả đáp án đúng.",
+            "correctPercent": 100,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000088"
+          },
+          {
+            "bodyText": "grid-template-columns: repeat(3, 1fr) tạo ra gì?",
+            "correctPercent": 100,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000089"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000090",
+        "name": "HTML CSS JS"
+      },
+      "stats": {
+        "attempted": 1,
+        "avgBestPercent": 100,
+        "members": 7,
+        "passed": 1,
+        "pending": 0,
+        "submittedAttempts": 1
+      }
+    },
+    {
+      "grants": [],
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000091",
+        "title": "Kiểm tra cuối chặng HTML CSS JS"
+      },
+      "maxAttempts": 3,
+      "members": [
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000003",
+          "name": "Hoàng Thu Hà",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000004",
+          "name": "Lê Văn Cường",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000006",
+          "name": "Nguyễn Hoàng An",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000007",
+          "name": "Phạm Minh Dũng",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000009",
+          "name": "Trần Thị Bích",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000010",
+          "name": "Vũ Đức Khang",
+          "status": "todo",
+          "used": 0
+        },
+        {
+          "bestPercent": null,
+          "granted": 0,
+          "latest": null,
+          "limit": 3,
+          "memberId": "0199ffff-0000-7000-8000-000000000011",
+          "name": "Đặng Hải Phong",
+          "status": "todo",
+          "used": 0
+        }
+      ],
+      "mode": "assessment",
+      "passPercent": 80,
+      "questionCount": 5,
+      "questionStats": {
+        "attempts": 0,
+        "rows": [
+          {
+            "bodyText": "Lấy phần tử đầu tiên khớp selector .card bằng cách nào?",
+            "correctPercent": null,
+            "position": 1,
+            "questionId": "0199ffff-0000-7000-8000-000000000092"
+          },
+          {
+            "bodyText": "Gắn sự kiện click cho nút btn đúng cách là?",
+            "correctPercent": null,
+            "position": 2,
+            "questionId": "0199ffff-0000-7000-8000-000000000093"
+          },
+          {
+            "bodyText": "Mỗi trang nên có bao nhiêu thẻ \u003cmain\u003e đang hiển thị?",
+            "correctPercent": null,
+            "position": 3,
+            "questionId": "0199ffff-0000-7000-8000-000000000094"
+          },
+          {
+            "bodyText": "Những thành phần nào thuộc box model của CSS? Chọn tất cả đáp án đúng.",
+            "correctPercent": null,
+            "position": 4,
+            "questionId": "0199ffff-0000-7000-8000-000000000095"
+          },
+          {
+            "bodyText": "Event delegation là gì?",
+            "correctPercent": null,
+            "position": 5,
+            "questionId": "0199ffff-0000-7000-8000-000000000096"
+          }
+        ]
+      },
+      "stage": {
+        "id": "0199ffff-0000-7000-8000-000000000090",
+        "name": "HTML CSS JS"
+      },
+      "stats": {
+        "attempted": 0,
+        "avgBestPercent": null,
+        "members": 7,
+        "passed": 0,
+        "pending": 0,
+        "submittedAttempts": 0
+      },
+      "timeLimitMinutes": 15
+    }
+  ]
+}

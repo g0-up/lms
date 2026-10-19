@@ -173,6 +173,81 @@ func TestLearningRoutesRequireSession(t *testing.T) {
 	}
 }
 
+func TestHomeworkRoutesRequireSession(t *testing.T) {
+	engine, _ := newTestEngine(t, nil)
+	const id = "01990000-0000-7000-8000-000000000301"
+	cases := []struct{ method, path string }{
+		{http.MethodPut, "/api/v1/classes/" + id + "/deadlines/" + id},
+		{http.MethodDelete, "/api/v1/classes/" + id + "/deadlines/" + id},
+		{http.MethodGet, "/api/v1/classes/" + id + "/homework"},
+		{http.MethodGet, "/api/v1/submissions/" + id},
+		{http.MethodPost, "/api/v1/submissions/" + id + "/grades"},
+		{http.MethodGet, "/api/v1/me/classes/" + id + "/lessons/" + id + "/submissions"},
+		{http.MethodPost, "/api/v1/me/classes/" + id + "/lessons/" + id + "/submissions"},
+		{http.MethodPost, "/api/v1/me/uploads"},
+		{http.MethodPost, "/api/v1/me/uploads/" + id + "/complete"},
+	}
+	for _, tc := range cases {
+		req := httptest.NewRequest(tc.method, tc.path, strings.NewReader(`{}`))
+		req.Header.Set("X-Requested-With", "fetch")
+		rec := serve(engine, req)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, tc.method+" "+tc.path)
+		assert.Equal(t, "UNAUTHENTICATED", decodeEnvelope(t, rec)["code"], tc.method+" "+tc.path)
+	}
+}
+
+func TestQuizRoutesRequireSession(t *testing.T) {
+	engine, _ := newTestEngine(t, nil)
+	const id = "01990000-0000-7000-8000-000000000301"
+	cases := []struct{ method, path string }{
+		{http.MethodGet, "/api/v1/me/classes/" + id + "/lessons/" + id + "/attempts"},
+		{http.MethodPost, "/api/v1/me/classes/" + id + "/lessons/" + id + "/attempts"},
+		{http.MethodGet, "/api/v1/me/attempts/" + id},
+		{http.MethodPut, "/api/v1/me/attempts/" + id + "/answers/" + id},
+		{http.MethodPost, "/api/v1/me/attempts/" + id + "/submit"},
+		{http.MethodGet, "/api/v1/quiz-attempts/" + id},
+		{http.MethodPost, "/api/v1/quiz-attempts/" + id + "/reviews"},
+		{http.MethodGet, "/api/v1/classes/" + id + "/quizzes"},
+	}
+	for _, tc := range cases {
+		req := httptest.NewRequest(tc.method, tc.path, strings.NewReader(`{}`))
+		req.Header.Set("X-Requested-With", "fetch")
+		rec := serve(engine, req)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, tc.method+" "+tc.path)
+		assert.Equal(t, "UNAUTHENTICATED", decodeEnvelope(t, rec)["code"], tc.method+" "+tc.path)
+		assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"), tc.method+" "+tc.path)
+	}
+}
+
+func TestGradingRoutesRequireSession(t *testing.T) {
+	engine, _ := newTestEngine(t, nil)
+	for _, path := range []string{"/api/v1/grading/queue", "/api/v1/grading/recent"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		req.Header.Set("X-Requested-With", "fetch")
+		rec := serve(engine, req)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, path)
+		assert.Equal(t, "UNAUTHENTICATED", decodeEnvelope(t, rec)["code"], path)
+	}
+}
+
+func TestSummaryRoutesRequireSession(t *testing.T) {
+	engine, _ := newTestEngine(t, nil)
+	const id = "01990000-0000-7000-8000-000000000301"
+	cases := []struct{ method, path string }{
+		{http.MethodGet, "/api/v1/me/classes/" + id + "/summary"},
+		{http.MethodGet, "/api/v1/classes/" + id + "/summary"},
+		{http.MethodGet, "/api/v1/classes/" + id + "/members/" + id + "/stages/" + id + "/summary"},
+		{http.MethodPut, "/api/v1/classes/" + id + "/members/" + id + "/stages/" + id + "/review"},
+	}
+	for _, tc := range cases {
+		req := httptest.NewRequest(tc.method, tc.path, strings.NewReader(`{"body":"x"}`))
+		req.Header.Set("X-Requested-With", "fetch")
+		rec := serve(engine, req)
+		assert.Equal(t, http.StatusUnauthorized, rec.Code, tc.method+" "+tc.path)
+		assert.Equal(t, "UNAUTHENTICATED", decodeEnvelope(t, rec)["code"], tc.method+" "+tc.path)
+	}
+}
+
 func TestStagesPreviewRequiresSession(t *testing.T) {
 	engine, _ := newTestEngine(t, nil)
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/stages/markdown-preview", strings.NewReader(`{"markdownSource":"# A"}`))

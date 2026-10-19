@@ -90,9 +90,38 @@ func (PGRepo) CanUserAccess(ctx context.Context, ex db.Executor, mediaID, userID
 		    AND ( c.teacher_id = $2
 		       OR EXISTS (SELECT 1 FROM class_members cm WHERE cm.class_id = c.id AND cm.user_id = $2
 		                  AND cm.status = 'active' AND c.status IN ('active', 'ended')) )
+		) OR EXISTS (
+		  SELECT 1 FROM media_files mf WHERE mf.id = $1 AND mf.uploaded_by = $2
+		) OR EXISTS (
+		  SELECT 1 FROM submission_files sf
+		  JOIN submissions s ON s.id = sf.submission_id
+		  JOIN class_members cm ON cm.id = s.class_member_id
+		  JOIN classes c ON c.id = cm.class_id
+		  WHERE sf.media_id = $1 AND c.teacher_id = $2
 		)`, mediaID, userID)
 	if err != nil {
 		return false, pgerr.Map(err)
 	}
 	return ok, nil
+}
+
+func (PGRepo) StudentUploadQuota(ctx context.Context, ex db.Executor, userID uuid.UUID, w QuotaWindow) (StudentQuota, error) {
+	if _, err := ex.ExecContext(ctx, `SELECT pg_advisory_xact_lock(hashtextextended('media.student_uploads:' || $1::text, 0))`, userID); err != nil {
+		return StudentQuota{}, pgerr.Map(err)
+	}
+	var q StudentQuota
+	err := sqlx.GetContext(ctx, ex, &q, `
+		SELECT EXISTS (
+		  SELECT 1 FROM class_members cm JOIN classes c ON c.id = cm.class_id
+		  WHERE cm.user_id = $1 AND cm.status = 'active' AND c.status = 'active'
+		) AS enrolled,
+		(SELECT count(*) FROM media_files mf
+		 WHERE mf.uploaded_by = $1 AND mf.kind = 'document'
+		   AND ((mf.status = 'ready' AND mf.created_at >= $2) OR (mf.status = 'pending' AND mf.created_at >= $3))
+		   AND NOT EXISTS (SELECT 1 FROM submission_files sf WHERE sf.media_id = mf.id)) AS unattached`,
+		userID, w.ReadySince, w.PendingSince)
+	if err != nil {
+		return StudentQuota{}, pgerr.Map(err)
+	}
+	return q, nil
 }

@@ -1,0 +1,241 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "01990000-0000-7000-8000-000000000301",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "deadline": "2026-10-05T08:00:00Z",
+  "history": [
+    {
+      "commitRef": "d4e5f6a",
+      "files": [
+        {
+          "fileName": "giai-thich.md",
+          "mediaId": "0199ffff-0000-7000-8000-000000000001",
+          "sizeBytes": 5
+        }
+      ],
+      "grade": {
+        "comment": "Đã bổ sung giải thích, đạt yêu cầu.",
+        "gradedAt": "2026-10-05T08:00:00Z",
+        "gradedBy": "Lê Thu Hương",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "maxPoints": 100,
+        "result": "passed",
+        "scores": [
+          {
+            "comment": "",
+            "criterionId": "01990000-0000-7000-8000-000000000932",
+            "description": "Truy vấn đúng kết quả",
+            "maxPoints": 40,
+            "points": 40
+          },
+          {
+            "comment": "Nên nêu lý do chọn JOIN.",
+            "criterionId": "01990000-0000-7000-8000-000000000934",
+            "description": "Giải thích cách làm",
+            "maxPoints": 60,
+            "points": 45
+          }
+        ],
+        "totalPoints": 85
+      },
+      "grades": [
+        {
+          "comment": "Đã bổ sung giải thích, đạt yêu cầu.",
+          "gradedAt": "2026-10-05T08:00:00Z",
+          "gradedBy": "Lê Thu Hương",
+          "id": "0199ffff-0000-7000-8000-000000000002",
+          "maxPoints": 100,
+          "result": "passed",
+          "scores": [
+            {
+              "comment": "",
+              "criterionId": "01990000-0000-7000-8000-000000000932",
+              "description": "Truy vấn đúng kết quả",
+              "maxPoints": 40,
+              "points": 40
+            },
+            {
+              "comment": "Nên nêu lý do chọn JOIN.",
+              "criterionId": "01990000-0000-7000-8000-000000000934",
+              "description": "Giải thích cách làm",
+              "maxPoints": 60,
+              "points": 45
+            }
+          ],
+          "totalPoints": 85
+        }
+      ],
+      "id": "0199ffff-0000-7000-8000-000000000003",
+      "isLate": true,
+      "no": 2,
+      "repoUrl": "https://github.com/an/sql-select",
+      "status": "passed",
+      "submittedAt": "2026-10-05T08:00:00Z"
+    },
+    {
+      "commitRef": "a1b2c3d",
+      "files": [],
+      "grade": {
+        "comment": "Truy vấn đúng nhưng thiếu phần giải thích.",
+        "gradedAt": "2026-10-05T08:00:00Z",
+        "gradedBy": "Lê Thu Hương",
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "maxPoints": 100,
+        "result": "rework",
+        "scores": [
+          {
+            "comment": "",
+            "criterionId": "01990000-0000-7000-8000-000000000932",
+            "description": "Truy vấn đúng kết quả",
+            "maxPoints": 40,
+            "points": 30
+          },
+          {
+            "comment": "Nên nêu lý do chọn JOIN.",
+            "criterionId": "01990000-0000-7000-8000-000000000934",
+            "description": "Giải thích cách làm",
+            "maxPoints": 60,
+            "points": 20
+          }
+        ],
+        "totalPoints": 50
+      },
+      "grades": [
+        {
+          "comment": "Truy vấn đúng nhưng thiếu phần giải thích.",
+          "gradedAt": "2026-10-05T08:00:00Z",
+          "gradedBy": "Lê Thu Hương",
+          "id": "0199ffff-0000-7000-8000-000000000004",
+          "maxPoints": 100,
+          "result": "rework",
+          "scores": [
+            {
+              "comment": "",
+              "criterionId": "01990000-0000-7000-8000-000000000932",
+              "description": "Truy vấn đúng kết quả",
+              "maxPoints": 40,
+              "points": 30
+            },
+            {
+              "comment": "Nên nêu lý do chọn JOIN.",
+              "criterionId": "01990000-0000-7000-8000-000000000934",
+              "description": "Giải thích cách làm",
+              "maxPoints": 60,
+              "points": 20
+            }
+          ],
+          "totalPoints": 50
+        }
+      ],
+      "id": "0199ffff-0000-7000-8000-000000000005",
+      "isLate": false,
+      "no": 1,
+      "repoUrl": "https://github.com/an/sql-select",
+      "status": "rework",
+      "submittedAt": "2026-10-05T08:00:00Z"
+    }
+  ],
+  "isLatest": true,
+  "latestSubmissionId": "0199ffff-0000-7000-8000-000000000003",
+  "lesson": {
+    "briefHtml": "<h1>Truy vấn SELECT</h1>",
+    "criteria": [
+      {
+        "description": "Truy vấn đúng kết quả",
+        "id": "01990000-0000-7000-8000-000000000932",
+        "maxPoints": 40
+      },
+      {
+        "description": "Giải thích cách làm",
+        "id": "01990000-0000-7000-8000-000000000934",
+        "maxPoints": 60
+      }
+    ],
+    "id": "01990000-0000-7000-8000-000000000928",
+    "maxPoints": 100,
+    "passPercent": 70,
+    "title": "Bài tập: truy vấn SELECT"
+  },
+  "stage": {
+    "id": "01990000-0000-7000-8000-000000000101",
+    "name": "Database"
+  },
+  "student": {
+    "email": "an.nguyen@gmail.com",
+    "memberId": "01990000-0000-7000-8000-000000000311",
+    "memberStatus": "active",
+    "name": "Nguyễn Hoàng An",
+    "userId": "01990000-0000-7000-8000-000000000003"
+  },
+  "submission": {
+    "commitRef": "d4e5f6a",
+    "files": [
+      {
+        "fileName": "giai-thich.md",
+        "mediaId": "0199ffff-0000-7000-8000-000000000001",
+        "sizeBytes": 5
+      }
+    ],
+    "grade": {
+      "comment": "Đã bổ sung giải thích, đạt yêu cầu.",
+      "gradedAt": "2026-10-05T08:00:00Z",
+      "gradedBy": "Lê Thu Hương",
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "maxPoints": 100,
+      "result": "passed",
+      "scores": [
+        {
+          "comment": "",
+          "criterionId": "01990000-0000-7000-8000-000000000932",
+          "description": "Truy vấn đúng kết quả",
+          "maxPoints": 40,
+          "points": 40
+        },
+        {
+          "comment": "Nên nêu lý do chọn JOIN.",
+          "criterionId": "01990000-0000-7000-8000-000000000934",
+          "description": "Giải thích cách làm",
+          "maxPoints": 60,
+          "points": 45
+        }
+      ],
+      "totalPoints": 85
+    },
+    "grades": [
+      {
+        "comment": "Đã bổ sung giải thích, đạt yêu cầu.",
+        "gradedAt": "2026-10-05T08:00:00Z",
+        "gradedBy": "Lê Thu Hương",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "maxPoints": 100,
+        "result": "passed",
+        "scores": [
+          {
+            "comment": "",
+            "criterionId": "01990000-0000-7000-8000-000000000932",
+            "description": "Truy vấn đúng kết quả",
+            "maxPoints": 40,
+            "points": 40
+          },
+          {
+            "comment": "Nên nêu lý do chọn JOIN.",
+            "criterionId": "01990000-0000-7000-8000-000000000934",
+            "description": "Giải thích cách làm",
+            "maxPoints": 60,
+            "points": 45
+          }
+        ],
+        "totalPoints": 85
+      }
+    ],
+    "id": "0199ffff-0000-7000-8000-000000000003",
+    "isLate": true,
+    "no": 2,
+    "repoUrl": "https://github.com/an/sql-select",
+    "status": "passed",
+    "submittedAt": "2026-10-05T08:00:00Z"
+  }
+}

@@ -9,7 +9,9 @@ import (
 
 	"lms/api/internal/domain"
 	"lms/api/internal/features/classes"
+	"lms/api/internal/features/homework"
 	"lms/api/internal/features/identity"
+	"lms/api/internal/features/quizzes"
 	"lms/api/internal/platform/apperr"
 	"lms/api/internal/platform/httpx"
 	"lms/api/internal/platform/middleware"
@@ -57,20 +59,31 @@ func New(d Deps) *gin.Engine {
 
 	requireAdmin := identity.RequireRole(domain.RoleAdmin)
 	requireStaff := identity.RequireRole(domain.RoleAdmin, domain.RoleTeacher)
+	requireStudent := identity.RequireRole(domain.RoleStudent)
 	stagesSvc := newStagesService(d)
 	newStages(stagesSvc).Register(authed, requireAdmin)
 	// courses gắn cả POST /stage-versions/:vid/apply: prefix là của chặng nhưng thao tác ghi vào khóa học.
 	newCourses(d).Register(authed, requireAdmin)
 	// Trang học tải nhiều ảnh markdown qua /content nên limiter theo user, không theo IP.
-	newMedia(d).Register(authed.Group("/media", middleware.RateLimit(userKey, mediaRequestsPerMin, !d.Cfg.IsE2E())), requireAdmin)
+	mediaLimit := middleware.RateLimit(userKey, mediaRequestsPerMin, !d.Cfg.IsE2E())
+	mediaHandler := newMedia(d)
+	mediaHandler.Register(authed.Group("/media", mediaLimit), requireAdmin)
+	// Học viên tải file bài nộp; xem file vẫn qua /media/{id}/url (quyền theo bản nộp).
+	mediaHandler.RegisterStudent(authed.Group("/me/uploads", mediaLimit, requireStudent))
 	newClasses(d, ident.svc, mail).Register(authed, classes.Guards{
 		Admin:       requireAdmin,
 		Staff:       requireStaff,
 		Teacher:     identity.RequireRole(domain.RoleTeacher),
 		InviteLimit: middleware.RateLimit(middleware.ClientIP, invitationsPerMin, !d.Cfg.IsE2E()),
 	})
-	newLearning(d).Register(authed, identity.RequireRole(domain.RoleStudent))
-	newReports(d, stagesSvc).Register(authed, requireStaff, requireAdmin)
+	summarySvc := newSummaryService(d)
+	newLearning(d, summarySvc).Register(authed, requireStudent)
+	newSummary(summarySvc).Register(authed, requireStudent, requireStaff)
+	gradingSvc := newGradingService(d)
+	newGrading(gradingSvc).Register(authed, requireStaff)
+	newQuizzes(d, mail, gradingSvc).Register(authed, quizzes.Guards{Staff: requireStaff, Student: requireStudent})
+	newHomework(d, mail, gradingSvc).Register(authed, homework.Guards{Staff: requireStaff, Student: requireStudent})
+	newReports(d, stagesSvc, gradingSvc).Register(authed, requireStaff, requireAdmin)
 
 	return engine
 }

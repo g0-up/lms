@@ -1,0 +1,188 @@
+{
+  "attempts": [
+    {
+      "autoSubmitted": false,
+      "id": "0199ffff-0000-7000-8000-000000000001",
+      "maxScore": 10,
+      "no": 2,
+      "passed": true,
+      "percent": 70,
+      "review": {
+        "comment": "Đạt ngưỡng. Lượt sau chú ý câu về chỉ mục kết hợp.",
+        "createdAt": "2026-10-05T08:00:00Z",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "notes": [
+          {
+            "note": "Tiền tố trái quyết định chỉ mục có dùng được không.",
+            "questionId": "01990000-0000-7000-8000-000000000733"
+          }
+        ],
+        "reviewer": {
+          "id": "01990000-0000-7000-8000-000000000002",
+          "name": "Lê Thu Hương"
+        }
+      },
+      "reviewStatus": "confirmed",
+      "score": 7,
+      "submittedAt": "2026-10-05T08:00:00Z"
+    },
+    {
+      "autoSubmitted": false,
+      "id": "0199ffff-0000-7000-8000-000000000003",
+      "maxScore": 10,
+      "no": 1,
+      "passed": false,
+      "percent": 30,
+      "review": null,
+      "reviewStatus": "superseded",
+      "score": 3,
+      "submittedAt": "2026-10-05T08:00:00Z"
+    }
+  ],
+  "autoSubmitted": false,
+  "class": {
+    "code": "basic01",
+    "id": "01990000-0000-7000-8000-000000000301",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "correctCount": 2,
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "isLatest": true,
+  "latestAttemptId": "0199ffff-0000-7000-8000-000000000001",
+  "lesson": {
+    "id": "01990000-0000-7000-8000-000000000702",
+    "title": "Kiểm tra: chỉ mục"
+  },
+  "limit": 2,
+  "maxScore": 10,
+  "minutes": 1,
+  "mode": "assessment",
+  "no": 2,
+  "passPercent": 70,
+  "passed": true,
+  "percent": 70,
+  "questionCount": 3,
+  "questions": [
+    {
+      "bodyHtml": "\u003cp\u003eChỉ mục (a, b) dùng được cho điều kiện nào?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000733",
+      "options": [
+        {
+          "body": "WHERE b = 2",
+          "id": "01990000-0000-7000-8000-000000000747",
+          "isCorrect": false,
+          "selected": false
+        },
+        {
+          "body": "WHERE a = 1 AND b = 2",
+          "id": "01990000-0000-7000-8000-000000000746",
+          "isCorrect": true,
+          "selected": true
+        },
+        {
+          "body": "WHERE a = 1",
+          "id": "01990000-0000-7000-8000-000000000745",
+          "isCorrect": true,
+          "selected": true
+        }
+      ],
+      "points": 4,
+      "pointsAwarded": 4,
+      "status": "correct",
+      "type": "multi"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eChỉ mục làm chậm thao tác nào?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000732",
+      "options": [
+        {
+          "body": "INSERT",
+          "id": "01990000-0000-7000-8000-000000000744",
+          "isCorrect": true,
+          "selected": false
+        },
+        {
+          "body": "SELECT",
+          "id": "01990000-0000-7000-8000-000000000743",
+          "isCorrect": false,
+          "selected": false
+        }
+      ],
+      "points": 3,
+      "pointsAwarded": 0,
+      "status": "blank",
+      "type": "single"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eChỉ mục B-tree phù hợp với?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000731",
+      "options": [
+        {
+          "body": "Tìm toàn văn",
+          "id": "01990000-0000-7000-8000-000000000742",
+          "isCorrect": false,
+          "selected": false
+        },
+        {
+          "body": "Truy vấn khoảng",
+          "id": "01990000-0000-7000-8000-000000000741",
+          "isCorrect": true,
+          "selected": true
+        }
+      ],
+      "points": 3,
+      "pointsAwarded": 3,
+      "status": "correct",
+      "type": "single"
+    }
+  ],
+  "reviewStatus": "confirmed",
+  "reviews": [
+    {
+      "comment": "Đạt ngưỡng. Lượt sau chú ý câu về chỉ mục kết hợp.",
+      "createdAt": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "notes": [
+        {
+          "note": "Tiền tố trái quyết định chỉ mục có dùng được không.",
+          "questionId": "01990000-0000-7000-8000-000000000733"
+        }
+      ],
+      "reviewer": {
+        "id": "01990000-0000-7000-8000-000000000002",
+        "name": "Lê Thu Hương"
+      }
+    },
+    {
+      "comment": "Đạt ngưỡng, cần xem lại chi phí ghi của chỉ mục.",
+      "createdAt": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000004",
+      "notes": [
+        {
+          "note": "Xem lại chi phí ghi của chỉ mục.",
+          "questionId": "01990000-0000-7000-8000-000000000732"
+        }
+      ],
+      "reviewer": {
+        "id": "01990000-0000-7000-8000-000000000002",
+        "name": "Lê Thu Hương"
+      }
+    }
+  ],
+  "score": 7,
+  "stage": {
+    "id": "01990000-0000-7000-8000-000000000101",
+    "name": "Database"
+  },
+  "startedAt": "2026-10-05T08:00:00Z",
+  "student": {
+    "email": "an.nguyen@gmail.com",
+    "memberId": "01990000-0000-7000-8000-000000000311",
+    "memberStatus": "active",
+    "name": "Nguyễn Hoàng An",
+    "userId": "01990000-0000-7000-8000-000000000003"
+  },
+  "submittedAt": "2026-10-05T08:00:00Z",
+  "timeLimitMinutes": 10
+}

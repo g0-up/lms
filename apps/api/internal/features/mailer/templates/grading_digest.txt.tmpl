@@ -1,0 +1,9 @@
+Chào {{.Name}},
+
+Có {{.Count}} bài chờ chấm hoặc xác nhận đã quá 3 ngày trong các lớp bạn phụ trách:
+{{range .Items}}
+- {{.StudentName}} · {{.KindLabel}} "{{.LessonTitle}}" · lớp {{.ClassName}} ({{.ClassCode}}) · đã chờ {{.Waited}}{{end}}
+
+Mở hàng chờ chấm tại: {{.QueueURL}}
+
+{{.AppName}}

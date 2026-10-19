@@ -12,12 +12,16 @@ import (
 	"lms/api/internal/domain"
 	"lms/api/internal/features/classes"
 	"lms/api/internal/features/courses"
+	"lms/api/internal/features/grading"
+	"lms/api/internal/features/homework"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/learning"
 	"lms/api/internal/features/mailer"
 	"lms/api/internal/features/media"
+	"lms/api/internal/features/quizzes"
 	"lms/api/internal/features/reports"
 	"lms/api/internal/features/stages"
+	"lms/api/internal/features/summary"
 	"lms/api/internal/platform/audit"
 	"lms/api/internal/platform/clock"
 	"lms/api/internal/platform/config"
@@ -159,11 +163,12 @@ func currentUserRole(c *gin.Context) (uuid.UUID, domain.Role, bool) {
 	return u.ID(), u.Role(), true
 }
 
-// newMediaService dựng media.Service; learning dùng lại làm media.URLSigner.
+// newMediaService dựng media.Service; learning dùng lại làm media.URLSigner. StudentTx cho phép học viên tải file
+// bài nộp (route /me/uploads).
 func newMediaService(d Deps) *media.Service {
 	return media.NewService(d.DB, media.PGRepo{}, d.Storage, d.Clock, ids.V7{}, media.Config{
-		Limits: media.Limits{MaxVideoBytes: d.Cfg.MaxVideoBytes, MaxImageBytes: d.Cfg.MaxImageBytes},
-		URLTTL: d.Cfg.MediaURLTTL,
+		Limits: media.Limits{MaxVideoBytes: d.Cfg.MaxVideoBytes, MaxImageBytes: d.Cfg.MaxImageBytes, MaxDocumentBytes: d.Cfg.MaxDocumentBytes},
+		URLTTL: d.Cfg.MediaURLTTL, StudentTx: db.TxRunner{DB: d.DB},
 	})
 }
 
@@ -180,22 +185,75 @@ func newMedia(d Deps) *media.Handler {
 
 // newLearning dựng handler học của học viên; quyền theo lớp đọc qua classes.MembershipReader, URL video ký qua
 // media.Service.
-func newLearning(d Deps) *learning.Handler {
+func newLearning(d Deps, statuses summary.StatusReader) *learning.Handler {
 	svc := learning.NewService(learning.Deps{
 		DB: d.DB, Tx: db.TxRunner{DB: d.DB},
 		Progress: learning.PGProgressRepo{}, Structure: learning.PGCourseStructureRepo{}, MyClasses: learning.PGMyClassesRepo{},
-		Members: classes.PGMembershipReader{}, Media: newMediaService(d), Clock: d.Clock,
+		Members: classes.PGMembershipReader{}, Media: newMediaService(d), Statuses: statuses, Clock: d.Clock,
 	})
 	return learning.NewHandler(svc, currentUserID)
 }
 
+// newHomework dựng handler hạn nộp, nộp bài và chấm; học liệu đọc qua learning, hoàn thành học liệu ghi qua
+// learning.CompletionWriter, email kết quả qua mailer trong cùng transaction.
+func newHomework(d Deps, enq mailer.Enqueuer, next grading.NextFinder) *homework.Handler {
+	svc := homework.NewService(homework.Deps{
+		DB: d.DB, Tx: db.TxRunner{DB: d.DB}, Repo: homework.PGRepo{},
+		Members: classes.PGMembershipReader{}, Lessons: learning.PGCourseStructureRepo{}, Completion: learning.PGProgressRepo{},
+		Mail: enq, Audit: d.Audit, Clock: d.Clock, IDs: ids.V7{}, Next: next, PublicBaseURL: d.Cfg.PublicBaseURL,
+	})
+	return homework.NewHandler(svc, currentUserRole)
+}
+
+// NewQuizzesService dựng use case làm quiz; dùng chung cho API và worker (tự nộp lượt quá giờ trong Cleanups).
+// Tiến độ học liệu ghi qua learning trong transaction của lượt.
+func NewQuizzesService(dbx *sqlx.DB, clk clock.Clock) *quizzes.Service {
+	return quizzes.NewService(quizzes.Deps{
+		DB: dbx, Tx: db.TxRunner{DB: dbx}, Repo: quizzes.PGRepo{}, Members: classes.PGMembershipReader{},
+		Progress: learning.PGProgressRepo{}, Clock: clk, IDs: ids.V7{}, Shuffle: quizzes.RandShuffler{},
+	})
+}
+
+// newQuizzes dựng handler làm quiz của học viên và xem, nhận xét lượt của staff; email nhận xét qua mailer và audit
+// trong transaction của lần nhận xét, mục kế tiếp của hàng chờ chấm qua next.
+func newQuizzes(d Deps, enq mailer.Enqueuer, next grading.NextFinder) *quizzes.Handler {
+	review := quizzes.NewReviewService(quizzes.ReviewDeps{
+		DB: d.DB, Tx: db.TxRunner{DB: d.DB}, Repo: quizzes.PGRepo{}, Mail: enq, Audit: d.Audit, Clock: d.Clock,
+		IDs: ids.V7{}, Next: next, PublicBaseURL: d.Cfg.PublicBaseURL,
+	})
+	return quizzes.NewHandler(NewQuizzesService(d.DB, d.Clock), review, currentUserID, currentUserRole)
+}
+
+// newGradingService dựng hàng chờ chấm: chỉ đọc, trong transaction REPEATABLE READ read-only; homework dùng chung
+// service làm NextFinder.
+func newGradingService(d Deps) *grading.Service {
+	return grading.NewService(grading.Deps{Tx: reports.ReadTx{DB: d.DB}, Repo: grading.PGRepo{}, Clock: d.Clock})
+}
+
+func newGrading(svc *grading.Service) *grading.Handler {
+	return grading.NewHandler(svc, currentUserRole)
+}
+
+// newSummaryService dựng read model tổng kết: đọc trong transaction REPEATABLE READ read-only, ghi nhận xét chặng
+// trong transaction thường kèm audit; learning dùng nó để gắn nhãn trạng thái lên lộ trình.
+func newSummaryService(d Deps) *summary.Service {
+	return summary.NewService(summary.Deps{
+		Read: reports.ReadTx{DB: d.DB}, Tx: db.TxRunner{DB: d.DB}, Repo: summary.PGRepo{},
+		Members: classes.PGMembershipReader{}, Audit: d.Audit, Clock: d.Clock, IDs: ids.V7{},
+	})
+}
+
+func newSummary(svc *summary.Service) *summary.Handler {
+	return summary.NewHandler(svc, currentUserRole)
+}
+
 // newReports dựng handler báo cáo lớp và dashboard: chỉ đọc, trong transaction REPEATABLE READ read-only; khóa
-// học dùng chặng cũ đọc qua stages.Service.
-func newReports(d Deps, outdated stages.OutdatedReader) *reports.Handler {
+// học dùng chặng cũ đọc qua stages.Service, tồn đọng chấm bài qua grading.Service.
+func newReports(d Deps, outdated stages.OutdatedReader, backlog reports.BacklogReader) *reports.Handler {
 	svc := reports.NewService(reports.Deps{
 		Tx: reports.ReadTx{DB: d.DB}, Reports: reports.PGReportRepo{}, Dashboard: reports.PGDashboardRepo{},
 		Progress: learning.PGProgressReader{}, Outdated: outdated, Audit: audit.PGReader{}, Users: identity.PGUserRepo{},
-		Clock: d.Clock, StaleDays: d.Cfg.StaleDays,
+		Backlog: backlog, Clock: d.Clock, StaleDays: d.Cfg.StaleDays,
 	})
 	return reports.NewHandler(svc, currentUserRole)
 }

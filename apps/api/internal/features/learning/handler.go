@@ -1,11 +1,13 @@
 package learning
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"lms/api/internal/domain"
 	"lms/api/internal/platform/apperr"
 	"lms/api/internal/platform/httpx"
 )
@@ -89,7 +91,7 @@ func (h *Handler) completion(c *gin.Context) {
 	}
 	out, err := h.svc.SetCompletion(c.Request.Context(), userID, classID, lessonID, *req.Completed)
 	if err != nil {
-		httpx.Fail(c, err)
+		fail(c, err)
 		return
 	}
 	httpx.OK(c, http.StatusOK, toCompletionDTO(out))
@@ -118,6 +120,16 @@ func (h *Handler) mustStudent(c *gin.Context) (uuid.UUID, bool) {
 		return uuid.Nil, false
 	}
 	return id, true
+}
+
+// fail trả lỗi theo envelope; lỗi nghiệp vụ dữ liệu sai là 422 theo hợp đồng API (lỗi cú pháp JSON vẫn 400).
+func fail(c *gin.Context, err error) {
+	var de *domain.Error
+	if errors.As(err, &de) && de.Kind == domain.KindInvalid {
+		httpx.Fail(c, apperr.Wrap(err, http.StatusUnprocessableEntity, apperr.CodeValidationFailed, de.Msg))
+		return
+	}
+	httpx.Fail(c, err)
 }
 
 func uuidParam(c *gin.Context, name string) (uuid.UUID, bool) {

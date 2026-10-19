@@ -1,0 +1,12 @@
+Chào {{.Name}},
+
+{{if .Updated}}Giảng viên đã cập nhật nhận xét{{else if .Assessment}}Giảng viên đã xác nhận kết quả{{else}}Giảng viên đã nhận xét{{end}} lượt #{{.AttemptNo}} của quiz "{{.QuizTitle}}" trong lớp {{.ClassName}} ({{.ClassCode}}).
+{{if .Assessment}}
+Kết quả: {{.Percent}}% · {{.ResultLabel}}
+{{end}}
+Nhận xét của giảng viên:
+{{.Comment}}
+
+Xem kết quả chi tiết tại: {{.ResultURL}}
+
+{{.AppName}}

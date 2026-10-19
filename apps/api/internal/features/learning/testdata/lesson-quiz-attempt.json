@@ -1,0 +1,47 @@
+{
+  "content": {
+    "quiz": {
+      "maxAttempts": 2,
+      "maxScore": 1,
+      "mode": "assessment",
+      "passPercent": 70,
+      "questionCount": 1,
+      "timeLimitMinutes": 10
+    },
+    "type": "quiz"
+  },
+  "crossesUnit": false,
+  "lesson": {
+    "id": "01990000-0000-7000-8000-000000000927",
+    "position": 4,
+    "required": false,
+    "stage": {
+      "id": "01990000-0000-7000-8000-000000000921",
+      "name": "Data structure",
+      "position": 2
+    },
+    "status": {
+      "label": "Chưa làm",
+      "tone": "optional"
+    },
+    "title": "Luyện tập cấu trúc dữ liệu",
+    "type": "quiz",
+    "unit": {
+      "id": "01990000-0000-7000-8000-000000000926",
+      "position": 1,
+      "title": "Nội dung chặng"
+    }
+  },
+  "next": {
+    "lessonId": "01990000-0000-7000-8000-000000000928",
+    "title": "Bài tập: cài đặt Stack"
+  },
+  "prev": {
+    "lessonId": "01990000-0000-7000-8000-000000000925",
+    "title": "Hash table"
+  },
+  "progress": {
+    "firstOpenedAt": "2026-10-05T08:00:00Z"
+  },
+  "readOnly": false
+}

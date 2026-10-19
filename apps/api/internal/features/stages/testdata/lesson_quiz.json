@@ -1,0 +1,38 @@
+{
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "lessonKey": "kiem-tra-join",
+  "position": 3,
+  "quiz": {
+    "maxAttempts": 2,
+    "mode": "assessment",
+    "passPercent": 70,
+    "questions": [
+      {
+        "bodySource": "LEFT JOIN giữ dòng nào?",
+        "explanationSource": "Giữ mọi dòng bảng trái.",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "options": [
+          {
+            "body": "Mọi dòng bảng trái",
+            "id": "0199ffff-0000-7000-8000-000000000003",
+            "isCorrect": true
+          },
+          {
+            "body": "Chỉ dòng khớp",
+            "id": "0199ffff-0000-7000-8000-000000000004",
+            "isCorrect": false
+          }
+        ],
+        "points": 1,
+        "questionKey": "join-left",
+        "type": "single"
+      }
+    ],
+    "shuffle": true,
+    "timeLimitMinutes": 10
+  },
+  "required": true,
+  "title": "Kiểm tra JOIN",
+  "type": "quiz",
+  "unitId": "01990000-0000-7000-8000-000000000142"
+}

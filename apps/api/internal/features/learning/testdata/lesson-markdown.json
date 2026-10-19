@@ -3,6 +3,7 @@
     "html": "<h1>Thiết kế bảng và khóa</h1>\n<p>Mỗi bảng cần một khóa chính.</p>\n",
     "type": "markdown"
   },
+  "crossesUnit": false,
   "lesson": {
     "durationSeconds": 720,
     "id": "01990000-0000-7000-8000-000000000121",
@@ -10,10 +11,16 @@
     "required": true,
     "stage": {
       "id": "01990000-0000-7000-8000-000000000101",
-      "name": "Database"
+      "name": "Database",
+      "position": 1
     },
     "title": "Thiết kế bảng và khóa",
-    "type": "markdown"
+    "type": "markdown",
+    "unit": {
+      "id": "01990000-0000-7000-8000-000000000141",
+      "position": 1,
+      "title": "Nội dung chặng"
+    }
   },
   "next": {
     "lessonId": "01990000-0000-7000-8000-000000000122",

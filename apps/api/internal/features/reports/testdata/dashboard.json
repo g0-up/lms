@@ -1,7 +1,7 @@
 {
   "classes": [
     {
-      "avgPercent": 41,
+      "avgPercent": 34,
       "code": "basic01",
       "courseName": "Lập trình cơ bản",
       "courseVersionNo": 1,
@@ -11,7 +11,7 @@
       "status": "active"
     },
     {
-      "avgPercent": 14,
+      "avgPercent": 12,
       "code": "basic02",
       "courseName": "Lập trình cơ bản",
       "courseVersionNo": 1,
@@ -31,6 +31,22 @@
       "status": "draft"
     }
   ],
+  "gradingBacklog": [
+    {
+      "avgHours": 19.09027777777778,
+      "overdue": 2,
+      "pending": 7,
+      "teacherId": "0199ffff-0000-7000-8000-000000000004",
+      "teacherName": "Lê Thu Hương"
+    },
+    {
+      "avgHours": 23.933333333333334,
+      "overdue": 1,
+      "pending": 4,
+      "teacherId": "0199ffff-0000-7000-8000-000000000005",
+      "teacherName": "Phạm Quốc Bảo"
+    }
+  ],
   "hints": {
     "draftClasses": 1,
     "failedInvites": 1,
@@ -46,27 +62,28 @@
   "outdated": [
     {
       "courseCode": "BASIC",
-      "courseId": "0199ffff-0000-7000-8000-000000000004",
+      "courseId": "0199ffff-0000-7000-8000-000000000006",
       "courseName": "Lập trình cơ bản",
-      "courseVersionId": "0199ffff-0000-7000-8000-000000000005",
+      "courseVersionId": "0199ffff-0000-7000-8000-000000000007",
       "courseVersionNo": 1,
       "currentVersionNo": 1,
       "latestPublishedNo": 2,
-      "latestVersionId": "0199ffff-0000-7000-8000-000000000006",
+      "latestVersionId": "0199ffff-0000-7000-8000-000000000008",
       "stageCode": "DB",
-      "stageId": "0199ffff-0000-7000-8000-000000000007",
+      "stageId": "0199ffff-0000-7000-8000-000000000009",
       "stageName": "Database"
     }
   ],
+  "overdueCount": 3,
   "recentActivity": [
     {
       "actionLabel": "Phát hành chặng",
       "actorName": "Trần Minh Quân",
       "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000008",
+      "id": "0199ffff-0000-7000-8000-000000000010",
       "summary": "Database v2",
       "target": {
-        "id": "0199ffff-0000-7000-8000-000000000006",
+        "id": "0199ffff-0000-7000-8000-000000000008",
         "label": "Database v2",
         "type": "stage_version"
       }
@@ -75,10 +92,10 @@
       "actionLabel": "Nhân bản chặng",
       "actorName": "Trần Minh Quân",
       "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000009",
+      "id": "0199ffff-0000-7000-8000-000000000011",
       "summary": "Database v1 → v2",
       "target": {
-        "id": "0199ffff-0000-7000-8000-000000000006",
+        "id": "0199ffff-0000-7000-8000-000000000008",
         "label": "Database v2",
         "type": "stage_version"
       }
@@ -87,7 +104,7 @@
       "actionLabel": "Mời học viên",
       "actorName": "Trần Minh Quân",
       "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000010",
+      "id": "0199ffff-0000-7000-8000-000000000012",
       "summary": "basic03: mời 2 học viên",
       "target": {
         "id": "0199ffff-0000-7000-8000-000000000003",
@@ -96,10 +113,22 @@
       }
     },
     {
+      "actionLabel": "Xác nhận quiz",
+      "actorName": "Lê Thu Hương",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000013",
+      "summary": "Kiểm tra cuối chặng Go · Lê Văn Cường",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "label": "basic01",
+        "type": "class"
+      }
+    },
+    {
       "actionLabel": "Gửi lại lời mời",
       "actorName": "Trần Minh Quân",
       "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000011",
+      "id": "0199ffff-0000-7000-8000-000000000014",
       "summary": "basic02: gửi lại cho quyen.ly@gmail.com",
       "target": {
         "id": "0199ffff-0000-7000-8000-000000000002",
@@ -108,23 +137,11 @@
       }
     },
     {
-      "actionLabel": "Tạo lớp",
-      "actorName": "Trần Minh Quân",
+      "actionLabel": "Đặt hạn nộp",
+      "actorName": "Lê Thu Hương",
       "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000012",
-      "summary": "basic03",
-      "target": {
-        "id": "0199ffff-0000-7000-8000-000000000003",
-        "label": "basic03",
-        "type": "class"
-      }
-    },
-    {
-      "actionLabel": "Mời học viên",
-      "actorName": "Trần Minh Quân",
-      "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000013",
-      "summary": "basic01: mời phong.dang@gmail.com",
+      "id": "0199ffff-0000-7000-8000-000000000015",
+      "summary": "Bài tập: Đọc CSV và thống kê",
       "target": {
         "id": "0199ffff-0000-7000-8000-000000000001",
         "label": "basic01",
@@ -132,26 +149,26 @@
       }
     },
     {
-      "actionLabel": "Vô hiệu hóa tài khoản",
-      "actorName": "Trần Minh Quân",
-      "at": "2026-10-05T08:00:00Z",
-      "id": "0199ffff-0000-7000-8000-000000000014",
-      "summary": "thao.vo@gmail.com",
-      "target": {
-        "id": "0199ffff-0000-7000-8000-000000000015",
-        "label": "thao.vo@gmail.com",
-        "type": "user"
-      }
-    },
-    {
-      "actionLabel": "Kích hoạt lớp",
+      "actionLabel": "Nhân bản chặng",
       "actorName": "Trần Minh Quân",
       "at": "2026-10-05T08:00:00Z",
       "id": "0199ffff-0000-7000-8000-000000000016",
-      "summary": "basic02",
+      "summary": "Golang basic v1 → v2",
       "target": {
-        "id": "0199ffff-0000-7000-8000-000000000002",
-        "label": "basic02",
+        "id": "0199ffff-0000-7000-8000-000000000017",
+        "label": "Golang basic v2",
+        "type": "stage_version"
+      }
+    },
+    {
+      "actionLabel": "Tạo lớp",
+      "actorName": "Trần Minh Quân",
+      "at": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000018",
+      "summary": "basic03",
+      "target": {
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "label": "basic03",
         "type": "class"
       }
     }

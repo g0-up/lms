@@ -67,6 +67,34 @@ top := stack[len(stack)-1]      // peek
 stack = stack[:len(stack)-1]    // pop
 ˋˋˋ`))
 
+var mdGoHello = renderDoc(backtick(`# Hello World từng bước
+
+## 1. Tạo module
+
+ˋˋˋbash
+mkdir hello && cd hello
+go mod init example.com/hello
+ˋˋˋ
+
+## 2. Viết chương trình
+
+ˋˋˋgo
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Xin chào, Go!")
+}
+ˋˋˋ
+
+## 3. Chạy và biên dịch
+
+- ˋgo run .ˋ biên dịch vào thư mục tạm rồi chạy.
+- ˋgo buildˋ tạo file nhị phân ˋhelloˋ để chạy lại nhiều lần.
+
+> Chạy ˋgo fmt ./...ˋ trước khi nộp bài để code đúng định dạng chuẩn.`))
+
 var mdGoTypes = renderDoc(backtick(`# Kiểu dữ liệu và hàm trong Go
 
 Go là ngôn ngữ tĩnh kiểu. Khai báo biến bằng ˋvarˋ hoặc ˋ:=ˋ.
@@ -113,3 +141,31 @@ Lợi ích:
 - Trình đọc màn hình hiểu cấu trúc trang.
 - Công cụ tìm kiếm đánh giá nội dung tốt hơn.
 - CSS và JavaScript dễ bám vào hơn.`))
+
+var mdDSHomework = renderDoc(backtick(`# Bài tập: Cài đặt Stack và Queue
+
+Cài đặt hai cấu trúc dữ liệu bằng Go, **không dùng thư viện ngoài**.
+
+## Yêu cầu
+
+1. ˋStackˋ có ˋPushˋ, ˋPopˋ, ˋPeekˋ, ˋLenˋ. ˋPopˋ trên stack rỗng trả về lỗi, không panic.
+2. ˋQueueˋ có ˋEnqueueˋ, ˋDequeueˋ, ˋLenˋ, đúng thứ tự FIFO.
+3. Viết test với ˋgo testˋ cho cả hai, gồm trường hợp rỗng.
+4. README ghi cách chạy test.
+
+> Nộp link repo kèm commit hash, hoặc nén thư mục thành file zip.`))
+
+var mdGoHomework = renderDoc(backtick(`# Bài tập: Đọc CSV và thống kê
+
+Viết chương trình đọc file ˋhocvien.csvˋ (cột: email, ma_lop) và in số học viên theo từng lớp.
+
+## Yêu cầu
+
+1. Dùng package ˋencoding/csvˋ.
+2. File không tồn tại: in thông báo lỗi rõ ràng và thoát với mã khác 0.
+3. Kết quả sắp xếp theo mã lớp tăng dần.
+
+ˋˋˋtext
+basic01  7
+basic02  5
+ˋˋˋ`))

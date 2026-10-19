@@ -1,0 +1,204 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "member": {
+    "email": "an.nguyen@gmail.com",
+    "id": "0199ffff-0000-7000-8000-000000000002",
+    "name": "Nguyễn Hoàng An",
+    "status": "active"
+  },
+  "summary": {
+    "code": "DS",
+    "complete": true,
+    "done": 6,
+    "missing": [],
+    "name": "Data structure",
+    "overdue": false,
+    "percent": 100,
+    "required": 6,
+    "review": {
+      "authorName": "Lê Thu Hương",
+      "body": "An nắm chắc stack và queue, bài nộp lại sửa đúng hướng. Chặng Go nên ôn lại phần đồng bộ goroutine trước bài kiểm tra.",
+      "createdAt": "2026-10-05T08:00:00Z",
+      "revision": 1,
+      "updatedAt": "2026-10-05T08:00:00Z"
+    },
+    "rework": false,
+    "stageId": "0199ffff-0000-7000-8000-000000000003",
+    "stageVersionId": "0199ffff-0000-7000-8000-000000000004",
+    "units": [
+      {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "items": [
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "lessonId": "0199ffff-0000-7000-8000-000000000006",
+            "required": true,
+            "status": {
+              "detail": "Đã tích hoàn thành",
+              "done": true,
+              "label": "Đã học xong",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Mảng và danh sách liên kết",
+            "type": "video"
+          },
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "lessonId": "0199ffff-0000-7000-8000-000000000007",
+            "required": true,
+            "status": {
+              "detail": "Đã tích hoàn thành",
+              "done": true,
+              "label": "Đã học xong",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Stack và Queue",
+            "type": "markdown"
+          }
+        ],
+        "position": 1,
+        "title": "Mảng, Stack và Queue"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000008",
+        "items": [
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "lessonId": "0199ffff-0000-7000-8000-000000000009",
+            "required": true,
+            "status": {
+              "detail": "Đã tích hoàn thành",
+              "done": true,
+              "label": "Đã học xong",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Hash table",
+            "type": "video"
+          },
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "lessonId": "0199ffff-0000-7000-8000-000000000010",
+            "quiz": {
+              "attemptsUsed": 2,
+              "best": {
+                "max": 5,
+                "percent": 100,
+                "score": 5
+              },
+              "latest": {
+                "max": 5,
+                "percent": 100,
+                "reviewStatus": null,
+                "score": 5
+              },
+              "limit": null,
+              "mode": "practice",
+              "open": false,
+              "passPercent": null,
+              "submitted": 2
+            },
+            "required": true,
+            "status": {
+              "detail": "2 lượt · Gần nhất 100%",
+              "done": true,
+              "label": "Đã làm",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Luyện tập: Stack, Queue và Hash",
+            "type": "quiz"
+          }
+        ],
+        "position": 2,
+        "title": "Hash table"
+      },
+      {
+        "id": "0199ffff-0000-7000-8000-000000000011",
+        "items": [
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "homework": {
+              "dueAt": "2026-10-05T08:00:00Z",
+              "latest": {
+                "attemptNo": 2,
+                "isLate": true,
+                "max": 100,
+                "status": "passed",
+                "submittedAt": "2026-10-05T08:00:00Z",
+                "total": 94
+              },
+              "submissionCount": 2
+            },
+            "lessonId": "0199ffff-0000-7000-8000-000000000012",
+            "required": true,
+            "status": {
+              "detail": "2 lần nộp · 94/100 điểm · nộp muộn",
+              "done": true,
+              "label": "Đạt",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Bài tập: Cài đặt Stack và Queue",
+            "type": "homework"
+          },
+          {
+            "completedAt": "2026-10-05T08:00:00Z",
+            "firstOpenedAt": "2026-10-05T08:00:00Z",
+            "lessonId": "0199ffff-0000-7000-8000-000000000013",
+            "quiz": {
+              "attemptsUsed": 1,
+              "best": {
+                "max": 5,
+                "percent": 100,
+                "score": 5
+              },
+              "latest": {
+                "max": 5,
+                "percent": 100,
+                "reviewStatus": "confirmed",
+                "score": 5
+              },
+              "limit": 2,
+              "mode": "assessment",
+              "open": false,
+              "passPercent": 70,
+              "submitted": 1
+            },
+            "required": true,
+            "status": {
+              "detail": "Tốt nhất 100% · 1/2 lượt · Đã xác nhận",
+              "done": true,
+              "label": "Đạt 100%",
+              "overdue": false,
+              "rework": false,
+              "tone": "ok"
+            },
+            "title": "Kiểm tra cuối chặng Data structure",
+            "type": "quiz"
+          }
+        ],
+        "position": 3,
+        "title": "Kiểm tra cuối chặng"
+      }
+    ],
+    "versionNo": 1
+  }
+}

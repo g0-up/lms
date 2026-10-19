@@ -1,6 +1,6 @@
 package audit
 
-// Action ghi vào audit_logs.action: đúng 20 giá trị của hợp đồng API, dạng quá khứ, chấm phân cách.
+// Action ghi vào audit_logs.action: đúng 28 giá trị của hợp đồng API, dạng quá khứ, chấm phân cách.
 // actions_test.go chặn thêm action ngoài danh sách; nhãn tiếng Việt thuộc màn hình nhật ký.
 const (
 	ActionStageVersionPublished     = "stage_version.published"
@@ -23,4 +23,12 @@ const (
 	ActionStageCreated              = "stage.created"
 	ActionCourseCreated             = "course.created"
 	ActionClassCreated              = "class.created"
+	ActionClassDeadlineChanged      = "class.homework_deadline_changed"
+	ActionHomeworkGraded            = "homework.graded"
+	ActionHomeworkGradeUpdated      = "homework.grade_updated"
+	ActionQuizAttemptConfirmed      = "quiz_attempt.confirmed"
+	ActionQuizAttemptCommented      = "quiz_attempt.commented"
+	ActionQuizAttemptReviewUpdated  = "quiz_attempt.review_updated"
+	ActionStageReviewSaved          = "stage_review.saved"
+	ActionQuizAttemptsGranted       = "quiz.attempts_granted"
 )

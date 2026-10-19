@@ -1,0 +1,33 @@
+{
+  "attemptsLeft": 1,
+  "autoSubmitted": false,
+  "best": {
+    "percent": 70
+  },
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "maxScore": 10,
+  "mode": "assessment",
+  "no": 1,
+  "passPercent": 70,
+  "passed": true,
+  "percent": 70,
+  "review": {
+    "comment": "Ổn, xem lại chi phí ghi của chỉ mục.",
+    "notes": [
+      {
+        "bodyHtml": "\u003cp\u003eChỉ mục làm chậm thao tác nào?\u003c/p\u003e",
+        "note": "INSERT phải cập nhật mọi chỉ mục.",
+        "position": 2,
+        "questionId": "01990000-0000-7000-8000-000000000732"
+      }
+    ],
+    "reviewedAt": "2026-10-05T08:00:00Z",
+    "reviewerName": "Lê Thu Hương",
+    "updated": true
+  },
+  "reviewStatus": "confirmed",
+  "score": 7,
+  "startedAt": "2026-10-05T08:00:00Z",
+  "status": "submitted",
+  "submittedAt": "2026-10-05T08:00:00Z"
+}

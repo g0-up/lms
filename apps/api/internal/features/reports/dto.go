@@ -196,6 +196,19 @@ type DashboardDTO struct {
 	Outdated       []OutdatedDTO `json:"outdated"`
 	Classes        []ClassRowDTO `json:"classes"`
 	RecentActivity []ActivityDTO `json:"recentActivity"`
+	// GradingBacklog là một dòng mỗi giảng viên không bị khóa, theo tên.
+	GradingBacklog []GradingBacklogDTO `json:"gradingBacklog"`
+	// OverdueCount là tổng số mục chờ chấm hoặc xác nhận quá 3 ngày, bằng overdueCount của hàng chờ Admin.
+	OverdueCount int `json:"overdueCount"`
+}
+
+// GradingBacklogDTO là tồn đọng chấm bài của một giảng viên; avgHours null khi giảng viên chưa xử lý mục nào.
+type GradingBacklogDTO struct {
+	TeacherID   string   `json:"teacherId"`
+	TeacherName string   `json:"teacherName"`
+	Pending     int      `json:"pending"`
+	Overdue     int      `json:"overdue"`
+	AvgHours    *float64 `json:"avgHours"`
 }
 
 func utc(t *time.Time) *time.Time {
@@ -294,6 +307,14 @@ func toDashboardDTO(d Dashboard) DashboardDTO {
 		Outdated:       make([]OutdatedDTO, len(d.Outdated)),
 		Classes:        make([]ClassRowDTO, len(d.Classes)),
 		RecentActivity: make([]ActivityDTO, len(d.RecentActivity)),
+		GradingBacklog: make([]GradingBacklogDTO, len(d.GradingBacklog)),
+		OverdueCount:   d.OverdueCount,
+	}
+	for i, b := range d.GradingBacklog {
+		out.GradingBacklog[i] = GradingBacklogDTO{
+			TeacherID: b.TeacherID.String(), TeacherName: b.TeacherName, Pending: b.Pending, Overdue: b.Overdue,
+			AvgHours: b.AvgHours,
+		}
 	}
 	for i, o := range d.Outdated {
 		out.Outdated[i] = OutdatedDTO{

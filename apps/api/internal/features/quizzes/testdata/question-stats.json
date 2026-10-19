@@ -1,0 +1,54 @@
+[
+  {
+    "lesson": "Luyện tập: khóa chính",
+    "questionStats": {
+      "attempts": 0,
+      "rows": [
+        {
+          "bodyText": "Khóa chính dùng để làm gì?",
+          "correctPercent": null,
+          "position": 1,
+          "questionId": "01990000-0000-7000-8000-000000000711"
+        },
+        {
+          "bodyText": "Ràng buộc nào chặn trùng giá trị?",
+          "correctPercent": null,
+          "position": 2,
+          "questionId": "01990000-0000-7000-8000-000000000712"
+        },
+        {
+          "bodyText": "Khóa ngoại tham chiếu tới đâu?",
+          "correctPercent": null,
+          "position": 3,
+          "questionId": "01990000-0000-7000-8000-000000000713"
+        }
+      ]
+    }
+  },
+  {
+    "lesson": "Kiểm tra: chỉ mục",
+    "questionStats": {
+      "attempts": 3,
+      "rows": [
+        {
+          "bodyText": "Chỉ mục B-tree phù hợp với?",
+          "correctPercent": 67,
+          "position": 1,
+          "questionId": "01990000-0000-7000-8000-000000000731"
+        },
+        {
+          "bodyText": "Chỉ mục làm chậm thao tác nào?",
+          "correctPercent": 33,
+          "position": 2,
+          "questionId": "01990000-0000-7000-8000-000000000732"
+        },
+        {
+          "bodyText": "Chỉ mục (a, b) dùng được cho điều kiện nào?",
+          "correctPercent": 0,
+          "position": 3,
+          "questionId": "01990000-0000-7000-8000-000000000733"
+        }
+      ]
+    }
+  }
+]

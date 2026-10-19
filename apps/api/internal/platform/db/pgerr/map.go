@@ -54,8 +54,17 @@ func uniqueMessage(constraint string) string {
 		return apperr.Message(apperr.CodeDraftExists)
 	case UqUsersEmailNormalized:
 		return "Email đã được sử dụng"
-	case UqStagesCode, UqCoursesCode, UqClassesCode:
+	case UqStagesCode, UqCoursesCode, UqClassesCode, UqStageUnitsVersionKey, UqQuestionsLessonKey:
 		return "Mã đã tồn tại"
+	case UqStageUnitsVersionTitle:
+		return "Tên bài học đã có trong phiên bản này"
+	case UqQuizAttemptsOneOpen:
+		return "Bạn đang có một lượt làm bài chưa nộp"
+	case UqSubmissionsOnePending, UqQuizAttemptsOnePending:
+		// Hai yêu cầu đồng thời cùng tạo bản chờ; thử lại sẽ thấy bản đã có.
+		return "Xung đột dữ liệu, vui lòng thử lại"
+	case UqSubmissionFilesMedia:
+		return "File đã dùng cho một lần nộp khác"
 	case UqClassMembersClassUser:
 		return "Học viên đã có trong lớp"
 	case UqLessonsVersionKey, UqLessonsVersionPosition, UqCvsVersionStage, UqCvsVersionPosition:

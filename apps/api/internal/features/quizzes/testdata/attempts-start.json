@@ -1,0 +1,70 @@
+{
+  "attempt": {
+    "deadlineAt": "2026-10-05T08:00:00Z",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "limit": 2,
+    "mode": "assessment",
+    "no": 1,
+    "questions": [
+      {
+        "bodyHtml": "\u003cp\u003eChỉ mục (a, b) dùng được cho điều kiện nào?\u003c/p\u003e",
+        "id": "01990000-0000-7000-8000-000000000733",
+        "options": [
+          {
+            "body": "WHERE b = 2",
+            "id": "01990000-0000-7000-8000-000000000747"
+          },
+          {
+            "body": "WHERE a = 1 AND b = 2",
+            "id": "01990000-0000-7000-8000-000000000746"
+          },
+          {
+            "body": "WHERE a = 1",
+            "id": "01990000-0000-7000-8000-000000000745"
+          }
+        ],
+        "points": 4,
+        "selectedOptionIds": [],
+        "type": "multi"
+      },
+      {
+        "bodyHtml": "\u003cp\u003eChỉ mục làm chậm thao tác nào?\u003c/p\u003e",
+        "id": "01990000-0000-7000-8000-000000000732",
+        "options": [
+          {
+            "body": "INSERT",
+            "id": "01990000-0000-7000-8000-000000000744"
+          },
+          {
+            "body": "SELECT",
+            "id": "01990000-0000-7000-8000-000000000743"
+          }
+        ],
+        "points": 3,
+        "selectedOptionIds": [],
+        "type": "single"
+      },
+      {
+        "bodyHtml": "\u003cp\u003eChỉ mục B-tree phù hợp với?\u003c/p\u003e",
+        "id": "01990000-0000-7000-8000-000000000731",
+        "options": [
+          {
+            "body": "Tìm toàn văn",
+            "id": "01990000-0000-7000-8000-000000000742"
+          },
+          {
+            "body": "Truy vấn khoảng",
+            "id": "01990000-0000-7000-8000-000000000741"
+          }
+        ],
+        "points": 3,
+        "selectedOptionIds": [],
+        "type": "single"
+      }
+    ],
+    "savedAt": null,
+    "serverNow": "2026-10-05T08:00:00Z",
+    "status": "open"
+  },
+  "resumed": false
+}

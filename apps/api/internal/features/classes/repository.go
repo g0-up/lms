@@ -21,6 +21,9 @@ type ClassRepo interface {
 	// Detail đọc lớp kèm giảng viên, phiên bản khóa học (số chặng, số học liệu), sĩ số và mốc kích hoạt/kết thúc.
 	Detail(ctx context.Context, ex db.Executor, id uuid.UUID) (*ClassDetail, error)
 	List(ctx context.Context, ex db.Executor, q ListQuery) ([]ClassListRow, error)
+	// DeleteDeadlines xóa mọi hạn nộp homework của lớp; gọi khi lớp đổi phiên bản khóa học vì học liệu của phiên bản
+	// cũ không còn thuộc lớp.
+	DeleteDeadlines(ctx context.Context, ex db.Executor, classID uuid.UUID) error
 }
 
 // MemberRepo là truy cập bảng class_members. Không tìm thấy → ErrMemberNotFound (trừ ByClassAndUser).

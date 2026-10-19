@@ -32,8 +32,11 @@ func (s *MemStorage) PresignPut(_ context.Context, key, contentType string, size
 	return "https://storage.mem/put/" + url.PathEscape(key) + "?" + q.Encode(), map[string]string{"Content-Type": contentType}, nil
 }
 
-func (s *MemStorage) PresignGet(_ context.Context, key string, ttl time.Duration, responseContentType string) (string, error) {
-	q := url.Values{"ttl": {ttl.String()}, "response-content-type": {responseContentType}, "X-Amz-Signature": {"mem"}}
+func (s *MemStorage) PresignGet(_ context.Context, key string, ttl time.Duration, opts GetOptions) (string, error) {
+	q := url.Values{"ttl": {ttl.String()}, "response-content-type": {opts.ContentType}, "X-Amz-Signature": {"mem"}}
+	if cd := opts.ContentDisposition(); cd != "" {
+		q.Set("response-content-disposition", cd)
+	}
 	return "https://storage.mem/get/" + url.PathEscape(key) + "?" + q.Encode(), nil
 }
 

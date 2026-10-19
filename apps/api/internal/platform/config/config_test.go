@@ -79,6 +79,7 @@ func TestLoadDefaults(t *testing.T) {
 	assert.Equal(t, 2*time.Hour, cfg.MediaURLTTL)
 	assert.Equal(t, int64(2147483648), cfg.MaxVideoBytes)
 	assert.Equal(t, int64(10485760), cfg.MaxImageBytes)
+	assert.Equal(t, int64(20971520), cfg.MaxDocumentBytes)
 	assert.Equal(t, 7, cfg.StaleDays)
 	require.NotNil(t, cfg.Location)
 	assert.Equal(t, "Asia/Ho_Chi_Minh", cfg.Location.String())

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -36,7 +37,7 @@ type Actor struct {
 	RequestID string
 }
 
-// Service là use case của chặng, phiên bản chặng và học liệu. Mọi use case ghi chạy trong một transaction mở bằng
+// Service là use case của chặng, phiên bản chặng, bài học và học liệu. Mọi use case ghi chạy trong một transaction mở bằng
 // ByIDForUpdate (hoặc khóa dòng stages) để tuần tự hóa với Publish/Archive/Clone.
 type Service struct {
 	db       db.Executor
@@ -80,8 +81,10 @@ type CreateStageCmd struct {
 	Description string
 }
 
-// LessonCmd là dữ liệu thêm/sửa học liệu; nil = không gửi (PATCH giữ giá trị cũ).
+// LessonCmd là dữ liệu thêm/sửa học liệu; nil = không gửi (PATCH giữ giá trị cũ). UnitID bắt buộc khi thêm; khi
+// sửa mà khác bài học hiện tại thì học liệu chuyển xuống cuối bài học mới.
 type LessonCmd struct {
+	UnitID          *uuid.UUID
 	LessonKey       *string
 	Title           *string
 	Type            *string
@@ -89,6 +92,49 @@ type LessonCmd struct {
 	DurationSeconds *int
 	VideoMediaID    *uuid.UUID
 	MarkdownSource  *string
+	Quiz            *QuizCmd
+	Homework        *HomeworkCmd
+}
+
+// QuizCmd là cấu hình quiz gửi kèm học liệu; nil = giữ nguyên. Thời gian tính bằng phút như form soạn.
+type QuizCmd struct {
+	Mode             *string
+	MaxAttempts      *int
+	TimeLimitMinutes *int
+	Shuffle          *bool
+	PassPercent      *int
+}
+
+// HomeworkCmd là đề bài, ngưỡng đạt và file kèm gửi kèm học liệu; nil = giữ nguyên, AttachmentMediaIDs rỗng khác nil
+// là xóa hết file kèm.
+type HomeworkCmd struct {
+	BriefSource        *string
+	PassPercent        *int
+	AttachmentMediaIDs []uuid.UUID
+}
+
+// QuestionCmd là toàn bộ một câu hỏi người soạn gửi (thêm và sửa đều gửi đủ, như form của prototype). QuestionKey
+// chỉ dùng khi thêm; khi sửa phải rỗng hoặc trùng mã cũ.
+type QuestionCmd struct {
+	QuestionKey       *string
+	Type              string
+	BodySource        string
+	ExplanationSource string
+	Points            int
+	Options           []OptionCmd
+}
+
+// OptionCmd là một phương án; ID nil là phương án mới.
+type OptionCmd struct {
+	ID      *uuid.UUID
+	Body    string
+	Correct bool
+}
+
+// CriterionCmd là một tiêu chí chấm.
+type CriterionCmd struct {
+	Description string
+	MaxPoints   int
 }
 
 // StageDetail là chặng kèm phiên bản, nơi dùng và khóa học dùng phiên bản cũ (FR-18).
@@ -99,7 +145,13 @@ type StageDetail struct {
 	Outdated []OutdatedCourse
 }
 
-// VersionDetail là phiên bản chặng kèm học liệu và nơi dùng.
+// UnitDetail là bài học kèm học liệu của nó, trả cho route soạn bài học.
+type UnitDetail struct {
+	Unit    *Unit
+	Lessons []*Lesson
+}
+
+// VersionDetail là phiên bản chặng kèm bài học, học liệu và nơi dùng.
 type VersionDetail struct {
 	Version             *StageVersion
 	Stage               StageRow
@@ -107,7 +159,7 @@ type VersionDetail struct {
 	UsedBy              []UsedByRow
 }
 
-// CreateStage tạo chặng cùng bản nháp v1 rỗng.
+// CreateStage tạo chặng cùng bản nháp v1 rỗng (chưa có bài học nào).
 func (s *Service) CreateStage(ctx context.Context, actor Actor, cmd CreateStageCmd) (StageDetail, error) {
 	if strings.TrimSpace(cmd.Code) == "" || strings.TrimSpace(cmd.Name) == "" {
 		return StageDetail{}, ErrStageNameRequired
@@ -198,7 +250,7 @@ func (s *Service) versionDetail(ctx context.Context, ex db.Executor, versionID u
 	return d, nil
 }
 
-// AddLesson thêm học liệu vào cuối bản nháp.
+// AddLesson thêm học liệu vào cuối bài học được chọn của bản nháp.
 func (s *Service) AddLesson(ctx context.Context, _ Actor, versionID uuid.UUID, cmd LessonCmd) (*Lesson, error) {
 	var added *Lesson
 	err := s.tx.Transact(ctx, func(tx db.Executor) error {
@@ -217,7 +269,11 @@ func (s *Service) AddLesson(ctx context.Context, _ Actor, versionID uuid.UUID, c
 			return err
 		}
 		required := cmd.Required == nil || *cmd.Required
-		if added, err = v.AddLesson(s.ids.New(), key, deref(cmd.Title), content, required); err != nil {
+		unitID := uuid.Nil
+		if cmd.UnitID != nil {
+			unitID = *cmd.UnitID
+		}
+		if added, err = v.AddLesson(s.ids.New(), unitID, key, deref(cmd.Title), content, required); err != nil {
 			return err
 		}
 		return s.versions.SaveDraft(ctx, tx, v)
@@ -228,7 +284,8 @@ func (s *Service) AddLesson(ctx context.Context, _ Actor, versionID uuid.UUID, c
 	return added, nil
 }
 
-// UpdateLesson sửa học liệu trong bản nháp; trường không gửi giữ nguyên.
+// UpdateLesson sửa học liệu trong bản nháp; trường không gửi giữ nguyên. unitId khác bài học hiện tại thì chuyển học
+// liệu xuống cuối bài học mới.
 func (s *Service) UpdateLesson(ctx context.Context, _ Actor, versionID, lessonID uuid.UUID, cmd LessonCmd) (*Lesson, error) {
 	var updated *Lesson
 	err := s.tx.Transact(ctx, func(tx db.Executor) error {
@@ -257,6 +314,11 @@ func (s *Service) UpdateLesson(ctx context.Context, _ Actor, versionID, lessonID
 		if err := v.UpdateLesson(lessonID, title, content, required); err != nil {
 			return err
 		}
+		if cmd.UnitID != nil {
+			if err := v.MoveLesson(lessonID, *cmd.UnitID); err != nil {
+				return err
+			}
+		}
 		if err := s.versions.SaveDraft(ctx, tx, v); err != nil {
 			return err
 		}
@@ -283,18 +345,79 @@ func (s *Service) RemoveLesson(ctx context.Context, _ Actor, versionID, lessonID
 	})
 }
 
-// ReorderLessons sắp lại toàn bộ học liệu của bản nháp.
-func (s *Service) ReorderLessons(ctx context.Context, _ Actor, versionID uuid.UUID, lessonIDs []uuid.UUID) (VersionDetail, error) {
-	return s.mutateVersion(ctx, versionID, func(tx db.Executor) error {
+// ReorderLessons áp bố cục đầy đủ {bài học, học liệu theo thứ tự} cho bản nháp; học liệu có thể đổi bài học.
+func (s *Service) ReorderLessons(ctx context.Context, _ Actor, versionID uuid.UUID, layout []UnitLessons) (VersionDetail, error) {
+	return s.mutateDraft(ctx, versionID, func(v *StageVersion) error { return v.ReorderLessons(layout) })
+}
+
+// AddUnit thêm bài học vào cuối bản nháp.
+func (s *Service) AddUnit(ctx context.Context, _ Actor, versionID uuid.UUID, title string) (UnitDetail, error) {
+	var added *Unit
+	err := s.tx.Transact(ctx, func(tx db.Executor) error {
 		v, err := s.lockDraft(ctx, tx, versionID)
 		if err != nil {
 			return err
 		}
-		if err := v.Reorder(lessonIDs); err != nil {
+		if added, err = v.AddUnit(s.ids.New(), title); err != nil {
 			return err
 		}
 		return s.versions.SaveDraft(ctx, tx, v)
 	})
+	if err != nil {
+		return UnitDetail{}, err
+	}
+	return UnitDetail{Unit: added}, nil
+}
+
+// RenameUnit đổi tên bài học trong bản nháp.
+func (s *Service) RenameUnit(ctx context.Context, _ Actor, versionID, unitID uuid.UUID, title string) (UnitDetail, error) {
+	var d UnitDetail
+	err := s.tx.Transact(ctx, func(tx db.Executor) error {
+		v, err := s.lockDraft(ctx, tx, versionID)
+		if err != nil {
+			return err
+		}
+		if err := v.RenameUnit(unitID, title); err != nil {
+			return err
+		}
+		if err := s.versions.SaveDraft(ctx, tx, v); err != nil {
+			return err
+		}
+		u, err := v.Unit(unitID)
+		if err != nil {
+			return err
+		}
+		d = UnitDetail{Unit: u, Lessons: v.LessonsOf(unitID)}
+		return nil
+	})
+	if err != nil {
+		return UnitDetail{}, err
+	}
+	return d, nil
+}
+
+// RemoveUnit xóa bài học cùng học liệu trong đó khỏi bản nháp; trả số học liệu bị xóa.
+func (s *Service) RemoveUnit(ctx context.Context, _ Actor, versionID, unitID uuid.UUID) (int, error) {
+	var removed int
+	err := s.tx.Transact(ctx, func(tx db.Executor) error {
+		v, err := s.lockDraft(ctx, tx, versionID)
+		if err != nil {
+			return err
+		}
+		if removed, err = v.RemoveUnit(unitID); err != nil {
+			return err
+		}
+		return s.versions.SaveDraft(ctx, tx, v)
+	})
+	if err != nil {
+		return 0, err
+	}
+	return removed, nil
+}
+
+// ReorderUnits sắp lại bài học của bản nháp; học liệu đi theo bài học.
+func (s *Service) ReorderUnits(ctx context.Context, _ Actor, versionID uuid.UUID, unitIDs []uuid.UUID) (VersionDetail, error) {
+	return s.mutateDraft(ctx, versionID, func(v *StageVersion) error { return v.ReorderUnits(unitIDs) })
 }
 
 // Publish phát hành bản nháp. Thứ tự bắt buộc: khóa header → render markdown → ghi học liệu (SaveDraft, chỉ khớp
@@ -442,12 +565,150 @@ func (s *Service) AllOutdated(ctx context.Context) ([]OutdatedCourse, error) {
 	return s.versions.AllOutdated(ctx, s.db)
 }
 
+// AddQuestion thêm câu hỏi vào cuối quiz của bản nháp; trả học liệu sau khi ghi.
+func (s *Service) AddQuestion(ctx context.Context, _ Actor, versionID, lessonID uuid.UUID, cmd QuestionCmd) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		in, err := cmd.input()
+		if err != nil {
+			return err
+		}
+		_, err = v.AddQuestion(lessonID, s.ids.New(), in, s.ids.New)
+		return err
+	})
+}
+
+// UpdateQuestion thay nội dung, điểm và phương án của câu hỏi trong bản nháp.
+func (s *Service) UpdateQuestion(ctx context.Context, _ Actor, versionID, lessonID, questionID uuid.UUID, cmd QuestionCmd) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		in, err := cmd.input()
+		if err != nil {
+			return err
+		}
+		_, err = v.UpdateQuestion(lessonID, questionID, in, s.ids.New)
+		return err
+	})
+}
+
+// RemoveQuestion xóa câu hỏi khỏi quiz của bản nháp.
+func (s *Service) RemoveQuestion(ctx context.Context, _ Actor, versionID, lessonID, questionID uuid.UUID) error {
+	_, err := s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		return v.RemoveQuestion(lessonID, questionID)
+	})
+	return err
+}
+
+// ReorderQuestions sắp lại câu hỏi của quiz trong bản nháp.
+func (s *Service) ReorderQuestions(ctx context.Context, _ Actor, versionID, lessonID uuid.UUID, questionIDs []uuid.UUID) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		return v.ReorderQuestions(lessonID, questionIDs)
+	})
+}
+
+// AddCriterion thêm tiêu chí vào cuối rubric của homework trong bản nháp.
+func (s *Service) AddCriterion(ctx context.Context, _ Actor, versionID, lessonID uuid.UUID, cmd CriterionCmd) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		_, err := v.AddCriterion(lessonID, s.ids.New(), cmd.Description, cmd.MaxPoints)
+		return err
+	})
+}
+
+// UpdateCriterion sửa nội dung và điểm tối đa của tiêu chí trong bản nháp.
+func (s *Service) UpdateCriterion(ctx context.Context, _ Actor, versionID, lessonID, criterionID uuid.UUID, cmd CriterionCmd) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		_, err := v.UpdateCriterion(lessonID, criterionID, cmd.Description, cmd.MaxPoints)
+		return err
+	})
+}
+
+// RemoveCriterion xóa tiêu chí khỏi rubric của bản nháp.
+func (s *Service) RemoveCriterion(ctx context.Context, _ Actor, versionID, lessonID, criterionID uuid.UUID) error {
+	_, err := s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		return v.RemoveCriterion(lessonID, criterionID)
+	})
+	return err
+}
+
+// ReorderCriteria sắp lại rubric của homework trong bản nháp.
+func (s *Service) ReorderCriteria(ctx context.Context, _ Actor, versionID, lessonID uuid.UUID, criterionIDs []uuid.UUID) (*Lesson, error) {
+	return s.mutateLesson(ctx, versionID, lessonID, func(v *StageVersion) error {
+		return v.ReorderCriteria(lessonID, criterionIDs)
+	})
+}
+
+// input kiểm mã, loại và nguồn markdown của câu hỏi rồi dựng QuestionInput cho aggregate.
+func (c QuestionCmd) input() (QuestionInput, error) {
+	var in QuestionInput
+	if c.QuestionKey != nil && strings.TrimSpace(*c.QuestionKey) != "" {
+		key, err := ParseQuestionKey(strings.TrimSpace(*c.QuestionKey))
+		if err != nil {
+			return in, err
+		}
+		in.Key = key
+	}
+	typ, err := ParseQuestionType(c.Type)
+	if err != nil {
+		return in, err
+	}
+	for _, src := range []string{c.BodySource, c.ExplanationSource} {
+		if err := validateMarkdownSource(src); err != nil {
+			return in, err
+		}
+	}
+	in.Type, in.BodySource, in.ExplanationSource, in.Points = typ, c.BodySource, c.ExplanationSource, c.Points
+	in.Options = make([]Option, 0, len(c.Options))
+	for _, o := range c.Options {
+		opt := Option{Body: o.Body, Correct: o.Correct}
+		if o.ID != nil {
+			opt.ID = *o.ID
+		}
+		in.Options = append(in.Options, opt)
+	}
+	return in, nil
+}
+
+// mutateLesson khóa bản nháp, áp fn rồi ghi lại; trả học liệu lessonID sau khi ghi.
+func (s *Service) mutateLesson(ctx context.Context, versionID, lessonID uuid.UUID, fn func(v *StageVersion) error) (*Lesson, error) {
+	var l *Lesson
+	err := s.tx.Transact(ctx, func(tx db.Executor) error {
+		v, err := s.lockDraft(ctx, tx, versionID)
+		if err != nil {
+			return err
+		}
+		if err := fn(v); err != nil {
+			return err
+		}
+		if err := s.versions.SaveDraft(ctx, tx, v); err != nil {
+			return err
+		}
+		l, err = v.Lesson(lessonID)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
 // mutateVersion chạy fn trong transaction rồi đọc lại phiên bản sau commit.
 func (s *Service) mutateVersion(ctx context.Context, versionID uuid.UUID, fn func(tx db.Executor) error) (VersionDetail, error) {
 	if err := s.tx.Transact(ctx, fn); err != nil {
 		return VersionDetail{}, err
 	}
 	return s.GetVersion(ctx, versionID)
+}
+
+// mutateDraft khóa bản nháp, áp fn lên aggregate, ghi lại rồi đọc phiên bản sau commit.
+func (s *Service) mutateDraft(ctx context.Context, versionID uuid.UUID, fn func(v *StageVersion) error) (VersionDetail, error) {
+	return s.mutateVersion(ctx, versionID, func(tx db.Executor) error {
+		v, err := s.lockDraft(ctx, tx, versionID)
+		if err != nil {
+			return err
+		}
+		if err := fn(v); err != nil {
+			return err
+		}
+		return s.versions.SaveDraft(ctx, tx, v)
+	})
 }
 
 // lockDraft khóa header và báo ErrVersionImmutable trước khi kiểm dữ liệu vào, để lỗi trên bản đã phát hành luôn
@@ -510,9 +771,86 @@ func (s *Service) contentFactory(ctx context.Context, tx db.Executor, cmd Lesson
 			return nil, ErrEmbeddedImage
 		}
 		return c, nil
+	case LessonQuiz:
+		// Quiz → quiz giữ câu hỏi, chỉ đổi cấu hình; loại khác chuyển sang quiz thì bắt đầu từ quiz rỗng.
+		base, ok := current.(QuizContent)
+		if !ok {
+			base = NewQuizContent()
+		}
+		settings, err := cmd.Quiz.settings()
+		if err != nil {
+			return nil, err
+		}
+		return base.Configure(settings)
+	case LessonHomework:
+		base, ok := current.(HomeworkContent)
+		if !ok {
+			base = NewHomeworkContent()
+		}
+		settings, err := s.homeworkSettings(ctx, tx, cmd.Homework)
+		if err != nil {
+			return nil, err
+		}
+		return base.Configure(settings)
 	default:
 		return nil, ErrInvalidLessonType
 	}
+}
+
+// settings đổi cấu hình quiz từ lệnh sang domain; phút ngoài 1–180 bị chặn trước khi nhân để không tràn số.
+func (c *QuizCmd) settings() (QuizSettings, error) {
+	var out QuizSettings
+	if c == nil {
+		return out, nil
+	}
+	if c.Mode != nil {
+		mode, err := ParseQuizMode(*c.Mode)
+		if err != nil {
+			return out, err
+		}
+		out.Mode = &mode
+	}
+	if c.TimeLimitMinutes != nil {
+		m := *c.TimeLimitMinutes
+		if m < 1 || time.Duration(m)*time.Minute > maxQuizTimeLimit {
+			return out, ErrQuizTimeLimit
+		}
+		d := time.Duration(m) * time.Minute
+		out.TimeLimit = &d
+	}
+	out.MaxAttempts, out.Shuffle, out.PassPercent = c.MaxAttempts, c.Shuffle, c.PassPercent
+	return out, nil
+}
+
+// homeworkSettings kiểm nguồn đề bài và đổi id file kèm thành tài liệu đã upload xong (lấy tên, dung lượng hiển thị).
+func (s *Service) homeworkSettings(ctx context.Context, tx db.Executor, c *HomeworkCmd) (HomeworkSettings, error) {
+	var out HomeworkSettings
+	if c == nil {
+		return out, nil
+	}
+	if c.BriefSource != nil {
+		if err := validateMarkdownSource(*c.BriefSource); err != nil {
+			return out, err
+		}
+	}
+	out.BriefSource, out.PassPercent = c.BriefSource, c.PassPercent
+	if c.AttachmentMediaIDs != nil {
+		out.Attachments = make([]Attachment, 0, len(c.AttachmentMediaIDs))
+		for _, id := range c.AttachmentMediaIDs {
+			m, err := s.media.ByID(ctx, tx, id)
+			if errors.Is(err, media.ErrMediaNotFound) {
+				return out, ErrAttachmentNotDocument
+			}
+			if err != nil {
+				return out, err
+			}
+			if !m.IsReady() || m.Kind() != media.KindDocument {
+				return out, ErrAttachmentNotDocument
+			}
+			out.Attachments = append(out.Attachments, Attachment{MediaID: id, FileName: m.FileName(), SizeBytes: m.SizeBytes()})
+		}
+	}
+	return out, nil
 }
 
 // validateMarkdownSource chặn ảnh nhúng base64 rồi ảnh không phải media nội bộ trong nguồn markdown.
@@ -553,15 +891,15 @@ func (s *Service) videoFileName(ctx context.Context, tx db.Executor, id uuid.UUI
 	return m.FileName(), nil
 }
 
-// checkMarkdownImages bảo đảm mọi ảnh còn lại trong HTML đã render là ảnh đã upload xong, trước khi lesson_media
-// tham chiếu tới chúng.
+// checkMarkdownImages bảo đảm mọi ảnh còn lại trong HTML đã render (bài đọc, câu hỏi, lời giải, đề bài) là ảnh đã
+// upload xong, trước khi lesson_media tham chiếu tới chúng.
 func (s *Service) checkMarkdownImages(ctx context.Context, tx db.Executor, v *StageVersion) error {
 	for _, l := range v.Lessons() {
-		mc, ok := l.Content().(MarkdownContent)
-		if !ok || mc.HTML == nil {
-			continue
+		var ids []uuid.UUID
+		for _, html := range renderedHTML(l.Content()) {
+			ids = append(ids, mediaIDsInHTML(html)...)
 		}
-		for _, id := range mediaIDsInHTML(*mc.HTML) {
+		for _, id := range ids {
 			m, err := s.media.ByID(ctx, tx, id)
 			if errors.Is(err, media.ErrMediaNotFound) {
 				return errImageNotUploaded(l.Title())

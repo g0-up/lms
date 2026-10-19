@@ -1,0 +1,28 @@
+{
+  "homework": {
+    "attachments": [
+      {
+        "fileName": "starter.zip",
+        "mediaId": "0199ffff-0000-7000-8000-000000000001",
+        "sizeBytes": 1024
+      }
+    ],
+    "briefSource": "# Viết truy vấn JOIN",
+    "criteria": [
+      {
+        "description": "Truy vấn chạy đúng",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "maxPoints": 60
+      }
+    ],
+    "maxPoints": 60,
+    "passPercent": 70
+  },
+  "id": "0199ffff-0000-7000-8000-000000000003",
+  "lessonKey": "bai-tap-join",
+  "position": 4,
+  "required": true,
+  "title": "Bài tập JOIN",
+  "type": "homework",
+  "unitId": "01990000-0000-7000-8000-000000000142"
+}

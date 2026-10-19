@@ -12,6 +12,10 @@
     "source": "# Stack và Queue\n\n- **Stack** (ngăn xếp): vào sau ra trước (LIFO). Dùng cho undo, duyệt cây, kiểm tra ngoặc.\n- **Queue** (hàng đợi): vào trước ra trước (FIFO). Dùng cho hàng đợi gửi email, BFS.\n\n```go\nstack := []int{}\nstack = append(stack, 1)        // push\ntop := stack[len(stack)-1]      // peek\nstack = stack[:len(stack)-1]    // pop\n```"
   },
   {
+    "key": "go-hello-read",
+    "source": "# Hello World từng bước\n\n## 1. Tạo module\n\n```bash\nmkdir hello && cd hello\ngo mod init example.com/hello\n```\n\n## 2. Viết chương trình\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    fmt.Println(\"Xin chào, Go!\")\n}\n```\n\n## 3. Chạy và biên dịch\n\n- `go run .` biên dịch vào thư mục tạm rồi chạy.\n- `go build` tạo file nhị phân `hello` để chạy lại nhiều lần.\n\n> Chạy `go fmt ./...` trước khi nộp bài để code đúng định dạng chuẩn."
+  },
+  {
     "key": "go-types",
     "source": "# Kiểu dữ liệu và hàm trong Go\n\nGo là ngôn ngữ tĩnh kiểu. Khai báo biến bằng `var` hoặc `:=`.\n\n```go\nfunc sum(xs []int) int {\n    total := 0\n    for _, x := range xs {\n        total += x\n    }\n    return total\n}\n```\n\nHàm có thể trả về nhiều giá trị, thường là `(kết quả, error)`."
   },

@@ -1,0 +1,62 @@
+{
+  "canSubmit": true,
+  "deadline": "2026-10-05T08:00:00Z",
+  "lessonId": "01990000-0000-7000-8000-000000000928",
+  "lockedReason": null,
+  "maxFiles": 5,
+  "status": "pending",
+  "submissions": [
+    {
+      "commitRef": "d4e5f6a",
+      "files": [
+        {
+          "fileName": "giai-thich.md",
+          "mediaId": "0199ffff-0000-7000-8000-000000000001",
+          "sizeBytes": 5
+        }
+      ],
+      "grade": null,
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "isLate": true,
+      "no": 2,
+      "repoUrl": "https://github.com/an/sql-select",
+      "status": "pending",
+      "submittedAt": "2026-10-05T08:00:00Z"
+    },
+    {
+      "commitRef": "a1b2c3d",
+      "files": [],
+      "grade": {
+        "comment": "Truy vấn đúng nhưng thiếu phần giải thích.",
+        "gradedAt": "2026-10-05T08:00:00Z",
+        "gradedBy": "Lê Thu Hương",
+        "id": "0199ffff-0000-7000-8000-000000000003",
+        "maxPoints": 100,
+        "result": "rework",
+        "scores": [
+          {
+            "comment": "",
+            "criterionId": "01990000-0000-7000-8000-000000000932",
+            "description": "Truy vấn đúng kết quả",
+            "maxPoints": 40,
+            "points": 30
+          },
+          {
+            "comment": "Nên nêu lý do chọn JOIN.",
+            "criterionId": "01990000-0000-7000-8000-000000000934",
+            "description": "Giải thích cách làm",
+            "maxPoints": 60,
+            "points": 20
+          }
+        ],
+        "totalPoints": 50
+      },
+      "id": "0199ffff-0000-7000-8000-000000000004",
+      "isLate": false,
+      "no": 1,
+      "repoUrl": "https://github.com/an/sql-select",
+      "status": "rework",
+      "submittedAt": "2026-10-05T08:00:00Z"
+    }
+  ]
+}

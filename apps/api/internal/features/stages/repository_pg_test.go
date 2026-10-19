@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -25,9 +26,11 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"lms/api/internal/domain"
+	"lms/api/internal/features/identity"
 	"lms/api/internal/features/media"
 	"lms/api/internal/platform/audit"
 	"lms/api/internal/platform/clock"
+	"lms/api/internal/platform/config"
 	"lms/api/internal/platform/db"
 	"lms/api/internal/platform/ids"
 	"lms/api/internal/platform/storage"
@@ -41,6 +44,7 @@ var (
 	stageDBID = uuid.MustParse(testdb.StageDBID)
 	dbV1ID    = uuid.MustParse(testdb.StageDBV1ID)
 	dbV2ID    = uuid.MustParse(testdb.StageDBV2ID)
+	unitV2ID  = uuid.MustParse(testdb.UnitDBV2ID)
 )
 
 type itEnv struct {
@@ -93,7 +97,7 @@ func (e *itEnv) inTx(fn func(tx db.Executor) error) error {
 func (e *itEnv) addMedia(kind media.Kind, ct, name string) uuid.UUID {
 	e.t.Helper()
 	m, err := media.NewPendingUpload(ids.New(), kind, name, ct, 1024, adminID, e.clk.Now(),
-		media.Limits{MaxVideoBytes: 1 << 30, MaxImageBytes: 1 << 20})
+		media.Limits{MaxVideoBytes: 1 << 30, MaxImageBytes: 1 << 20, MaxDocumentBytes: 1 << 20})
 	if err != nil {
 		e.t.Fatal(err)
 	}
@@ -115,9 +119,38 @@ func (e *itEnv) createStage(code string) uuid.UUID {
 	return d.Versions[0].ID
 }
 
+func (e *itEnv) addUnit(vid uuid.UUID, title string) uuid.UUID {
+	e.t.Helper()
+	d, err := e.svc.AddUnit(e.ctx(), e.actor, vid, title)
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	return d.Unit.ID()
+}
+
+// firstUnit trả bài học đầu của phiên bản, tạo bài học "Bài 1" khi phiên bản chưa có bài học nào.
+func (e *itEnv) firstUnit(vid uuid.UUID) *uuid.UUID {
+	e.t.Helper()
+	v, err := e.repo.ByID(e.ctx(), e.dbx, vid)
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	if units := v.Units(); len(units) > 0 {
+		id := units[0].ID()
+		return &id
+	}
+	id := e.addUnit(vid, "Bài 1")
+	return &id
+}
+
 func (e *itEnv) addMarkdown(vid uuid.UUID, title, src string) *Lesson {
 	e.t.Helper()
-	l, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{Title: &title, Type: strp("markdown"), MarkdownSource: &src})
+	return e.addMarkdownTo(vid, *e.firstUnit(vid), title, src)
+}
+
+func (e *itEnv) addMarkdownTo(vid, unitID uuid.UUID, title, src string) *Lesson {
+	e.t.Helper()
+	l, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: &unitID, Title: &title, Type: strp("markdown"), MarkdownSource: &src})
 	if err != nil {
 		e.t.Fatal(err)
 	}
@@ -137,26 +170,46 @@ func (e *itEnv) addLegacyMarkdown(vid uuid.UUID, title, src string) *Lesson {
 
 func (e *itEnv) addVideo(vid uuid.UUID, title string, mediaID uuid.UUID, seconds int) *Lesson {
 	e.t.Helper()
-	l, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{Title: &title, Type: strp("video"), VideoMediaID: &mediaID, DurationSeconds: &seconds})
+	l, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: e.firstUnit(vid), Title: &title, Type: strp("video"),
+		VideoMediaID: &mediaID, DurationSeconds: &seconds})
 	if err != nil {
 		e.t.Fatal(err)
 	}
 	return l
 }
 
-// versionSnapshot là toàn bộ header, học liệu và lesson_media của một phiên bản dưới dạng JSON để so trước/sau.
+// versionSnapshot là toàn bộ header, bài học, học liệu, nội dung quiz/homework và lesson_media của một phiên bản dưới
+// dạng JSON để so trước/sau.
 func (e *itEnv) versionSnapshot(vid uuid.UUID, withHeader bool) string {
+	e.t.Helper()
+	return e.snapshotOn(e.dbx, vid, withHeader)
+}
+
+// snapshotOn như versionSnapshot nhưng đọc qua ex, để so ngay trong transaction trước khi rollback.
+func (e *itEnv) snapshotOn(ex db.Executor, vid uuid.UUID, withHeader bool) string {
 	e.t.Helper()
 	var s string
 	header := `NULL`
 	if withHeader {
 		header = `(SELECT row_to_json(sv) FROM stage_versions sv WHERE sv.id = $1)`
 	}
-	err := e.dbx.Get(&s, `SELECT json_build_object(
+	ofVersion := func(table, alias, order string) string {
+		return `COALESCE((SELECT json_agg(` + alias + ` ORDER BY ` + order + `) FROM ` + table + ` ` + alias +
+			` JOIN lessons l ON l.id = ` + alias + `.lesson_id WHERE l.stage_version_id = $1), '[]')`
+	}
+	err := sqlx.GetContext(e.ctx(), ex, &s, `SELECT json_build_object(
 		'header', `+header+`,
+		'units', COALESCE((SELECT json_agg(su ORDER BY su.position) FROM stage_units su WHERE su.stage_version_id = $1), '[]'),
 		'lessons', COALESCE((SELECT json_agg(l ORDER BY l.position) FROM lessons l WHERE l.stage_version_id = $1), '[]'),
-		'media', COALESCE((SELECT json_agg(lm ORDER BY lm.lesson_id, lm.media_id) FROM lesson_media lm
-		                   JOIN lessons l ON l.id = lm.lesson_id WHERE l.stage_version_id = $1), '[]'))::text`, vid)
+		'media', `+ofVersion("lesson_media", "lm", "lm.lesson_id, lm.media_id")+`,
+		'quiz', `+ofVersion("quiz_settings", "qs", "qs.lesson_id")+`,
+		'questions', `+ofVersion("questions", "q", "q.lesson_id, q.position")+`,
+		'options', COALESCE((SELECT json_agg(o ORDER BY o.question_id, o.position) FROM question_options o
+		                     JOIN questions q ON q.id = o.question_id JOIN lessons l ON l.id = q.lesson_id
+		                     WHERE l.stage_version_id = $1), '[]'),
+		'homework', `+ofVersion("homework_settings", "hs", "hs.lesson_id")+`,
+		'criteria', `+ofVersion("rubric_criteria", "rc", "rc.lesson_id, rc.position")+`,
+		'attachments', `+ofVersion("homework_attachments", "ha", "ha.lesson_id, ha.position")+`)::text`, vid)
 	if err != nil {
 		e.t.Fatal(err)
 	}
@@ -241,6 +294,28 @@ func TestImmutability_LessonMedia(t *testing.T) {
 	})
 }
 
+func TestImmutability_InsertUnit(t *testing.T) {
+	expectImmutable(t, func(e *itEnv, tx db.Executor, v *StageVersion) error {
+		v.units = append(v.units, &Unit{id: ids.New(), key: "chen-them", title: "Chèn thêm", position: len(v.units) + 1})
+		return e.repo.SaveDraft(e.ctx(), tx, v)
+	})
+}
+
+func TestImmutability_RenameUnit(t *testing.T) {
+	expectImmutable(t, func(e *itEnv, tx db.Executor, v *StageVersion) error {
+		v.units[0].title = "Đổi tên"
+		return e.repo.SaveDraft(e.ctx(), tx, v)
+	})
+}
+
+// Bỏ bài học khỏi aggregate nhưng giữ học liệu để câu DELETE stage_units là câu ghi đầu tiên chạm DB.
+func TestImmutability_DeleteUnit(t *testing.T) {
+	expectImmutable(t, func(e *itEnv, tx db.Executor, v *StageVersion) error {
+		v.units = nil
+		return e.repo.SaveDraft(e.ctx(), tx, v)
+	})
+}
+
 func TestImmutability_DeleteHeader(t *testing.T) {
 	expectImmutable(t, func(e *itEnv, tx db.Executor, v *StageVersion) error {
 		return e.repo.Delete(e.ctx(), tx, v.ID())
@@ -253,10 +328,16 @@ func TestImmutability_ServiceMutations(t *testing.T) {
 	lid := uuid.MustParse(testdb.LessonDBTableV1ID)
 	title := "Sửa"
 	errs := map[string]error{}
-	_, errs["add"] = e.svc.AddLesson(e.ctx(), e.actor, dbV1ID, LessonCmd{Title: &title, Type: strp("markdown"), MarkdownSource: &title})
+	uid := uuid.MustParse(testdb.UnitDBV1ID)
+	_, errs["add"] = e.svc.AddLesson(e.ctx(), e.actor, dbV1ID, LessonCmd{UnitID: &uid, Title: &title, Type: strp("markdown"), MarkdownSource: &title})
 	_, errs["update"] = e.svc.UpdateLesson(e.ctx(), e.actor, dbV1ID, lid, LessonCmd{Title: &title})
 	errs["remove"] = e.svc.RemoveLesson(e.ctx(), e.actor, dbV1ID, lid)
-	_, errs["reorder"] = e.svc.ReorderLessons(e.ctx(), e.actor, dbV1ID, []uuid.UUID{uuid.MustParse(testdb.LessonDBIndexV1ID), lid})
+	_, errs["reorder"] = e.svc.ReorderLessons(e.ctx(), e.actor, dbV1ID,
+		[]UnitLessons{{UnitID: uid, LessonIDs: []uuid.UUID{uuid.MustParse(testdb.LessonDBIndexV1ID), lid}}})
+	_, errs["addUnit"] = e.svc.AddUnit(e.ctx(), e.actor, dbV1ID, title)
+	_, errs["renameUnit"] = e.svc.RenameUnit(e.ctx(), e.actor, dbV1ID, uid, title)
+	_, errs["removeUnit"] = e.svc.RemoveUnit(e.ctx(), e.actor, dbV1ID, uid)
+	_, errs["reorderUnits"] = e.svc.ReorderUnits(e.ctx(), e.actor, dbV1ID, []uuid.UUID{uid})
 	for name, err := range errs {
 		if !errors.Is(err, ErrVersionImmutable) {
 			t.Errorf("%s err = %v", name, err)
@@ -291,7 +372,7 @@ func TestCreateStageCreatesSingleDraftAndAudit(t *testing.T) {
 func TestPublishMarkdownOnRealSchema(t *testing.T) {
 	e := newIT(t)
 	vid := e.createStage("DOCKER")
-	if _, err := e.svc.Publish(e.ctx(), e.actor, vid); !errors.Is(err, ErrNoLessons) {
+	if _, err := e.svc.Publish(e.ctx(), e.actor, vid); !errors.Is(err, ErrNoUnits) {
 		t.Fatalf("empty publish err = %v", err)
 	}
 	img := e.addMedia(media.KindImage, "image/png", "so-do.png")
@@ -416,7 +497,8 @@ func (e *itEnv) waitForLockWaiter() {
 	e.t.Helper()
 	deadline := time.Now().Add(10 * time.Second)
 	for time.Now().Before(deadline) {
-		if e.count(`SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'`) > 0 {
+		if e.count(`SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() AND wait_event_type = 'Lock'
+			AND wait_event <> 'advisory'`) > 0 {
 			return
 		}
 		time.Sleep(20 * time.Millisecond)
@@ -440,6 +522,7 @@ func TestConcurrentAddLessonAndPublish(t *testing.T) {
 		e := newIT(t)
 		vid := e.createStage("RACE")
 		e.addMarkdown(vid, "Bài 1", "# Một")
+		unit := e.firstUnit(vid)
 		p := pausingRepo{locked: make(chan struct{}), release: make(chan struct{})}
 		publisher := e.service(p)
 
@@ -454,7 +537,7 @@ func TestConcurrentAddLessonAndPublish(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			title, src := "Bài chen", "# Chen"
-			_, addErr = e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{Title: &title, Type: strp("markdown"), MarkdownSource: &src})
+			_, addErr = e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: unit, Title: &title, Type: strp("markdown"), MarkdownSource: &src})
 		}()
 		e.waitForLockWaiter()
 		close(p.release)
@@ -474,6 +557,7 @@ func TestConcurrentAddLessonAndPublish(t *testing.T) {
 		for i := range 10 {
 			vid := e.createStage("RACE" + string(rune('A'+i)))
 			e.addMarkdown(vid, "Bài 1", "# Một")
+			unit := e.firstUnit(vid)
 			start := make(chan struct{})
 			var wg sync.WaitGroup
 			var pubErr, addErr error
@@ -487,7 +571,7 @@ func TestConcurrentAddLessonAndPublish(t *testing.T) {
 				defer wg.Done()
 				<-start
 				title, src := "Bài chen", "# Chen"
-				_, addErr = e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{Title: &title, Type: strp("markdown"), MarkdownSource: &src})
+				_, addErr = e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: unit, Title: &title, Type: strp("markdown"), MarkdownSource: &src})
 			}()
 			close(start)
 			wg.Wait()
@@ -564,18 +648,344 @@ func TestCloneKeepsLessonsAndMedia(t *testing.T) {
 	}
 }
 
-func TestReorderSwapsWithoutUniqueViolation(t *testing.T) {
+// guardedRouter dựng route soạn sau SessionAuth và RequireRole(admin) thật như router của app; login trả cookie
+// phiên, call gọi route bằng cookie đó.
+type guardedRouter struct {
+	t     *testing.T
+	e     *itEnv
+	r     *gin.Engine
+	ident *identity.Service
+}
+
+func (e *itEnv) guardedRouter() *guardedRouter {
+	ident := identity.NewService(identity.ServiceDeps{
+		DB: e.dbx, Tx: db.TxRunner{DB: e.dbx},
+		Users: identity.PGUserRepo{}, Sessions: identity.PGSessionRepo{}, Attempts: identity.PGLoginAttemptRepo{},
+		Resets: identity.PGResetTokenRepo{}, Clock: clock.Real{}, Audit: audit.Noop{},
+		Cfg: config.Config{
+			SessionTTL: 12 * time.Hour, TempPasswordTTL: 72 * time.Hour, ResetTokenTTL: 30 * time.Minute,
+			PasswordMinLength: 8, LoginMaxFailures: 5, LoginLockWindow: 15 * time.Minute,
+			PublicBaseURL: "http://localhost:5173", AppEnv: config.EnvE2E,
+		},
+	})
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	authed := r.Group("/api/v1", identity.NewMiddleware(ident, false).SessionAuth())
+	NewHandler(e.svc, func(c *gin.Context) (uuid.UUID, bool) {
+		u, ok := identity.CurrentUser(c)
+		if !ok {
+			return uuid.Nil, false
+		}
+		return u.ID(), true
+	}).Register(authed, identity.RequireRole(domain.RoleAdmin))
+	return &guardedRouter{t: e.t, e: e, r: r, ident: ident}
+}
+
+func (g *guardedRouter) login(email string) string {
+	g.t.Helper()
+	res, err := g.ident.Login(g.e.ctx(), email, testdb.FixturePassword, "127.0.0.1", "it")
+	if err != nil {
+		g.t.Fatalf("đăng nhập %s: %v", email, err)
+	}
+	return res.Token.Reveal()
+}
+
+func (g *guardedRouter) call(cookie, method, path, body string) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, path, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(&http.Cookie{Name: identity.CookieName(false), Value: cookie})
+	w := httptest.NewRecorder()
+	g.r.ServeHTTP(w, req)
+	return w
+}
+
+// expectForbidden gọi từng route bằng cookie và đòi 403 FORBIDDEN.
+func (g *guardedRouter) expectForbidden(cookie string, routes []struct{ method, path, body string }) {
+	g.t.Helper()
+	for _, rt := range routes {
+		w := g.call(cookie, rt.method, rt.path, rt.body)
+		var env struct {
+			Error struct {
+				Code string `json:"code"`
+			} `json:"error"`
+		}
+		if err := json.Unmarshal(w.Body.Bytes(), &env); w.Code != http.StatusForbidden || err != nil || env.Error.Code != "FORBIDDEN" {
+			g.t.Errorf("teacher %s %s = %d %s", rt.method, rt.path, w.Code, w.Body)
+		}
+	}
+}
+
+// TestUnitRoutesRequireAdmin: teacher nhận FORBIDDEN ở mọi route soạn bài học và không đổi được dữ liệu, admin dùng
+// được.
+func TestUnitRoutesRequireAdmin(t *testing.T) {
+	e := newIT(t, "stage_db_draft")
+	g := e.guardedRouter()
+
+	base := "/api/v1/stage-versions/" + dbV2ID.String()
+	unit := testdb.UnitDBV2ID
+	lessons := `["` + testdb.LessonDBIndexV2ID + `","` + testdb.LessonDBTableV2ID + `"]`
+	routes := []struct{ method, path, body string }{
+		{http.MethodPost, base + "/units", `{"title":"Nâng cao"}`},
+		{http.MethodPatch, base + "/units/" + unit, `{"title":"Đổi tên"}`},
+		{http.MethodPut, base + "/units/order", `{"unitIds":["` + unit + `"]}`},
+		{http.MethodPut, base + "/lessons/order", `{"units":[{"unitId":"` + unit + `","lessonIds":` + lessons + `}]}`},
+		{http.MethodDelete, base + "/units/" + unit, ""},
+	}
+	before := e.versionSnapshot(dbV2ID, true)
+	g.expectForbidden(g.login("huong.le@goup.vn"), routes)
+	if e.versionSnapshot(dbV2ID, true) != before {
+		t.Fatal("teacher calls changed the draft")
+	}
+
+	admin := g.login("quan.tran@goup.vn")
+	want := []int{http.StatusCreated, http.StatusOK, http.StatusUnprocessableEntity, http.StatusUnprocessableEntity, http.StatusNoContent}
+	for i, rt := range routes {
+		// Sau khi admin thêm "Nâng cao", body thứ tự chỉ liệt kê một bài học nên nhận 422: admin qua được guard.
+		if w := g.call(admin, rt.method, rt.path, rt.body); w.Code != want[i] {
+			t.Errorf("admin %s %s = %d, want %d: %s", rt.method, rt.path, w.Code, want[i], w.Body)
+		}
+	}
+	if got, want := e.unitLayout(dbV2ID), "1.Nâng cao[]"; got != want {
+		t.Fatalf("after admin calls = %s, want %s", got, want)
+	}
+}
+
+// lessonUnits trả "lesson_key=unit_key" theo position học liệu, chỉ khi bài học thuộc đúng phiên bản của học liệu.
+func (e *itEnv) lessonUnits(vid uuid.UUID) []string {
+	e.t.Helper()
+	var out []string
+	if err := e.dbx.Select(&out, `SELECT l.lesson_key || '=' || su.unit_key FROM lessons l
+		JOIN stage_units su ON su.id = l.unit_id AND su.stage_version_id = l.stage_version_id
+		WHERE l.stage_version_id = $1 ORDER BY l.position`, vid); err != nil {
+		e.t.Fatal(err)
+	}
+	return out
+}
+
+// unitLayout đọc bố cục bài học và học liệu thẳng từ DB, cùng dạng với layoutOf của aggregate.
+func (e *itEnv) unitLayout(vid uuid.UUID) string {
+	e.t.Helper()
+	var rows []struct {
+		UnitPos  int     `db:"unit_pos"`
+		Title    string  `db:"title"`
+		Key      *string `db:"lesson_key"`
+		Position *int    `db:"position"`
+	}
+	if err := e.dbx.Select(&rows, `SELECT su.position AS unit_pos, su.title, l.lesson_key, l.position FROM stage_units su
+		LEFT JOIN lessons l ON l.unit_id = su.id WHERE su.stage_version_id = $1 ORDER BY su.position, l.position`, vid); err != nil {
+		e.t.Fatal(err)
+	}
+	var b strings.Builder
+	for i, r := range rows {
+		if i == 0 || rows[i-1].UnitPos != r.UnitPos {
+			if i > 0 {
+				b.WriteString("] ")
+			}
+			fmt.Fprintf(&b, "%d.%s[", r.UnitPos, r.Title)
+		} else {
+			b.WriteString(" ")
+		}
+		if r.Key != nil {
+			fmt.Fprintf(&b, "%s@%d", *r.Key, *r.Position)
+		}
+	}
+	if len(rows) > 0 {
+		b.WriteString("]")
+	}
+	return b.String()
+}
+
+func TestCreateStageStartsWithoutUnits(t *testing.T) {
+	e := newIT(t)
+	vid := e.createStage("UNIT")
+	if n := e.count(`SELECT count(*) FROM stage_units WHERE stage_version_id = $1`, vid); n != 0 {
+		t.Fatalf("units of new stage = %d", n)
+	}
+	title, src := "Một", "# Một"
+	if _, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{Title: &title, Type: strp("markdown"), MarkdownSource: &src}); !errors.Is(err, ErrLessonUnitRequired) {
+		t.Fatalf("add lesson without unit err = %v", err)
+	}
+	if n := e.count(`SELECT count(*) FROM lessons WHERE stage_version_id = $1`, vid); n != 0 {
+		t.Fatalf("lessons = %d", n)
+	}
+}
+
+// Dữ liệu MVP sau migration nằm trong một bài học "Nội dung chặng" và giữ thứ tự cũ.
+func TestMigratedVersionKeepsOrderInDefaultUnit(t *testing.T) {
+	e := newIT(t)
+	v, err := e.repo.ByID(e.ctx(), e.dbx, dbV1ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := layoutOf(v), "1.Nội dung chặng[Thiết kế bảng và khóa@1 Đọc thêm: chỉ mục@2]"; got != want {
+		t.Fatalf("layout = %s, want %s", got, want)
+	}
+	if got, want := e.unitLayout(dbV1ID), "1.Nội dung chặng[db-table@1 db-index@2]"; got != want {
+		t.Fatalf("db layout = %s, want %s", got, want)
+	}
+}
+
+func TestUnitOperationsPersist(t *testing.T) {
+	e := newIT(t)
+	vid := e.createStage("UNITS")
+	a := e.addUnit(vid, "Nhập môn")
+	b := e.addUnit(vid, "Thiết kế bảng")
+	one := e.addMarkdownTo(vid, a, "Một", "# Một")
+	e.addMarkdownTo(vid, b, "Hai", "# Hai")
+	e.addMarkdownTo(vid, a, "Ba", "# Ba")
+	if got, want := e.unitLayout(vid), "1.Nhập môn[mot@1 ba@2] 2.Thiết kế bảng[hai@3]"; got != want {
+		t.Fatalf("after add = %s, want %s", got, want)
+	}
+
+	if _, err := e.svc.RenameUnit(e.ctx(), e.actor, vid, b, "Thiết kế CSDL"); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(`SELECT count(*) FROM stage_units WHERE id = $1 AND title = 'Thiết kế CSDL' AND unit_key = 'thiet-ke-bang'`, b); n != 1 {
+		t.Fatal("rename not persisted or unit_key changed")
+	}
+	if _, err := e.svc.UpdateLesson(e.ctx(), e.actor, vid, one.ID(), LessonCmd{UnitID: &b}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := e.unitLayout(vid), "1.Nhập môn[ba@1] 2.Thiết kế CSDL[hai@2 mot@3]"; got != want {
+		t.Fatalf("after move = %s, want %s", got, want)
+	}
+	if _, err := e.svc.ReorderUnits(e.ctx(), e.actor, vid, []uuid.UUID{b, a}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := e.unitLayout(vid), "1.Thiết kế CSDL[hai@1 mot@2] 2.Nhập môn[ba@3]"; got != want {
+		t.Fatalf("after unit reorder = %s, want %s", got, want)
+	}
+	stored, err := e.repo.ByID(e.ctx(), e.dbx, vid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := layoutOf(stored), "1.Thiết kế CSDL[Hai@1 Một@2] 2.Nhập môn[Ba@3]"; got != want {
+		t.Fatalf("reloaded aggregate = %s, want %s", got, want)
+	}
+}
+
+// Hoán đổi vị trí bài học và chuyển học liệu sang bài học khác trong một lần lưu: UNIQUE vị trí được hoãn tới commit.
+func TestReorderAcrossUnitsWithoutUniqueViolation(t *testing.T) {
 	e := newIT(t, "stage_db_draft")
 	a, b := uuid.MustParse(testdb.LessonDBTableV2ID), uuid.MustParse(testdb.LessonDBIndexV2ID)
-	d, err := e.svc.ReorderLessons(e.ctx(), e.actor, dbV2ID, []uuid.UUID{b, a})
+	extra := e.addUnit(dbV2ID, "Nâng cao")
+	d, err := e.svc.ReorderLessons(e.ctx(), e.actor, dbV2ID, []UnitLessons{
+		{UnitID: unitV2ID, LessonIDs: []uuid.UUID{b}},
+		{UnitID: extra, LessonIDs: []uuid.UUID{a}},
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got := d.Version.Lessons(); got[0].ID() != b || got[0].Position() != 1 || got[1].ID() != a || got[1].Position() != 2 {
 		t.Fatal("order not swapped")
 	}
-	if _, err := e.svc.ReorderLessons(e.ctx(), e.actor, dbV2ID, []uuid.UUID{a}); !errors.Is(err, ErrReorderMismatch) {
+	if got, want := e.unitLayout(dbV2ID), "1.Nội dung chặng[db-index@1] 2.Nâng cao[db-table@2]"; got != want {
+		t.Fatalf("after layout = %s, want %s", got, want)
+	}
+	if _, err := e.svc.ReorderUnits(e.ctx(), e.actor, dbV2ID, []uuid.UUID{extra, unitV2ID}); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := e.unitLayout(dbV2ID), "1.Nâng cao[db-table@1] 2.Nội dung chặng[db-index@2]"; got != want {
+		t.Fatalf("after unit swap = %s, want %s", got, want)
+	}
+	if _, err := e.svc.ReorderLessons(e.ctx(), e.actor, dbV2ID, []UnitLessons{{UnitID: extra, LessonIDs: []uuid.UUID{a, b}}}); !errors.Is(err, ErrReorderMismatch) {
 		t.Fatalf("mismatch err = %v", err)
+	}
+}
+
+func TestRemoveUnitCascadesLessonsAndMedia(t *testing.T) {
+	e := newIT(t)
+	vid := e.createStage("RMUNIT")
+	a := e.addUnit(vid, "Bỏ đi")
+	b := e.addUnit(vid, "Giữ lại")
+	video := e.addMedia(media.KindVideo, "video/mp4", "v.mp4")
+	seconds := 60
+	vl, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: &a, Title: strp("Video"), Type: strp("video"),
+		VideoMediaID: &video, DurationSeconds: &seconds})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ml := e.addMarkdownTo(vid, a, "Ghi chú", "# Ghi chú")
+	e.addMarkdownTo(vid, b, "Giữ", "# Giữ")
+	if len(e.lessonMedia(vl.ID())) != 1 {
+		t.Fatal("lesson_media missing before remove")
+	}
+
+	n, err := e.svc.RemoveUnit(e.ctx(), e.actor, vid, a)
+	if err != nil || n != 2 {
+		t.Fatalf("RemoveUnit = %d, %v; want 2", n, err)
+	}
+	if got, want := e.unitLayout(vid), "1.Giữ lại[giu@1]"; got != want {
+		t.Fatalf("after remove = %s, want %s", got, want)
+	}
+	if c := e.count(`SELECT count(*) FROM lessons WHERE id = ANY($1)`, []uuid.UUID{vl.ID(), ml.ID()}); c != 0 {
+		t.Fatalf("lessons left = %d", c)
+	}
+	if c := e.count(`SELECT count(*) FROM lesson_media WHERE lesson_id = $1`, vl.ID()); c != 0 {
+		t.Fatalf("lesson_media left = %d", c)
+	}
+	if c := e.count(`SELECT count(*) FROM media_files WHERE id = $1`, video); c != 1 {
+		t.Fatal("media files must survive unit delete")
+	}
+	if _, err := e.svc.RemoveUnit(e.ctx(), e.actor, vid, a); !errors.Is(err, ErrUnitNotFound) {
+		t.Fatalf("remove twice err = %v", err)
+	}
+}
+
+// Unique index lower(btrim(title)) chặn cả khi bỏ qua kiểm tra của domain, và lỗi map về CONFLICT.
+func TestUnitTitleUniqueOnRealSchema(t *testing.T) {
+	e := newIT(t, "stage_db_draft")
+	err := e.inTx(func(tx db.Executor) error {
+		return insertUnit(e.ctx(), tx, dbV2ID, &Unit{id: ids.New(), key: "trung-ten", title: "  NỘI DUNG CHẶNG ", position: 2})
+	})
+	if !errors.Is(err, ErrUnitTitleTaken) || !errors.Is(err, domain.ErrConflict) {
+		t.Fatalf("direct insert err = %v", err)
+	}
+	if _, err := e.svc.AddUnit(e.ctx(), e.actor, dbV2ID, "nội dung chặng"); !errors.Is(err, ErrUnitTitleTaken) {
+		t.Fatalf("service err = %v", err)
+	}
+	if n := e.count(`SELECT count(*) FROM stage_units WHERE stage_version_id = $1`, dbV2ID); n != 1 {
+		t.Fatalf("units = %d", n)
+	}
+}
+
+func TestCloneDeepCopiesUnits(t *testing.T) {
+	e := newIT(t)
+	vid := e.createStage("UNITCLONE")
+	intro := e.addUnit(vid, "Nhập môn")
+	adv := e.addUnit(vid, "Nâng cao")
+	a := e.addMarkdownTo(vid, intro, "Một", "# Một")
+	b := e.addMarkdownTo(vid, adv, "Hai", "# Hai")
+	if _, err := e.svc.Publish(e.ctx(), e.actor, vid); err != nil {
+		t.Fatal(err)
+	}
+	c, err := e.svc.Clone(e.ctx(), e.actor, vid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cid := c.Version.ID()
+	want := []string{a.Key().String() + "=nhap-mon", b.Key().String() + "=nang-cao"}
+	if got := e.lessonUnits(cid); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("clone lesson units = %v, want %v", got, want)
+	}
+	if n := e.count(`SELECT count(*) FROM stage_units cu JOIN stage_units su ON su.stage_version_id = $1
+		AND su.unit_key = cu.unit_key AND su.title = cu.title AND su.position = cu.position AND su.id <> cu.id
+		WHERE cu.stage_version_id = $2`, vid, cid); n != 2 {
+		t.Fatalf("copied units = %d", n)
+	}
+	// Sửa bản nháp mới không chạm bài học của bản đã phát hành.
+	before := e.versionSnapshot(vid, true)
+	cloneAdv := c.Version.Units()[1].ID()
+	if _, err := e.svc.RenameUnit(e.ctx(), e.actor, cid, cloneAdv, "Chuyên sâu"); err != nil {
+		t.Fatal(err)
+	}
+	added := e.addMarkdownTo(cid, cloneAdv, "Ba", "# Ba")
+	want = append(want, added.Key().String()+"=nang-cao")
+	if got := e.lessonUnits(cid); fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("after add = %v, want %v", got, want)
+	}
+	if e.versionSnapshot(vid, true) != before {
+		t.Fatal("editing the clone changed the published version")
 	}
 }
 
@@ -919,12 +1329,30 @@ func TestGoldenJSON(t *testing.T) {
 		r := e.router()
 		video := e.addMedia(media.KindVideo, "video/mp4", "join-co-ban.mp4")
 		assertGolden(t, "lesson_video.json", e.call(r, http.MethodPost, "/api/v1/stage-versions/"+dbV2ID.String()+"/lessons",
-			`{"title":"Video: JOIN cơ bản","type":"video","required":true,"durationSeconds":540,"videoMediaId":"`+video.String()+`"}`, http.StatusCreated))
+			`{"unitId":"`+testdb.UnitDBV2ID+`","title":"Video: JOIN cơ bản","type":"video","required":true,"durationSeconds":540,"videoMediaId":"`+video.String()+`"}`, http.StatusCreated))
 		assertGolden(t, "lesson_markdown.json", e.call(r, http.MethodPost, "/api/v1/stage-versions/"+dbV2ID.String()+"/lessons",
-			`{"lessonKey":"db-join-notes","title":"Ghi chú JOIN","type":"markdown","required":false,"markdownSource":"# JOIN\n\nINNER và LEFT JOIN."}`, http.StatusCreated))
+			`{"unitId":"`+testdb.UnitDBV2ID+`","lessonKey":"db-join-notes","title":"Ghi chú JOIN","type":"markdown","required":false,"markdownSource":"# JOIN\n\nINNER và LEFT JOIN."}`, http.StatusCreated))
 		assertGolden(t, "error_validation.json", e.call(r, http.MethodPost, "/api/v1/stage-versions/"+dbV2ID.String()+"/lessons",
-			`{"title":"Video thiếu file","type":"video"}`, http.StatusUnprocessableEntity))
+			`{"unitId":"`+testdb.UnitDBV2ID+`","title":"Video thiếu file","type":"video"}`, http.StatusUnprocessableEntity))
 		assertGolden(t, "delete_version.json", e.call(r, http.MethodDelete, "/api/v1/stage-versions/"+dbV2ID.String(), "", http.StatusOK))
+	})
+	t.Run("lesson quiz và homework", func(t *testing.T) {
+		e := newIT(t, "stage_db_draft")
+		r := e.router()
+		base := "/api/v1/stage-versions/" + dbV2ID.String() + "/lessons"
+		var quiz LessonDTO
+		if err := json.Unmarshal(e.call(r, http.MethodPost, base, `{"unitId":"`+testdb.UnitDBV2ID+`","title":"Kiểm tra JOIN","type":"quiz","quiz":{"mode":"assessment","maxAttempts":2,"timeLimitMinutes":10,"passPercent":70}}`, http.StatusCreated), &quiz); err != nil {
+			t.Fatal(err)
+		}
+		assertGolden(t, "lesson_quiz.json", e.call(r, http.MethodPost, base+"/"+quiz.ID+"/questions",
+			`{"questionKey":"join-left","type":"single","bodySource":"LEFT JOIN giữ dòng nào?","explanationSource":"Giữ mọi dòng bảng trái.","points":1,"options":[{"body":"Mọi dòng bảng trái","correct":true},{"body":"Chỉ dòng khớp"}]}`, http.StatusCreated))
+		doc := e.addMedia(media.KindDocument, "application/zip", "starter.zip")
+		var hw LessonDTO
+		if err := json.Unmarshal(e.call(r, http.MethodPost, base, `{"unitId":"`+testdb.UnitDBV2ID+`","title":"Bài tập JOIN","type":"homework","homework":{"briefSource":"# Viết truy vấn JOIN","passPercent":70,"attachmentMediaIds":["`+doc.String()+`"]}}`, http.StatusCreated), &hw); err != nil {
+			t.Fatal(err)
+		}
+		assertGolden(t, "lesson_homework.json", e.call(r, http.MethodPost, base+"/"+hw.ID+"/criteria",
+			`{"description":"Truy vấn chạy đúng","maxPoints":60}`, http.StatusCreated))
 	})
 	t.Run("xem trước markdown bài seed", func(t *testing.T) {
 		e := newIT(t)
@@ -952,3 +1380,496 @@ func firstSeedMarkdown(t *testing.T) string {
 	}
 	return docs[0].Source
 }
+
+// contentVersion là phiên bản có một quiz đánh giá (hai câu hỏi) và một homework (đề, hai tiêu chí, một file kèm).
+type contentVersion struct {
+	vid, quiz, homework, doc uuid.UUID
+}
+
+func (e *itEnv) quizHomeworkVersion(code string, publish bool) contentVersion {
+	e.t.Helper()
+	cv := contentVersion{vid: e.createStage(code), doc: e.addMedia(media.KindDocument, "application/zip", "starter.zip")}
+	unit := e.firstUnit(cv.vid)
+	quiz, err := e.svc.AddLesson(e.ctx(), e.actor, cv.vid, LessonCmd{UnitID: unit, Title: strp("Kiểm tra"), Type: strp("quiz"),
+		Quiz: &QuizCmd{Mode: strp("assessment"), TimeLimitMinutes: intp(10)}})
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	cv.quiz = quiz.ID()
+	for _, body := range []string{"Khóa chính là gì?", "Khóa ngoại là gì?"} {
+		if _, err := e.svc.AddQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, questionCmd(body)); err != nil {
+			e.t.Fatal(err)
+		}
+	}
+	hw, err := e.svc.AddLesson(e.ctx(), e.actor, cv.vid, LessonCmd{UnitID: unit, Title: strp("Bài tập"), Type: strp("homework"),
+		Homework: &HomeworkCmd{BriefSource: strp("# Thiết kế lược đồ"), AttachmentMediaIDs: []uuid.UUID{cv.doc}}})
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	cv.homework = hw.ID()
+	for _, c := range []CriterionCmd{{Description: "Đủ bảng", MaxPoints: 60}, {Description: "Khóa ngoại đúng", MaxPoints: 40}} {
+		if _, err := e.svc.AddCriterion(e.ctx(), e.actor, cv.vid, cv.homework, c); err != nil {
+			e.t.Fatal(err)
+		}
+	}
+	if publish {
+		if _, err := e.svc.Publish(e.ctx(), e.actor, cv.vid); err != nil {
+			e.t.Fatal(err)
+		}
+	}
+	return cv
+}
+
+// storedContent đọc lại nội dung học liệu từ DB.
+func (e *itEnv) storedContent(vid, lid uuid.UUID) LessonContent {
+	e.t.Helper()
+	v, err := e.repo.ByID(e.ctx(), e.dbx, vid)
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	l, err := v.Lesson(lid)
+	if err != nil {
+		e.t.Fatal(err)
+	}
+	return l.Content()
+}
+
+func TestQuizHomeworkPersistAndDiff(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", false)
+
+	quiz := e.storedContent(cv.vid, cv.quiz).(QuizContent)
+	if quiz.Mode != QuizAssessment || *quiz.MaxAttempts != 2 || *quiz.TimeLimit != 10*time.Minute || *quiz.PassPercent != 70 || !quiz.Shuffle {
+		t.Fatalf("quiz settings = %+v", quiz)
+	}
+	if n := e.count(`SELECT time_limit_seconds FROM quiz_settings WHERE lesson_id = $1`, cv.quiz); n != 600 {
+		t.Fatalf("time_limit_seconds = %d", n)
+	}
+	if len(quiz.Questions) != 2 || quiz.Questions[0].Key != "cau-hoi" || quiz.Questions[1].Key != "cau-hoi-2" ||
+		!quiz.Questions[0].Options[0].Correct || quiz.Questions[0].Options[1].Correct || quiz.Questions[0].ExplanationSource != "Vì vậy." {
+		t.Fatalf("questions = %+v %+v", quiz.Questions[0], quiz.Questions[1])
+	}
+	hw := e.storedContent(cv.vid, cv.homework).(HomeworkContent)
+	if hw.BriefSource != "# Thiết kế lược đồ" || hw.PassPercent != 70 || hw.MaxScore() != 100 || len(hw.Attachments) != 1 ||
+		hw.Attachments[0] != (Attachment{MediaID: cv.doc, FileName: "starter.zip", SizeBytes: 1024}) {
+		t.Fatalf("homework = %+v", hw)
+	}
+	if got := e.lessonMedia(cv.homework); len(got) != 1 || got[0] != cv.doc {
+		t.Fatalf("homework lesson_media = %v", got)
+	}
+
+	// Sửa câu 1 (giữ một phương án, thêm một), thêm câu 3, rồi đảo thứ tự: id giữ nguyên, vị trí đổi không vướng UNIQUE.
+	q1, q2 := quiz.Questions[0], quiz.Questions[1]
+	keep := q1.Options[1].ID
+	upd := QuestionCmd{Type: "multi", BodySource: "Khóa chính?", Points: 2,
+		Options: []OptionCmd{{ID: &keep, Body: "Định danh", Correct: true}, {Body: "Duy nhất", Correct: true}, {Body: "Tùy chọn"}}}
+	l, err := e.svc.UpdateQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, q1.ID, upd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(e.storedContent(cv.vid, cv.quiz), l.Content()) {
+		t.Fatalf("stored quiz differs from aggregate after update")
+	}
+	if n := e.count(`SELECT count(*) FROM question_options WHERE id = $1`, q1.Options[0].ID); n != 0 {
+		t.Fatal("dropped option still stored")
+	}
+	if l, err = e.svc.AddQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, questionCmd("Câu 3")); err != nil {
+		t.Fatal(err)
+	}
+	q3 := l.Content().(QuizContent).Questions[2]
+	if l, err = e.svc.ReorderQuestions(e.ctx(), e.actor, cv.vid, cv.quiz, []uuid.UUID{q3.ID, q1.ID, q2.ID}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(e.storedContent(cv.vid, cv.quiz), l.Content()) {
+		t.Fatalf("stored quiz differs from aggregate after reorder")
+	}
+	if err := e.svc.RemoveQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, q2.ID); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(`SELECT count(*) FROM question_options WHERE question_id = $1`, q2.ID); n != 0 {
+		t.Fatal("options of removed question still stored")
+	}
+	if l, err = e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, cv.quiz, LessonCmd{Quiz: &QuizCmd{Mode: strp("practice"), Shuffle: boolp(false)}}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(e.storedContent(cv.vid, cv.quiz), l.Content()) {
+		t.Fatalf("stored quiz differs from aggregate after settings")
+	}
+
+	hwl, err := e.svc.ReorderCriteria(e.ctx(), e.actor, cv.vid, cv.homework, []uuid.UUID{hw.Criteria[1].ID, hw.Criteria[0].ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(e.storedContent(cv.vid, cv.homework), hwl.Content()) {
+		t.Fatalf("stored homework differs from aggregate after reorder")
+	}
+
+	// Bỏ file kèm thì lesson_media cũng bỏ; đổi loại học liệu xóa sạch dòng con của loại cũ.
+	if _, err := e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, cv.homework, LessonCmd{Homework: &HomeworkCmd{AttachmentMediaIDs: []uuid.UUID{}}}); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(`SELECT count(*) FROM homework_attachments WHERE lesson_id = $1`, cv.homework); n != 0 || len(e.lessonMedia(cv.homework)) != 0 {
+		t.Fatalf("attachments = %d, lesson_media = %v", n, e.lessonMedia(cv.homework))
+	}
+	for _, lid := range []uuid.UUID{cv.quiz, cv.homework} {
+		if _, err := e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, lid, LessonCmd{Type: strp("markdown"), MarkdownSource: strp("# Đọc")}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, table := range []string{"quiz_settings", "questions", "homework_settings", "rubric_criteria"} {
+		if n := e.count(`SELECT count(*) FROM `+table+` WHERE lesson_id = ANY($1)`, []uuid.UUID{cv.quiz, cv.homework}); n != 0 {
+			t.Errorf("%s rows left after type change = %d", table, n)
+		}
+	}
+	if n := e.count(`SELECT count(*) FROM question_options o JOIN questions q ON q.id = o.question_id WHERE q.lesson_id = $1`, cv.quiz); n != 0 {
+		t.Fatalf("options left = %d", n)
+	}
+}
+
+func TestQuestionKeyUniqueOnRealSchema(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", false)
+	cmd := questionCmd("Trùng mã")
+	cmd.QuestionKey = strp("cau-hoi")
+	if _, err := e.svc.AddQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, cmd); !errors.Is(err, ErrQuestionKeyTaken) {
+		t.Fatalf("err = %v", err)
+	}
+	// Bỏ qua aggregate: chính ràng buộc DB cũng chặn và được dịch sang lỗi nghiệp vụ.
+	err := e.inTx(func(tx db.Executor) error {
+		v, err := e.repo.ByID(e.ctx(), tx, cv.vid)
+		if err != nil {
+			return err
+		}
+		l, _ := v.Lesson(cv.quiz)
+		c := l.content.(QuizContent)
+		dup := *c.Questions[0]
+		dup.ID, dup.Options = ids.New(), []Option{{ID: ids.New(), Body: "A", Correct: true}, {ID: ids.New(), Body: "B"}}
+		c.Questions = append(c.Questions, &dup)
+		l.content = c
+		return e.repo.SaveDraft(e.ctx(), tx, v)
+	})
+	if !errors.Is(err, ErrQuestionKeyTaken) {
+		t.Fatalf("repo err = %v", err)
+	}
+}
+
+// TestImmutability_QuizHomeworkContent ghi thẳng repository lên bản đã phát hành. Snapshot chụp ngay trong cùng
+// transaction sau lỗi, nên câu ghi bảng con nào thiếu điều kiện draft sẽ lộ ra dù header ghi sau cùng cũng bị chặn.
+func TestImmutability_QuizHomeworkContent(t *testing.T) {
+	quizOf := func(v *StageVersion, lid uuid.UUID, fn func(c *QuizContent)) {
+		l, _ := v.Lesson(lid)
+		c := l.content.(QuizContent)
+		fn(&c)
+		l.content = c
+	}
+	homeworkOf := func(v *StageVersion, lid uuid.UUID, fn func(c *HomeworkContent)) {
+		l, _ := v.Lesson(lid)
+		c := l.content.(HomeworkContent)
+		fn(&c)
+		l.content = c
+	}
+	cases := map[string]func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error{
+		"insert question": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) {
+				html := "<p>x</p>"
+				c.Questions = append(c.Questions, &Question{ID: ids.New(), Key: "chen-them", Type: QuestionSingle, BodySource: "x",
+					BodyHTML: &html, ExplanationHTML: &html, Points: 1,
+					Options: []Option{{ID: ids.New(), Body: "A", Correct: true}, {ID: ids.New(), Body: "B"}}})
+			})
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"update question": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.Questions[0].BodySource, c.Questions[0].Points = "Sửa", 50 })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"delete question": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.Questions = c.Questions[:1] })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"reorder questions": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.Questions[0], c.Questions[1] = c.Questions[1], c.Questions[0] })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"insert option": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) {
+				c.Questions[0].Options = append(c.Questions[0].Options, Option{ID: ids.New(), Body: "Thêm"})
+			})
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"update option": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.Questions[0].Options[1].Correct = true })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"delete option": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.Questions[0].Options = c.Questions[0].Options[:1] })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"quiz settings": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			quizOf(v, cv.quiz, func(c *QuizContent) { c.MaxAttempts = intp(9) })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"homework settings": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			homeworkOf(v, cv.homework, func(c *HomeworkContent) { c.PassPercent = 90 })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"insert criterion": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			homeworkOf(v, cv.homework, func(c *HomeworkContent) {
+				c.Criteria = append(c.Criteria, &Criterion{ID: ids.New(), Description: "Thêm", MaxPoints: 5})
+			})
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"update criterion": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			homeworkOf(v, cv.homework, func(c *HomeworkContent) { c.Criteria[0].MaxPoints = 1 })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"delete criterion": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			homeworkOf(v, cv.homework, func(c *HomeworkContent) { c.Criteria = c.Criteria[1:] })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		"replace attachments": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			doc := e.addMedia(media.KindDocument, "application/pdf", "de.pdf")
+			homeworkOf(v, cv.homework, func(c *HomeworkContent) { c.Attachments = []Attachment{{MediaID: doc}} })
+			return e.repo.SaveDraft(e.ctx(), tx, v)
+		},
+		// saveContent gọi thẳng để câu xóa dòng con khi đổi loại chạy trước mọi câu ghi lessons.
+		"drop quiz rows": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			l, _ := v.Lesson(cv.quiz)
+			old := l.content
+			html := "<p>x</p>"
+			l.content = MarkdownContent{Source: "x", HTML: &html}
+			return saveContent(e.ctx(), tx, l, old)
+		},
+		"drop homework rows": func(e *itEnv, cv contentVersion, tx db.Executor, v *StageVersion) error {
+			l, _ := v.Lesson(cv.homework)
+			old := l.content
+			l.content = NewQuizContent()
+			return saveContent(e.ctx(), tx, l, old)
+		},
+	}
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", true)
+	before := e.versionSnapshot(cv.vid, true)
+	for name, fn := range cases {
+		t.Run(name, func(t *testing.T) {
+			e.t = t
+			var writeErr error
+			var during string
+			err := e.inTx(func(tx db.Executor) error {
+				v, err := e.repo.ByID(e.ctx(), tx, cv.vid)
+				if err != nil {
+					return err
+				}
+				writeErr = fn(e, cv, tx, v)
+				during = e.snapshotOn(tx, cv.vid, true)
+				return nil
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !errors.Is(writeErr, ErrVersionImmutable) {
+				t.Fatalf("err = %v, want ErrVersionImmutable", writeErr)
+			}
+			if during != before {
+				t.Fatalf("published version changed inside tx:\nbefore %s\nduring %s", before, during)
+			}
+		})
+	}
+}
+
+func TestImmutability_QuizHomeworkServiceMutations(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", true)
+	before := e.versionSnapshot(cv.vid, true)
+	quiz := e.storedContent(cv.vid, cv.quiz).(QuizContent)
+	hw := e.storedContent(cv.vid, cv.homework).(HomeworkContent)
+	q, cr := quiz.Questions[0].ID, hw.Criteria[0].ID
+	errs := map[string]error{}
+	_, errs["addQuestion"] = e.svc.AddQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, questionCmd("Thêm"))
+	_, errs["updateQuestion"] = e.svc.UpdateQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, q, questionCmd("Sửa"))
+	errs["removeQuestion"] = e.svc.RemoveQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, q)
+	_, errs["reorderQuestions"] = e.svc.ReorderQuestions(e.ctx(), e.actor, cv.vid, cv.quiz, []uuid.UUID{quiz.Questions[1].ID, q})
+	_, errs["quizSettings"] = e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, cv.quiz, LessonCmd{Quiz: &QuizCmd{MaxAttempts: intp(5)}})
+	_, errs["homeworkSettings"] = e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, cv.homework, LessonCmd{Homework: &HomeworkCmd{PassPercent: intp(90)}})
+	_, errs["addCriterion"] = e.svc.AddCriterion(e.ctx(), e.actor, cv.vid, cv.homework, CriterionCmd{Description: "Thêm", MaxPoints: 5})
+	_, errs["updateCriterion"] = e.svc.UpdateCriterion(e.ctx(), e.actor, cv.vid, cv.homework, cr, CriterionCmd{Description: "Sửa", MaxPoints: 5})
+	errs["removeCriterion"] = e.svc.RemoveCriterion(e.ctx(), e.actor, cv.vid, cv.homework, cr)
+	_, errs["reorderCriteria"] = e.svc.ReorderCriteria(e.ctx(), e.actor, cv.vid, cv.homework, []uuid.UUID{hw.Criteria[1].ID, cr})
+	for name, err := range errs {
+		if !errors.Is(err, ErrVersionImmutable) {
+			t.Errorf("%s err = %v", name, err)
+		}
+	}
+	if e.versionSnapshot(cv.vid, true) != before {
+		t.Fatal("published quiz/homework changed through service")
+	}
+}
+
+func TestPublishQuizHomeworkOnRealSchema(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", false)
+	img := e.addMedia(media.KindImage, "image/png", "so-do.png")
+	src := "Xem ![s](/api/v1/media/" + img.String() + "/content)"
+	brief := "# Đề <script>x</script> " + src
+	if _, err := e.svc.UpdateLesson(e.ctx(), e.actor, cv.vid, cv.homework, LessonCmd{Homework: &HomeworkCmd{BriefSource: &brief}}); err != nil {
+		t.Fatal(err)
+	}
+	quiz := e.storedContent(cv.vid, cv.quiz).(QuizContent)
+	if _, err := e.svc.UpdateQuestion(e.ctx(), e.actor, cv.vid, cv.quiz, quiz.Questions[0].ID, questionCmd(src)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.svc.Publish(e.ctx(), e.actor, cv.vid); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.count(`SELECT count(*) FROM questions WHERE lesson_id = $1 AND (body_html IS NULL OR explanation_html IS NULL)`, cv.quiz); n != 0 {
+		t.Fatalf("unrendered questions = %d", n)
+	}
+	var html string
+	if err := e.dbx.Get(&html, `SELECT body_html FROM questions WHERE lesson_id = $1 ORDER BY position LIMIT 1`, cv.quiz); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(html, img.String()) {
+		t.Fatalf("question body_html = %s", html)
+	}
+	if err := e.dbx.Get(&html, `SELECT brief_html FROM homework_settings WHERE lesson_id = $1`, cv.homework); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(html, "<script") || !strings.Contains(html, "<h1") {
+		t.Fatalf("brief_html = %s", html)
+	}
+	// lesson_media gom cả ảnh trong câu hỏi/đề bài lẫn file kèm, để quyền tải media đi theo lớp học.
+	if got := e.lessonMedia(cv.quiz); len(got) != 1 || got[0] != img {
+		t.Fatalf("quiz lesson_media = %v", got)
+	}
+	want := []uuid.UUID{cv.doc, img}
+	sort.Slice(want, func(i, j int) bool { return want[i].String() < want[j].String() })
+	if got := e.lessonMedia(cv.homework); !reflect.DeepEqual(got, want) {
+		t.Fatalf("homework lesson_media = %v, want %v", got, want)
+	}
+}
+
+func TestPublishBlocksIncompleteQuizOnRealSchema(t *testing.T) {
+	e := newIT(t)
+	vid := e.createStage("QZ")
+	quiz, err := e.svc.AddLesson(e.ctx(), e.actor, vid, LessonCmd{UnitID: e.firstUnit(vid), Title: strp("Kiểm tra"), Type: strp("quiz")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.svc.Publish(e.ctx(), e.actor, vid); err == nil || err.Error() != `"Kiểm tra" chưa có câu hỏi.` {
+		t.Fatalf("err = %v", err)
+	}
+	if _, err := e.svc.AddQuestion(e.ctx(), e.actor, vid, quiz.ID(), questionCmd("Câu 1")); err != nil {
+		t.Fatal(err)
+	}
+	// Chốt chặn cuối ở DB: câu hỏi chưa render thì không chuyển được sang published.
+	now := e.clk.Now()
+	err = e.inTx(func(tx db.Executor) error {
+		return e.repo.TransitionStatus(e.ctx(), tx, vid, domain.VersionDraft, domain.VersionPublished, &now)
+	})
+	if !errors.Is(err, ErrNotRendered) {
+		t.Fatalf("transition err = %v", err)
+	}
+	if n := e.count(`SELECT count(*) FROM stage_versions WHERE id = $1 AND status = 'draft'`, vid); n != 1 {
+		t.Fatal("version must stay draft")
+	}
+}
+
+func TestCloneDeepCopiesQuizAndHomeworkOnRealSchema(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", true)
+	before := e.versionSnapshot(cv.vid, true)
+	c, err := e.svc.Clone(e.ctx(), e.actor, cv.vid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	src, err := e.repo.ByID(e.ctx(), e.dbx, cv.vid)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clone, err := e.repo.ByID(e.ctx(), e.dbx, c.Version.ID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	sq, _ := src.Lesson(cv.quiz)
+	cq := clone.Lessons()[sq.Position()-1]
+	sqc, cqc := sq.Content().(QuizContent), cq.Content().(QuizContent)
+	if cqc.Mode != sqc.Mode || *cqc.TimeLimit != *sqc.TimeLimit || *cqc.MaxAttempts != *sqc.MaxAttempts || len(cqc.Questions) != len(sqc.Questions) {
+		t.Fatalf("clone quiz settings = %+v", cqc)
+	}
+	for i, sqn := range sqc.Questions {
+		cqn := cqc.Questions[i]
+		if cqn.ID == sqn.ID || cqn.Key != sqn.Key || cqn.BodySource != sqn.BodySource || cqn.BodyHTML == nil || *cqn.BodyHTML != *sqn.BodyHTML {
+			t.Fatalf("question %d: %+v vs %+v", i, cqn, sqn)
+		}
+		for j, so := range sqn.Options {
+			if co := cqn.Options[j]; co.ID == so.ID || co.Body != so.Body || co.Correct != so.Correct {
+				t.Fatalf("option %d.%d: %+v vs %+v", i, j, co, so)
+			}
+		}
+	}
+	sh, _ := src.Lesson(cv.homework)
+	ch := clone.Lessons()[sh.Position()-1]
+	shc, chc := sh.Content().(HomeworkContent), ch.Content().(HomeworkContent)
+	if chc.BriefSource != shc.BriefSource || chc.PassPercent != shc.PassPercent || !reflect.DeepEqual(chc.Attachments, shc.Attachments) {
+		t.Fatalf("clone homework = %+v", chc)
+	}
+	for i, sc := range shc.Criteria {
+		if cc := chc.Criteria[i]; cc.ID == sc.ID || cc.Description != sc.Description || cc.MaxPoints != sc.MaxPoints {
+			t.Fatalf("criterion %d: %+v vs %+v", i, cc, sc)
+		}
+	}
+	if got := e.lessonMedia(ch.ID()); len(got) != 1 || got[0] != cv.doc {
+		t.Fatalf("clone homework lesson_media = %v", got)
+	}
+
+	// Sửa bản nháp nhân bản không chạm bản gốc.
+	if _, err := e.svc.UpdateQuestion(e.ctx(), e.actor, c.Version.ID(), cq.ID(), cqc.Questions[0].ID, questionCmd("Sửa ở v2")); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.svc.RemoveCriterion(e.ctx(), e.actor, c.Version.ID(), ch.ID(), chc.Criteria[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	if e.versionSnapshot(cv.vid, true) != before {
+		t.Fatal("editing the clone changed the published source")
+	}
+}
+
+// TestQuizRoutesRequireAdmin: teacher không gọi được route soạn quiz/homework (kể cả PATCH học liệu), admin gọi được.
+func TestQuizRoutesRequireAdmin(t *testing.T) {
+	e := newIT(t)
+	cv := e.quizHomeworkVersion("QZ", false)
+	quiz := e.storedContent(cv.vid, cv.quiz).(QuizContent)
+	hw := e.storedContent(cv.vid, cv.homework).(HomeworkContent)
+	g := e.guardedRouter()
+	lessons := "/api/v1/stage-versions/" + cv.vid.String() + "/lessons/"
+	q, h := lessons+cv.quiz.String(), lessons+cv.homework.String()
+	q1, q2 := quiz.Questions[0].ID.String(), quiz.Questions[1].ID.String()
+	c1, c2 := hw.Criteria[0].ID.String(), hw.Criteria[1].ID.String()
+	question := `{"type":"single","bodySource":"Câu mới","points":1,"options":[{"body":"A","correct":true},{"body":"B"}]}`
+	routes := []struct{ method, path, body string }{
+		{http.MethodPost, q + "/questions", question},
+		{http.MethodPatch, q, `{"quiz":{"maxAttempts":5}}`},
+		{http.MethodPut, q + "/questions/order", `{"questionIds":["` + q2 + `","` + q1 + `"]}`},
+		{http.MethodPatch, q + "/questions/" + q1, question},
+		{http.MethodPost, h + "/criteria", `{"description":"Thêm","maxPoints":5}`},
+		{http.MethodPatch, h + "/criteria/" + c1, `{"description":"Sửa","maxPoints":5}`},
+		{http.MethodPut, h + "/criteria/order", `{"criterionIds":["` + c2 + `","` + c1 + `"]}`},
+		{http.MethodDelete, q + "/questions/" + q2, ""},
+		{http.MethodDelete, h + "/criteria/" + c2, ""},
+	}
+	before := e.versionSnapshot(cv.vid, true)
+	g.expectForbidden(g.login("huong.le@goup.vn"), routes)
+	if e.versionSnapshot(cv.vid, true) != before {
+		t.Fatal("teacher calls changed the draft")
+	}
+	admin := g.login("quan.tran@goup.vn")
+	want := []int{http.StatusCreated, http.StatusOK, http.StatusUnprocessableEntity, http.StatusOK, http.StatusCreated, http.StatusOK,
+		http.StatusUnprocessableEntity, http.StatusNoContent, http.StatusNoContent}
+	for i, rt := range routes {
+		// Sau khi admin thêm câu hỏi/tiêu chí, body thứ tự thiếu một id nên nhận 422: admin qua được guard.
+		if w := g.call(admin, rt.method, rt.path, rt.body); w.Code != want[i] {
+			t.Errorf("admin %s %s = %d, want %d: %s", rt.method, rt.path, w.Code, want[i], w.Body)
+		}
+	}
+}
+
+func boolp(b bool) *bool { return &b }

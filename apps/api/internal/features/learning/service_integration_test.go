@@ -21,6 +21,7 @@ import (
 	"lms/api/internal/features/classes"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/media"
+	"lms/api/internal/features/summary"
 	"lms/api/internal/platform/audit"
 	"lms/api/internal/platform/clock"
 	"lms/api/internal/platform/config"
@@ -60,6 +61,7 @@ var (
 	lessonArrayID = uuid.MustParse("01990000-0000-7000-8000-000000000923") // ds-array, video
 	lessonStackID = uuid.MustParse("01990000-0000-7000-8000-000000000924") // ds-stack, markdown
 	lessonHashID  = uuid.MustParse("01990000-0000-7000-8000-000000000925") // ds-hash, video
+	unitDSV1ID    = uuid.MustParse("01990000-0000-7000-8000-000000000926") // bài học "Nội dung chặng" của DS v1
 	basic02ID     = uuid.MustParse("01990000-0000-7000-8000-000000000951") // active, An đã rời
 	basic03ID     = uuid.MustParse("01990000-0000-7000-8000-000000000952") // draft, An đã được thêm
 	basic00ID     = uuid.MustParse("01990000-0000-7000-8000-000000000953") // ended
@@ -108,6 +110,10 @@ func newIT(t *testing.T) *itEnv {
 	e.svc = NewService(Deps{
 		DB: dbx, Tx: db.TxRunner{DB: dbx}, Progress: PGProgressRepo{}, Structure: PGCourseStructureRepo{},
 		MyClasses: PGMyClassesRepo{}, Members: classes.PGMembershipReader{}, Media: signer, Clock: clk,
+		Statuses: summary.NewService(summary.Deps{
+			Read: db.TxRunner{DB: dbx}, Tx: db.TxRunner{DB: dbx}, Repo: summary.PGRepo{}, Members: classes.PGMembershipReader{},
+			Audit: audit.PG{Clock: clk}, Clock: clk, IDs: ids.V7{},
+		}),
 	})
 	e.seedExtra()
 
@@ -158,19 +164,22 @@ func (e *itEnv) seedExtra() {
 		mediaIntroID, mediaArrayID, mediaHashID, adminID)
 	// Một câu UPDATE: uq_lessons_version_position DEFERRABLE nên kiểm ở cuối câu lệnh.
 	e.exec(`UPDATE lessons SET position = position + 1 WHERE stage_version_id = $1`, stageDBV1ID)
-	e.exec(`INSERT INTO lessons (id, stage_version_id, lesson_key, position, title, type, required, video_media_id, duration_seconds)
-		VALUES ($1, $2, 'db-intro', 1, 'Giới thiệu SQL', 'video', true, $3, 1104)`, lessonIntroID, stageDBV1ID, mediaIntroID)
+	e.exec(`INSERT INTO lessons (id, stage_version_id, unit_id, lesson_key, position, title, type, required, video_media_id,
+		duration_seconds) VALUES ($1, $2, $4, 'db-intro', 1, 'Giới thiệu SQL', 'video', true, $3, 1104)`,
+		lessonIntroID, stageDBV1ID, mediaIntroID, testdb.UnitDBV1ID)
 	e.exec(`INSERT INTO stages (id, code, name, created_by) VALUES ($1, 'DS', 'Data structure', $2)`, stageDSID, adminID)
 	e.exec(`INSERT INTO stage_versions (id, stage_id, version_no, status, title, description, published_at, created_by)
 		VALUES ($1, $2, 1, 'published', 'Data structure', 'Cấu trúc dữ liệu cơ bản.', now() - interval '60 days', $3)`,
 		stageDSV1ID, stageDSID, adminID)
-	e.exec(`INSERT INTO lessons (id, stage_version_id, lesson_key, position, title, type, required, markdown_source, markdown_html,
-		video_media_id, duration_seconds) VALUES
-		($1, $4, 'ds-array', 1, 'Mảng và danh sách liên kết', 'video', true, NULL, NULL, $5, 1330),
-		($2, $4, 'ds-stack', 2, 'Stack và Queue', 'markdown', true, E'# Stack và Queue\n\nLIFO và FIFO.',
+	e.exec(`INSERT INTO stage_units (id, stage_version_id, unit_key, title, position)
+		VALUES ($1, $2, 'noi-dung-chang', 'Nội dung chặng', 1)`, unitDSV1ID, stageDSV1ID)
+	e.exec(`INSERT INTO lessons (id, stage_version_id, unit_id, lesson_key, position, title, type, required, markdown_source,
+		markdown_html, video_media_id, duration_seconds) VALUES
+		($1, $4, $7, 'ds-array', 1, 'Mảng và danh sách liên kết', 'video', true, NULL, NULL, $5, 1330),
+		($2, $4, $7, 'ds-stack', 2, 'Stack và Queue', 'markdown', true, E'# Stack và Queue\n\nLIFO và FIFO.',
 		 E'<h1>Stack và Queue</h1>\n<p>LIFO và FIFO.</p>\n', NULL, 900),
-		($3, $4, 'ds-hash', 3, 'Hash table', 'video', true, NULL, NULL, $6, 1005)`,
-		lessonArrayID, lessonStackID, lessonHashID, stageDSV1ID, mediaArrayID, mediaHashID)
+		($3, $4, $7, 'ds-hash', 3, 'Hash table', 'video', true, NULL, NULL, $6, 1005)`,
+		lessonArrayID, lessonStackID, lessonHashID, stageDSV1ID, mediaArrayID, mediaHashID, unitDSV1ID)
 	e.exec(`INSERT INTO lesson_media (lesson_id, media_id) VALUES ($1, $2), ($3, $4), ($5, $6)`,
 		lessonIntroID, mediaIntroID, lessonArrayID, mediaArrayID, lessonHashID, mediaHashID)
 	e.exec(`INSERT INTO course_version_stages (course_version_id, stage_version_id, stage_id, position) VALUES ($1, $2, $3, 2)`,
@@ -576,4 +585,113 @@ func TestOnlyStudentsUseLearningRoutes(t *testing.T) {
 
 	e.cookie = ""
 	e.expectError(http.MethodGet, "/api/v1/me/classes", "", http.StatusUnauthorized, "UNAUTHENTICATED", "")
+}
+
+// TestQuizAndHomeworkPages: trang học của quiz chỉ có tóm tắt cấu hình (JSON thô không chứa câu hỏi, phương án hay
+// cờ đáp án đúng); trang homework có đề bài, ngưỡng, tiêu chí và file kèm theo thứ tự. Cả hai không tích tay được.
+func TestQuizAndHomeworkPages(t *testing.T) {
+	e := newIT(t)
+	quizID := uuid.MustParse("01990000-0000-7000-8000-000000000927")
+	hwID := uuid.MustParse("01990000-0000-7000-8000-000000000928")
+	docID := uuid.MustParse("01990000-0000-7000-8000-000000000933")
+	e.exec(`INSERT INTO lessons (id, stage_version_id, unit_id, lesson_key, position, title, type, required) VALUES
+		($1, $3, $4, 'ds-quiz', 4, 'Luyện tập cấu trúc dữ liệu', 'quiz', false),
+		($2, $3, $4, 'ds-hw', 5, 'Bài tập: cài đặt Stack', 'homework', true)`, quizID, hwID, stageDSV1ID, unitDSV1ID)
+	e.exec(`INSERT INTO quiz_settings (lesson_id, mode, max_attempts, time_limit_seconds, shuffle, pass_percent)
+		VALUES ($1, 'assessment', 2, 600, true, 70)`, quizID)
+	e.exec(`INSERT INTO questions (id, lesson_id, question_key, type, body_source, body_html, explanation_source,
+		explanation_html, points, position) VALUES ($1, $2, 'lifo', 'single', 'Stack theo nguyên tắc nào?',
+		'<p>Stack theo nguyên tắc nào?</p>', 'Vào sau ra trước.', '<p>Vào sau ra trước.</p>', 1, 1)`,
+		uuid.MustParse("01990000-0000-7000-8000-000000000929"), quizID)
+	e.exec(`INSERT INTO question_options (id, question_id, body, is_correct, position) VALUES
+		($1, $3, 'LIFO-dung', true, 1), ($2, $3, 'FIFO-sai', false, 2)`,
+		uuid.MustParse("01990000-0000-7000-8000-000000000930"), uuid.MustParse("01990000-0000-7000-8000-000000000931"),
+		uuid.MustParse("01990000-0000-7000-8000-000000000929"))
+	e.exec(`INSERT INTO homework_settings (lesson_id, brief_source, brief_html, pass_percent)
+		VALUES ($1, '# Cài đặt Stack', '<h1>Cài đặt Stack</h1>', 70)`, hwID)
+	e.exec(`INSERT INTO rubric_criteria (id, lesson_id, description, max_points, position) VALUES
+		($1, $3, 'Test đủ trường hợp', 60, 2), ($2, $3, 'Push/pop đúng', 40, 1)`,
+		uuid.MustParse("01990000-0000-7000-8000-000000000932"), uuid.MustParse("01990000-0000-7000-8000-000000000934"), hwID)
+	e.exec(`INSERT INTO media_files (id, kind, storage_key, original_name, content_type, size_bytes, status, uploaded_by, ready_at)
+		VALUES ($1, 'document', 'documents/01990000-0000-7000-8000-000000000933.zip', 'stack-khung.zip', 'application/zip',
+		2048, 'ready', $2, now())`, docID, adminID)
+	e.exec(`INSERT INTO homework_attachments (lesson_id, media_id, position) VALUES ($1, $2, 1)`, hwID, docID)
+	e.login("an.nguyen@gmail.com")
+
+	raw := e.must(http.MethodGet, lessonURL(basic01ID, quizID), "", http.StatusOK)
+	for _, leak := range []string{"isCorrect", "correct", "options", "questions", "LIFO-dung", "FIFO-sai", "Vào sau ra trước"} {
+		if strings.Contains(string(raw), leak) {
+			t.Fatalf("trang quiz lộ %q: %s", leak, raw)
+		}
+	}
+	page := decode[LessonPageDTO](t, raw)
+	quiz := page.Content.Quiz
+	if page.Lesson.Type != "quiz" || page.Content.Type != "quiz" || page.Content.HTML != nil || page.Content.URL != "" ||
+		page.Content.Homework != nil || quiz == nil || quiz.Mode != "assessment" || quiz.QuestionCount != 1 || quiz.MaxScore != 1 ||
+		quiz.PassPercent == nil || *quiz.PassPercent != 70 || quiz.TimeLimitMinutes == nil || *quiz.TimeLimitMinutes != 10 ||
+		quiz.MaxAttempts == nil || *quiz.MaxAttempts != 2 {
+		t.Fatalf("trang quiz = %s", raw)
+	}
+	assertGolden(t, "lesson-quiz-attempt.json", raw)
+
+	page = decode[LessonPageDTO](t, e.must(http.MethodGet, lessonURL(basic01ID, hwID), "", http.StatusOK))
+	hw := page.Content.Homework
+	if page.Content.Type != "homework" || hw == nil || hw.BriefHTML != "<h1>Cài đặt Stack</h1>" || hw.PassPercent != 70 ||
+		hw.MaxPoints != 100 || len(hw.Criteria) != 2 || hw.Criteria[0].Description != "Push/pop đúng" || hw.Criteria[0].MaxPoints != 40 ||
+		hw.Criteria[1].Description != "Test đủ trường hợp" || len(hw.Attachments) != 1 ||
+		hw.Attachments[0] != (AttachmentDTO{MediaID: docID.String(), FileName: "stack-khung.zip", SizeBytes: 2048}) {
+		t.Fatalf("trang homework = %+v", page.Content)
+	}
+
+	// Quiz và homework hoàn thành theo kết quả làm bài: tích tay bị từ chối 422 và không ghi completed_at.
+	for _, id := range []uuid.UUID{quizID, hwID} {
+		e.expectError(http.MethodPut, completionURL(basic01ID, id), tick, http.StatusUnprocessableEntity, "VALIDATION_FAILED",
+			"Học liệu này hoàn thành theo kết quả làm bài, không tích tay.")
+		if _, completed, _ := e.openedAt(memberAnID, id); completed != nil {
+			t.Fatalf("học liệu %s bị tích tay", id)
+		}
+	}
+
+	// Lộ trình có hai học liệu mới với đúng loại; bản thân lộ trình cũng không mang nội dung câu hỏi.
+	raw = e.must(http.MethodGet, classURL(basic01ID), "", http.StatusOK)
+	if !strings.Contains(string(raw), `"type":"quiz"`) || !strings.Contains(string(raw), `"type":"homework"`) || strings.Contains(string(raw), "LIFO-dung") {
+		t.Fatalf("lộ trình = %s", raw)
+	}
+
+	// Nhãn trạng thái chỉ có ở quiz và homework, cùng nhãn ở danh sách theo bài học và trang học; "Quá hạn" suy ra
+	// từ hạn nộp đã qua khi chưa nộp, không lưu.
+	e.expectStatuses(map[uuid.UUID]*StatusDTO{
+		lessonArrayID: nil, quizID: {Label: "Chưa làm", Tone: "optional"}, hwID: {Label: "Chưa nộp", Tone: "optional"},
+	})
+	e.exec(`INSERT INTO class_lesson_deadlines (class_id, lesson_id, due_at, set_by) VALUES ($1, $2, $3, $4)`,
+		basic01ID, hwID, e.clk.Now().Add(-time.Minute), huongID)
+	e.expectStatuses(map[uuid.UUID]*StatusDTO{hwID: {Label: "Quá hạn", Tone: "danger"}})
+	page = decode[LessonPageDTO](t, e.must(http.MethodGet, lessonURL(basic01ID, hwID), "", http.StatusOK))
+	if page.Lesson.Status == nil || *page.Lesson.Status != (StatusDTO{Label: "Quá hạn", Tone: "danger"}) {
+		t.Fatalf("trang homework status = %+v", page.Lesson.Status)
+	}
+}
+
+// expectStatuses so nhãn trạng thái của các học liệu trên lộ trình basic01 (nil là không có nhãn).
+func (e *itEnv) expectStatuses(want map[uuid.UUID]*StatusDTO) {
+	e.t.Helper()
+	r := decode[RoadmapDTO](e.t, e.must(http.MethodGet, classURL(basic01ID), "", http.StatusOK))
+	seen := 0
+	for _, st := range r.Stages {
+		for _, u := range st.Units {
+			for _, l := range u.Lessons {
+				w, ok := want[uuid.MustParse(l.ID)]
+				if !ok {
+					continue
+				}
+				seen++
+				if (w == nil) != (l.Status == nil) || (w != nil && *w != *l.Status) {
+					e.t.Errorf("học liệu %q status = %+v, muốn %+v", l.Title, l.Status, w)
+				}
+			}
+		}
+	}
+	if seen != len(want) {
+		e.t.Fatalf("thấy %d/%d học liệu trên lộ trình", seen, len(want))
+	}
 }

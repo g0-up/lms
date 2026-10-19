@@ -50,13 +50,14 @@ func TestPresignOffline(t *testing.T) {
 	assert.Contains(t, signed, "content-type")
 	assert.Contains(t, signed, "content-length")
 
-	getURL, err := s.PresignGet(ctx, "media/video/2026/10/a.mp4", 2*time.Hour, "video/mp4")
+	getURL, err := s.PresignGet(ctx, "media/video/2026/10/a.mp4", 2*time.Hour, GetOptions{ContentType: "video/mp4"})
 	require.NoError(t, err)
 	g, err := url.Parse(getURL)
 	require.NoError(t, err)
 	assert.NotEmpty(t, g.Query().Get("X-Amz-Signature"))
 	assert.Equal(t, "7200", g.Query().Get("X-Amz-Expires"))
 	assert.Equal(t, "video/mp4", g.Query().Get("response-content-type"))
+	assert.False(t, g.Query().Has("response-content-disposition"), "video xem trực tiếp, không tải về")
 
 	assert.Zero(t, rt.calls.Load(), "presign đã gọi mạng")
 }
@@ -67,10 +68,30 @@ func TestPresignUsesPublicEndpoint(t *testing.T) {
 		AccessKey: "a", SecretKey: "b", Transport: &noNetwork{},
 	})
 	require.NoError(t, err)
-	got, err := s.PresignGet(context.Background(), "media/image/2026/10/x.png", time.Minute, "")
+	got, err := s.PresignGet(context.Background(), "media/image/2026/10/x.png", time.Minute, GetOptions{})
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(got, "https://media.example.com/lms-media/media/image/2026/10/x.png?"), got)
 	assert.NotContains(t, got, "response-content-type")
+}
+
+func TestPresignGetAttachment(t *testing.T) {
+	rt := &noNetwork{}
+	s := offlineStorage(t, rt)
+	got, err := s.PresignGet(context.Background(), "media/document/2026/10/d.sql", time.Hour,
+		GetOptions{ContentType: "text/plain; charset=utf-8", AttachmentName: "bài tập; 1.sql"})
+	require.NoError(t, err)
+	u, err := url.Parse(got)
+	require.NoError(t, err)
+	assert.NotEmpty(t, u.Query().Get("X-Amz-Signature"))
+	assert.Equal(t, "text/plain; charset=utf-8", u.Query().Get("response-content-type"))
+	assert.Equal(t, "attachment; filename*=UTF-8''b%C3%A0i%20t%E1%BA%ADp%3B%201.sql", u.Query().Get("response-content-disposition"))
+	assert.Zero(t, rt.calls.Load(), "presign đã gọi mạng")
+}
+
+func TestContentDisposition(t *testing.T) {
+	assert.Empty(t, GetOptions{ContentType: "image/png"}.ContentDisposition())
+	assert.Equal(t, "attachment; filename*=UTF-8''schema.sql", GetOptions{AttachmentName: "schema.sql"}.ContentDisposition())
+	assert.Equal(t, "attachment; filename*=UTF-8''a%22b%2Fc%0A.zip", GetOptions{AttachmentName: "a\"b/c\n.zip"}.ContentDisposition())
 }
 
 func TestNewMinIORejectsBadPublicEndpoint(t *testing.T) {
@@ -99,6 +120,12 @@ func TestMemStorage(t *testing.T) {
 	assert.Equal(t, int64(5), st.Size)
 	assert.Equal(t, "image/png", st.ContentType)
 	assert.NotEmpty(t, st.ETag)
+
+	got, err := s.PresignGet(ctx, "k", time.Minute, GetOptions{ContentType: "application/pdf", AttachmentName: "de.pdf"})
+	require.NoError(t, err)
+	u, err := url.Parse(got)
+	require.NoError(t, err)
+	assert.Equal(t, "attachment; filename*=UTF-8''de.pdf", u.Query().Get("response-content-disposition"))
 
 	require.NoError(t, s.Delete(ctx, "k"))
 	_, err = s.Stat(ctx, "k")

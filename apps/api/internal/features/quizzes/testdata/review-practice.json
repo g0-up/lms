@@ -1,0 +1,161 @@
+{
+  "attempts": [
+    {
+      "autoSubmitted": false,
+      "id": "0199ffff-0000-7000-8000-000000000001",
+      "maxScore": 6,
+      "no": 1,
+      "passed": null,
+      "percent": 33,
+      "review": {
+        "comment": "Câu ràng buộc còn thiếu một đáp án.",
+        "createdAt": "2026-10-05T08:00:00Z",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "notes": [
+          {
+            "note": "UNIQUE cũng chặn trùng.",
+            "questionId": "01990000-0000-7000-8000-000000000712"
+          }
+        ],
+        "reviewer": {
+          "id": "01990000-0000-7000-8000-000000000002",
+          "name": "Lê Thu Hương"
+        }
+      },
+      "reviewStatus": "confirmed",
+      "score": 2,
+      "submittedAt": "2026-10-05T08:00:00Z"
+    }
+  ],
+  "autoSubmitted": false,
+  "class": {
+    "code": "basic01",
+    "id": "01990000-0000-7000-8000-000000000301",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "correctCount": 1,
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "isLatest": true,
+  "latestAttemptId": "0199ffff-0000-7000-8000-000000000001",
+  "lesson": {
+    "id": "01990000-0000-7000-8000-000000000701",
+    "title": "Luyện tập: khóa chính"
+  },
+  "limit": null,
+  "maxScore": 6,
+  "minutes": 1,
+  "mode": "practice",
+  "no": 1,
+  "passPercent": null,
+  "passed": null,
+  "percent": 33,
+  "questionCount": 3,
+  "questions": [
+    {
+      "bodyHtml": "\u003cp\u003eKhóa chính dùng để làm gì?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000711",
+      "options": [
+        {
+          "body": "Định danh duy nhất mỗi dòng",
+          "id": "01990000-0000-7000-8000-000000000721",
+          "isCorrect": true,
+          "selected": true
+        },
+        {
+          "body": "Tăng tốc mọi truy vấn",
+          "id": "01990000-0000-7000-8000-000000000722",
+          "isCorrect": false,
+          "selected": false
+        }
+      ],
+      "points": 2,
+      "pointsAwarded": 2,
+      "status": "correct",
+      "type": "single"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eRàng buộc nào chặn trùng giá trị?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000712",
+      "options": [
+        {
+          "body": "PRIMARY KEY",
+          "id": "01990000-0000-7000-8000-000000000724",
+          "isCorrect": true,
+          "selected": true
+        },
+        {
+          "body": "CHECK",
+          "id": "01990000-0000-7000-8000-000000000725",
+          "isCorrect": false,
+          "selected": false
+        },
+        {
+          "body": "UNIQUE",
+          "id": "01990000-0000-7000-8000-000000000726",
+          "isCorrect": true,
+          "selected": false
+        }
+      ],
+      "points": 3,
+      "pointsAwarded": 0,
+      "status": "wrong",
+      "type": "multi"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eKhóa ngoại tham chiếu tới đâu?\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000713",
+      "options": [
+        {
+          "body": "Một cột bất kỳ",
+          "id": "01990000-0000-7000-8000-000000000727",
+          "isCorrect": false,
+          "selected": false
+        },
+        {
+          "body": "Khóa của bảng khác",
+          "id": "01990000-0000-7000-8000-000000000728",
+          "isCorrect": true,
+          "selected": false
+        }
+      ],
+      "points": 1,
+      "pointsAwarded": 0,
+      "status": "blank",
+      "type": "single"
+    }
+  ],
+  "reviewStatus": "confirmed",
+  "reviews": [
+    {
+      "comment": "Câu ràng buộc còn thiếu một đáp án.",
+      "createdAt": "2026-10-05T08:00:00Z",
+      "id": "0199ffff-0000-7000-8000-000000000002",
+      "notes": [
+        {
+          "note": "UNIQUE cũng chặn trùng.",
+          "questionId": "01990000-0000-7000-8000-000000000712"
+        }
+      ],
+      "reviewer": {
+        "id": "01990000-0000-7000-8000-000000000002",
+        "name": "Lê Thu Hương"
+      }
+    }
+  ],
+  "score": 2,
+  "stage": {
+    "id": "01990000-0000-7000-8000-000000000101",
+    "name": "Database"
+  },
+  "startedAt": "2026-10-05T08:00:00Z",
+  "student": {
+    "email": "an.nguyen@gmail.com",
+    "memberId": "01990000-0000-7000-8000-000000000311",
+    "memberStatus": "active",
+    "name": "Nguyễn Hoàng An",
+    "userId": "01990000-0000-7000-8000-000000000003"
+  },
+  "submittedAt": "2026-10-05T08:00:00Z",
+  "timeLimitMinutes": null
+}

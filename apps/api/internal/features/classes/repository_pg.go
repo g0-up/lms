@@ -84,6 +84,13 @@ func (PGClassRepo) Update(ctx context.Context, ex db.Executor, c *Class, from do
 	}
 }
 
+func (PGClassRepo) DeleteDeadlines(ctx context.Context, ex db.Executor, classID uuid.UUID) error {
+	if _, err := ex.ExecContext(ctx, `DELETE FROM class_lesson_deadlines WHERE class_id = $1`, classID); err != nil {
+		return fmt.Errorf("classes: xóa hạn nộp: %w", pgerr.Map(err))
+	}
+	return nil
+}
+
 const classColumns = `c.id, c.code, c.name, c.course_version_id, c.teacher_id, c.status, c.start_date, c.end_date, c.created_by, c.created_at`
 
 type classRecord struct {

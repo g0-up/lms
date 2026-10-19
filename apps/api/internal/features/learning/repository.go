@@ -25,6 +25,16 @@ type ProgressRepo interface {
 	ByMember(ctx context.Context, ex db.Executor, memberID uuid.UUID) (map[uuid.UUID]*LessonProgress, error)
 }
 
+// CompletionWriter ghi hoàn thành học liệu chấm theo kết quả (homework, quiz) bằng Executor của caller, để mốc
+// hoàn thành commit cùng sự kiện quyết định nó.
+type CompletionWriter interface {
+	// MarkCompleted upsert lesson_progress: chưa mở thì tạo với first_opened_at = at; đã mở thì first_opened_at là
+	// mốc sớm hơn và completed_at giữ mốc cũ nếu đã có (giữ ck_lesson_progress_order).
+	MarkCompleted(ctx context.Context, ex db.Executor, memberID, lessonID uuid.UUID, at time.Time) error
+	// ClearCompleted xóa completed_at; chưa có bản ghi hoặc chưa hoàn thành thì không đổi gì.
+	ClearCompleted(ctx context.Context, ex db.Executor, memberID, lessonID uuid.UUID, at time.Time) error
+}
+
 // LessonRow là một học liệu thuộc phiên bản khóa học của lớp, kèm nội dung để dựng trang học.
 type LessonRow struct {
 	ID              uuid.UUID
@@ -33,10 +43,16 @@ type LessonRow struct {
 	Position        int
 	Required        bool
 	DurationSeconds *int
-	// Content là stages.VideoContent (MediaID) hoặc stages.MarkdownContent (HTML đã sanitize; Source không đọc).
+	// Content là stages.VideoContent (MediaID), stages.MarkdownContent (HTML đã sanitize; Source không đọc),
+	// stages.QuizContent (chỉ cấu hình, không có câu hỏi) hoặc stages.HomeworkContent (đề bài HTML, ngưỡng đạt,
+	// tiêu chí và file kèm theo thứ tự; BriefSource không đọc).
 	Content   stages.LessonContent
 	StageID   uuid.UUID
 	StageName string
+	// QuestionCount và QuizMaxScore là số câu và tổng điểm của quiz (0 với loại khác), đếm trong SQL để câu hỏi
+	// không rời database trên đường của học viên.
+	QuestionCount int
+	QuizMaxScore  int
 }
 
 // CourseStructureRepo đọc cấu trúc phiên bản khóa học (chặng → học liệu); chỉ đọc.

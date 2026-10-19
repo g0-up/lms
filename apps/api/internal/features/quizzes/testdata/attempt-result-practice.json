@@ -1,0 +1,95 @@
+{
+  "autoSubmitted": false,
+  "id": "0199ffff-0000-7000-8000-000000000001",
+  "maxScore": 6,
+  "mode": "practice",
+  "no": 1,
+  "percent": 83,
+  "questions": [
+    {
+      "bodyHtml": "\u003cp\u003eKhóa chính dùng để làm gì?\u003c/p\u003e",
+      "correct": true,
+      "explanationHtml": "\u003cp\u003eGiải thích: Khóa chính định danh duy nhất mỗi dòng.\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000711",
+      "options": [
+        {
+          "body": "Định danh duy nhất mỗi dòng",
+          "id": "01990000-0000-7000-8000-000000000721",
+          "isCorrect": true,
+          "selected": true
+        },
+        {
+          "body": "Tăng tốc mọi truy vấn",
+          "id": "01990000-0000-7000-8000-000000000722",
+          "isCorrect": false,
+          "selected": false
+        }
+      ],
+      "points": 2,
+      "pointsAwarded": 2,
+      "type": "single"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eRàng buộc nào chặn trùng giá trị?\u003c/p\u003e",
+      "correct": true,
+      "explanationHtml": "\u003cp\u003eGiải thích: PRIMARY KEY và UNIQUE đều chặn trùng.\u003c/p\u003e",
+      "id": "01990000-0000-7000-8000-000000000712",
+      "options": [
+        {
+          "body": "PRIMARY KEY",
+          "id": "01990000-0000-7000-8000-000000000724",
+          "isCorrect": true,
+          "selected": true
+        },
+        {
+          "body": "CHECK",
+          "id": "01990000-0000-7000-8000-000000000725",
+          "isCorrect": false,
+          "selected": false
+        },
+        {
+          "body": "UNIQUE",
+          "id": "01990000-0000-7000-8000-000000000726",
+          "isCorrect": true,
+          "selected": true
+        }
+      ],
+      "points": 3,
+      "pointsAwarded": 3,
+      "type": "multi"
+    },
+    {
+      "bodyHtml": "\u003cp\u003eKhóa ngoại tham chiếu tới đâu?\u003c/p\u003e",
+      "correct": false,
+      "id": "01990000-0000-7000-8000-000000000713",
+      "note": "Khóa ngoại trỏ tới khóa của bảng khác.",
+      "options": [
+        {
+          "body": "Một cột bất kỳ",
+          "id": "01990000-0000-7000-8000-000000000727",
+          "isCorrect": false,
+          "selected": true
+        },
+        {
+          "body": "Khóa của bảng khác",
+          "id": "01990000-0000-7000-8000-000000000728",
+          "isCorrect": true,
+          "selected": false
+        }
+      ],
+      "points": 1,
+      "pointsAwarded": 0,
+      "type": "single"
+    }
+  ],
+  "review": {
+    "comment": "Câu khóa ngoại cần xem lại.",
+    "reviewedAt": "2026-10-05T08:00:00Z",
+    "reviewerName": "Lê Thu Hương",
+    "updated": false
+  },
+  "score": 5,
+  "startedAt": "2026-10-05T08:00:00Z",
+  "status": "submitted",
+  "submittedAt": "2026-10-05T08:00:00Z"
+}

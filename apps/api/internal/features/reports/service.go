@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"lms/api/internal/domain"
 	"lms/api/internal/features/classes"
+	"lms/api/internal/features/grading"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/learning"
 	"lms/api/internal/features/stages"
@@ -27,6 +29,12 @@ func (r ReadTx) Transact(ctx context.Context, fn func(tx db.Executor) error) err
 	return db.TransactWithOptions(ctx, r.DB, &sql.TxOptions{Isolation: sql.LevelRepeatableRead, ReadOnly: true}, fn)
 }
 
+// BacklogReader đọc tồn đọng chấm bài của từng giảng viên không bị khóa và tổng số mục quá hạn của toàn hệ thống;
+// grading.Service hiện thực. ex là transaction của dashboard để số tồn đọng cùng snapshot với phần còn lại.
+type BacklogReader interface {
+	Backlog(ctx context.Context, ex db.Executor, now time.Time) ([]grading.TeacherBacklog, int, error)
+}
+
 // Actor là người xem báo cáo.
 type Actor struct {
 	ID   uuid.UUID
@@ -42,6 +50,7 @@ type Service struct {
 	outdated  stages.OutdatedReader
 	audit     audit.Reader
 	users     identity.UserReader
+	backlog   BacklogReader
 	clock     clock.Clock
 	staleDays int
 }
@@ -55,6 +64,7 @@ type Deps struct {
 	Outdated  stages.OutdatedReader
 	Audit     audit.Reader
 	Users     identity.UserReader
+	Backlog   BacklogReader
 	Clock     clock.Clock
 	StaleDays int
 }
@@ -63,7 +73,7 @@ type Deps struct {
 func NewService(d Deps) *Service {
 	return &Service{
 		tx: d.Tx, reports: d.Reports, dashboard: d.Dashboard, progress: d.Progress, outdated: d.Outdated,
-		audit: d.Audit, users: d.Users, clock: d.Clock, staleDays: d.StaleDays,
+		audit: d.Audit, users: d.Users, backlog: d.Backlog, clock: d.Clock, staleDays: d.StaleDays,
 	}
 }
 
@@ -155,7 +165,7 @@ func (s *Service) MemberReport(ctx context.Context, actor Actor, classID, member
 }
 
 // Dashboard là trang tổng quan của admin. Danh sách khóa học dùng chặng cũ do stages đọc bằng kết nối riêng;
-// phần còn lại đọc trong một transaction chỉ đọc.
+// phần còn lại, gồm tồn đọng chấm bài, đọc trong một transaction chỉ đọc.
 func (s *Service) Dashboard(ctx context.Context, actor Actor) (Dashboard, error) {
 	if actor.Role != domain.RoleAdmin {
 		return Dashboard{}, domain.ErrForbidden
@@ -178,6 +188,9 @@ func (s *Service) Dashboard(ctx context.Context, actor Actor) (Dashboard, error)
 		hints.OutdatedCourses = out.Hints.OutdatedCourses
 		out.Hints = hints
 		if out.Classes, err = s.classRows(ctx, tx); err != nil {
+			return err
+		}
+		if out.GradingBacklog, out.OverdueCount, err = s.backlog.Backlog(ctx, tx, s.clock.Now()); err != nil {
 			return err
 		}
 		out.RecentActivity, err = s.recentActivity(ctx, tx)

@@ -1,9 +1,12 @@
-// Package stages quản lý chặng, phiên bản chặng và học liệu. Phiên bản đã phát hành là bất biến: mọi thay đổi học liệu
-// đi qua aggregate StageVersion (chặn ở domain) và câu SQL có điều kiện header còn draft (chặn ở repository).
+// Package stages quản lý chặng, phiên bản chặng, bài học và học liệu. Phiên bản đã phát hành là bất biến: mọi thay đổi
+// bài học và học liệu đi qua aggregate StageVersion (chặn ở domain) và câu SQL có điều kiện header còn draft (chặn ở
+// repository).
 package stages
 
 import (
+	"cmp"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -21,7 +24,6 @@ var (
 	ErrMarkdownRequired    = domain.ErrInvalid.WithMsg("Học liệu markdown bắt buộc có nội dung.")
 	ErrInvalidDuration     = domain.ErrInvalid.WithMsg("Thời lượng không hợp lệ.")
 	ErrInvalidLessonType   = domain.ErrInvalid.WithMsg("Loại học liệu không hợp lệ.")
-	ErrNoLessons           = domain.ErrInvalid.WithMsg("Chặng cần ít nhất một học liệu trước khi phát hành.")
 	ErrReorderMismatch     = domain.ErrInvalid.WithMsg("Danh sách sắp xếp không khớp.")
 	ErrPublishNotDraft     = domain.ErrInvalidTransition.WithMsg("Chỉ phát hành được bản nháp.")
 	ErrCloneNotPublished   = domain.ErrInvalidTransition.WithMsg("Chỉ nhân bản từ phiên bản đã phát hành.")
@@ -91,12 +93,14 @@ type LessonType string
 const (
 	LessonVideo    LessonType = "video"
 	LessonMarkdown LessonType = "markdown"
+	LessonQuiz     LessonType = "quiz"
+	LessonHomework LessonType = "homework"
 )
 
 // ParseLessonType kiểm loại học liệu từ client.
 func ParseLessonType(s string) (LessonType, error) {
 	switch t := LessonType(s); t {
-	case LessonVideo, LessonMarkdown:
+	case LessonVideo, LessonMarkdown, LessonQuiz, LessonHomework:
 		return t, nil
 	default:
 		return "", ErrInvalidLessonType
@@ -143,9 +147,11 @@ func (c MarkdownContent) Validate() error {
 	return nil
 }
 
-// Lesson là học liệu trong một phiên bản chặng; position bắt đầu từ 1 và liên tục.
+// Lesson là học liệu thuộc một bài học của phiên bản chặng; position là thứ tự phẳng trong cả phiên bản, bắt đầu từ 1
+// và liên tục theo (vị trí bài học, vị trí trong bài học).
 type Lesson struct {
 	id       uuid.UUID
+	unitID   uuid.UUID
 	key      domain.LessonKey
 	title    string
 	position int
@@ -154,13 +160,15 @@ type Lesson struct {
 }
 
 func (l *Lesson) ID() uuid.UUID          { return l.id }
+func (l *Lesson) UnitID() uuid.UUID      { return l.unitID }
 func (l *Lesson) Key() domain.LessonKey  { return l.key }
 func (l *Lesson) Title() string          { return l.title }
 func (l *Lesson) Position() int          { return l.position }
 func (l *Lesson) Required() bool         { return l.required }
 func (l *Lesson) Content() LessonContent { return l.content }
 
-// StageVersion là gốc aggregate của học liệu; chỉ bản draft được sửa.
+// StageVersion là gốc aggregate của bài học và học liệu; chỉ bản draft được sửa. Bất biến: units và lessons luôn xếp
+// theo position, lessons nhóm liền theo thứ tự bài học; renumber() khôi phục bất biến sau mọi thao tác.
 type StageVersion struct {
 	id           uuid.UUID
 	stageID      uuid.UUID
@@ -169,6 +177,7 @@ type StageVersion struct {
 	title        string
 	description  string
 	clonedFromID *uuid.UUID
+	units        []*Unit
 	lessons      []*Lesson
 	publishedAt  *time.Time
 	archivedAt   *time.Time
@@ -214,26 +223,30 @@ func (v *StageVersion) ensureMutable() error {
 	return nil
 }
 
-// AddLesson thêm học liệu vào cuối bản nháp. key rỗng thì sinh từ tiêu đề và thêm hậu tố cho khỏi trùng.
-func (v *StageVersion) AddLesson(id uuid.UUID, key domain.LessonKey, title string, content LessonContent, required bool) (*Lesson, error) {
+// AddLesson thêm học liệu vào cuối bài học unitID. key rỗng thì sinh từ tiêu đề và thêm hậu tố cho khỏi trùng.
+func (v *StageVersion) AddLesson(id, unitID uuid.UUID, key domain.LessonKey, title string, content LessonContent, required bool) (*Lesson, error) {
 	if err := v.ensureMutable(); err != nil {
 		return nil, err
+	}
+	if _, err := v.Unit(unitID); err != nil {
+		return nil, ErrLessonUnitRequired
 	}
 	title, err := validLesson(title, content)
 	if err != nil {
 		return nil, err
 	}
 	if key == "" {
-		key = v.uniqueKey(title)
+		key = uniqueKey(title, "hoc-lieu", v.hasKey)
 	} else if v.hasKey(key) {
 		return nil, ErrLessonKeyTaken
 	}
-	l := &Lesson{id: id, key: key, title: title, position: len(v.lessons) + 1, required: required, content: content}
+	l := &Lesson{id: id, unitID: unitID, key: key, title: title, required: required, content: content}
 	v.lessons = append(v.lessons, l)
+	v.renumber()
 	return l, nil
 }
 
-// UpdateLesson thay tiêu đề, nội dung và cờ bắt buộc; lesson_key và vị trí giữ nguyên.
+// UpdateLesson thay tiêu đề, nội dung và cờ bắt buộc; lesson_key và vị trí giữ nguyên (chuyển bài học bằng MoveLesson).
 func (v *StageVersion) UpdateLesson(id uuid.UUID, title string, content LessonContent, required bool) error {
 	if err := v.ensureMutable(); err != nil {
 		return err
@@ -258,76 +271,50 @@ func (v *StageVersion) RemoveLesson(id uuid.UUID) error {
 	if _, err := v.Lesson(id); err != nil {
 		return err
 	}
-	kept := v.lessons[:0:0]
-	for _, l := range v.lessons {
-		if l.id != id {
-			kept = append(kept, l)
-		}
-	}
-	v.lessons = kept
+	v.lessons = slices.DeleteFunc(v.lessons, func(l *Lesson) bool { return l.id == id })
 	v.renumber()
 	return nil
 }
 
-// Reorder sắp lại theo idsInOrder; danh sách phải là hoán vị đầy đủ của học liệu hiện có.
-func (v *StageVersion) Reorder(idsInOrder []uuid.UUID) error {
-	if err := v.ensureMutable(); err != nil {
-		return err
-	}
-	if len(idsInOrder) != len(v.lessons) {
-		return ErrReorderMismatch
-	}
-	byID := make(map[uuid.UUID]*Lesson, len(v.lessons))
-	for _, l := range v.lessons {
-		byID[l.id] = l
-	}
-	ordered := make([]*Lesson, 0, len(idsInOrder))
-	for _, id := range idsInOrder {
-		l, ok := byID[id]
-		if !ok {
-			return ErrReorderMismatch
-		}
-		delete(byID, id)
-		ordered = append(ordered, l)
-	}
-	v.lessons = ordered
-	v.renumber()
-	return nil
-}
-
-// RenderMarkdown điền HTML cho mọi học liệu markdown của bản nháp; gọi ngay trước Publish trong cùng giao dịch.
+// RenderMarkdown điền HTML cho mọi nguồn markdown của bản nháp (học liệu markdown, nội dung và giải thích câu hỏi,
+// đề bài homework); gọi ngay trước Publish trong cùng giao dịch.
 func (v *StageVersion) RenderMarkdown(render MarkdownRenderer) error {
 	if err := v.ensureMutable(); err != nil {
 		return err
 	}
 	for _, l := range v.lessons {
-		mc, ok := l.content.(MarkdownContent)
-		if !ok {
-			continue
-		}
-		html, err := render.Render(mc.Source)
+		c, err := renderContent(l.content, render)
 		if err != nil {
 			return err
 		}
-		mc.HTML = &html
-		l.content = mc
+		l.content = c
 	}
 	return nil
 }
 
-// Publish chỉ đổi trạng thái và thời điểm phát hành; học liệu phải hợp lệ và markdown đã render.
+// Publish chỉ đổi trạng thái và thời điểm phát hành. Kiểm theo thứ tự của prototype: có bài học, không bài học nào
+// rỗng, rồi học liệu hợp lệ, đủ nội dung (quiz có câu hỏi và đáp án đúng, homework có đề bài và rubric) và markdown
+// đã render.
 func (v *StageVersion) Publish(now time.Time) error {
 	if v.status.Transition(domain.VersionPublished) != nil {
 		return ErrPublishNotDraft
 	}
-	if len(v.lessons) == 0 {
-		return ErrNoLessons
+	if len(v.units) == 0 {
+		return ErrNoUnits
+	}
+	for _, u := range v.units {
+		if len(v.LessonsOf(u.id)) == 0 {
+			return ErrEmptyUnit(u.title)
+		}
 	}
 	for _, l := range v.lessons {
 		if err := l.content.Validate(); err != nil {
 			return err
 		}
-		if mc, ok := l.content.(MarkdownContent); ok && mc.HTML == nil {
+		if err := publishBlocker(l); err != nil {
+			return err
+		}
+		if !rendered(l.content) {
 			return ErrNotRendered
 		}
 	}
@@ -344,19 +331,28 @@ func (v *StageVersion) Archive(now time.Time) error {
 	return nil
 }
 
-// CloneAsDraft sao chép sâu bản đã phát hành thành bản nháp mới: học liệu có id mới nhưng giữ lesson_key, nội dung,
-// tham chiếu media (không copy file), cờ bắt buộc và thứ tự.
-func (v *StageVersion) CloneAsDraft(newID uuid.UUID, nextNo domain.VersionNo, by uuid.UUID, lessonIDs func() uuid.UUID) (*StageVersion, error) {
+// CloneAsDraft sao chép sâu bản đã phát hành thành bản nháp mới: bài học, học liệu, câu hỏi, phương án và tiêu chí có
+// id mới nhưng giữ unit_key, lesson_key, question_key, nội dung, tham chiếu media (không copy file), cờ bắt buộc và
+// thứ tự; học liệu trỏ sang bài học mới.
+func (v *StageVersion) CloneAsDraft(newID uuid.UUID, nextNo domain.VersionNo, by uuid.UUID, newIDs func() uuid.UUID) (*StageVersion, error) {
 	if v.status != domain.VersionPublished {
 		return nil, ErrCloneNotPublished
 	}
 	from := v.id
 	c := NewDraftVersion(newID, v.stageID, nextNo, v.title, v.description, by)
 	c.clonedFromID = &from
+	unitIDs := make(map[uuid.UUID]uuid.UUID, len(v.units))
+	c.units = make([]*Unit, 0, len(v.units))
+	for _, u := range v.units {
+		nu := &Unit{id: newIDs(), key: u.key, title: u.title, position: u.position}
+		unitIDs[u.id] = nu.id
+		c.units = append(c.units, nu)
+	}
 	c.lessons = make([]*Lesson, 0, len(v.lessons))
 	for _, l := range v.lessons {
 		c.lessons = append(c.lessons, &Lesson{
-			id: lessonIDs(), key: l.key, title: l.title, position: l.position, required: l.required, content: copyContent(l.content),
+			id: newIDs(), unitID: unitIDs[l.unitID], key: l.key, title: l.title, position: l.position, required: l.required,
+			content: cloneContent(l.content, newIDs),
 		})
 	}
 	return c, nil
@@ -370,7 +366,15 @@ func (v *StageVersion) CanDelete() error {
 	return nil
 }
 
+// renumber khôi phục bất biến: bài học đánh số 1..m theo thứ tự hiện có, học liệu xếp ổn định theo vị trí bài học
+// (giữ thứ tự tương đối trong bài học) rồi đánh số phẳng 1..n.
 func (v *StageVersion) renumber() {
+	unitPos := make(map[uuid.UUID]int, len(v.units))
+	for i, u := range v.units {
+		u.position = i + 1
+		unitPos[u.id] = u.position
+	}
+	slices.SortStableFunc(v.lessons, func(a, b *Lesson) int { return cmp.Compare(unitPos[a.unitID], unitPos[b.unitID]) })
 	for i, l := range v.lessons {
 		l.position = i + 1
 	}
@@ -385,14 +389,15 @@ func (v *StageVersion) hasKey(key domain.LessonKey) bool {
 	return false
 }
 
-// uniqueKey sinh lesson_key từ tiêu đề; tiêu đề không ra slug hợp lệ thì dùng "hoc-lieu".
-func (v *StageVersion) uniqueKey(title string) domain.LessonKey {
+// uniqueKey sinh lesson_key/unit_key từ tiêu đề; tiêu đề không ra slug hợp lệ thì dùng fallback. taken báo key đã
+// có trong phiên bản để thêm hậu tố -2, -3…
+func uniqueKey(title string, fallback domain.LessonKey, taken func(domain.LessonKey) bool) domain.LessonKey {
 	base, err := domain.ParseLessonKey(domain.Slugify(title))
 	if err != nil {
-		base = "hoc-lieu"
+		base = fallback
 	}
 	key := base
-	for n := 2; v.hasKey(key); n++ {
+	for n := 2; taken(key); n++ {
 		suffix := "-" + strconv.Itoa(n)
 		head := string(base)
 		if len(head)+len(suffix) > 40 {
@@ -417,21 +422,120 @@ func validLesson(title string, content LessonContent) (string, error) {
 	return title, nil
 }
 
-func copyContent(c LessonContent) LessonContent {
+// copyContent sao chép sâu nội dung, giữ nguyên id con.
+func copyContent(c LessonContent) LessonContent { return cloneContent(c, nil) }
+
+// cloneContent sao chép sâu nội dung; newID khác nil thì câu hỏi, phương án và tiêu chí nhận id mới.
+func cloneContent(c LessonContent, newID func() uuid.UUID) LessonContent {
 	switch t := c.(type) {
 	case VideoContent:
-		if t.DurationSeconds != nil {
-			d := *t.DurationSeconds
-			t.DurationSeconds = &d
-		}
+		t.DurationSeconds = copyPtr(t.DurationSeconds)
 		return t
 	case MarkdownContent:
-		if t.HTML != nil {
-			h := *t.HTML
-			t.HTML = &h
-		}
+		t.HTML = copyPtr(t.HTML)
+		return t
+	case QuizContent:
+		t.MaxAttempts, t.TimeLimit, t.PassPercent = copyPtr(t.MaxAttempts), copyPtr(t.TimeLimit), copyPtr(t.PassPercent)
+		t.Questions = copyQuestions(t.Questions, newID)
+		return t
+	case HomeworkContent:
+		t.BriefHTML = copyPtr(t.BriefHTML)
+		t.Criteria = copyCriteria(t.Criteria, newID)
+		t.Attachments = slices.Clone(t.Attachments)
 		return t
 	default:
 		return c
 	}
+}
+
+// renderContent trả bản sao nội dung đã render mọi nguồn markdown; nội dung không có markdown giữ nguyên.
+func renderContent(c LessonContent, render MarkdownRenderer) (LessonContent, error) {
+	var err error
+	one := func(src string) *string {
+		if err != nil {
+			return nil
+		}
+		var html string
+		html, err = render.Render(src)
+		return &html
+	}
+	switch t := c.(type) {
+	case MarkdownContent:
+		t.HTML = one(t.Source)
+		return t, err
+	case QuizContent:
+		t.Questions = copyQuestions(t.Questions, nil)
+		for _, q := range t.Questions {
+			q.BodyHTML, q.ExplanationHTML = one(q.BodySource), one(q.ExplanationSource)
+		}
+		return t, err
+	case HomeworkContent:
+		t.BriefHTML = one(t.BriefSource)
+		return t, err
+	default:
+		return c, nil
+	}
+}
+
+// rendered báo mọi nguồn markdown của nội dung đã có HTML.
+func rendered(c LessonContent) bool {
+	switch t := c.(type) {
+	case MarkdownContent:
+		return t.HTML != nil
+	case QuizContent:
+		return !slices.ContainsFunc(t.Questions, func(q *Question) bool { return q.BodyHTML == nil || q.ExplanationHTML == nil })
+	case HomeworkContent:
+		return t.BriefHTML != nil
+	default:
+		return true
+	}
+}
+
+// renderedHTML trả mọi HTML đã render của nội dung, để kiểm ảnh và ghi lesson_media.
+func renderedHTML(c LessonContent) []string {
+	var out []string
+	add := func(h *string) {
+		if h != nil {
+			out = append(out, *h)
+		}
+	}
+	switch t := c.(type) {
+	case MarkdownContent:
+		add(t.HTML)
+	case QuizContent:
+		for _, q := range t.Questions {
+			add(q.BodyHTML)
+			add(q.ExplanationHTML)
+		}
+	case HomeworkContent:
+		add(t.BriefHTML)
+	}
+	return out
+}
+
+// publishBlocker trả lý do học liệu chưa đủ nội dung để phát hành, theo lessonBlockers của prototype.
+func publishBlocker(l *Lesson) error {
+	switch t := l.content.(type) {
+	case QuizContent:
+		if len(t.Questions) == 0 {
+			return errNoQuestions(l.title)
+		}
+		bad := 0
+		for _, q := range t.Questions {
+			if !q.hasCorrect() {
+				bad++
+			}
+		}
+		if bad > 0 {
+			return errUnansweredQuestions(l.title, bad)
+		}
+	case HomeworkContent:
+		if strings.TrimSpace(t.BriefSource) == "" {
+			return errNoBrief(l.title)
+		}
+		if len(t.Criteria) == 0 {
+			return errNoCriteria(l.title)
+		}
+	}
+	return nil
 }

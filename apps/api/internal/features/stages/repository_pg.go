@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -22,8 +23,8 @@ import (
 // PGStageRepo là StageRepo trên PostgreSQL.
 type PGStageRepo struct{}
 
-// PGStageVersionRepo là StageVersionRepo trên PostgreSQL. Mọi câu ghi lên lessons/lesson_media mang điều kiện header
-// còn draft ngay trong SQL và chạy qua db.ExecAffectOne: DB không có trigger nên đây là lớp chặn cuối.
+// PGStageVersionRepo là StageVersionRepo trên PostgreSQL. Mọi câu ghi lên stage_units/lessons/lesson_media mang điều kiện
+// header còn draft ngay trong SQL và chạy qua db.ExecAffectOne: DB không có trigger nên đây là lớp chặn cuối.
 type PGStageVersionRepo struct{}
 
 var (
@@ -166,8 +167,16 @@ type versionRecord struct {
 
 const versionColumns = `id, stage_id, version_no, status, title, description, cloned_from_id, published_at, archived_at, created_by`
 
+type unitRecord struct {
+	ID       uuid.UUID `db:"id"`
+	UnitKey  string    `db:"unit_key"`
+	Title    string    `db:"title"`
+	Position int       `db:"position"`
+}
+
 type lessonRecord struct {
 	ID              uuid.UUID  `db:"id"`
+	UnitID          uuid.UUID  `db:"unit_id"`
 	LessonKey       string     `db:"lesson_key"`
 	Position        int        `db:"position"`
 	Title           string     `db:"title"`
@@ -180,9 +189,10 @@ type lessonRecord struct {
 	VideoFileName   *string    `db:"video_file_name"`
 }
 
-// toLesson dựng LessonContent theo cột type: đây là điểm mở duy nhất khi thêm loại học liệu mới.
-func (r lessonRecord) toLesson() (*Lesson, error) {
-	l := &Lesson{id: r.ID, key: domain.LessonKey(r.LessonKey), title: r.Title, position: r.Position, required: r.Required}
+// toLesson dựng LessonContent theo cột type: đây là điểm mở duy nhất khi thêm loại học liệu mới. Quiz và homework lấy
+// nội dung từ bảng con đã đọc theo lô.
+func (r lessonRecord) toLesson(contents lessonContents) (*Lesson, error) {
+	l := &Lesson{id: r.ID, unitID: r.UnitID, key: domain.LessonKey(r.LessonKey), title: r.Title, position: r.Position, required: r.Required}
 	switch LessonType(r.Type) {
 	case LessonVideo:
 		if r.VideoMediaID == nil {
@@ -198,13 +208,25 @@ func (r lessonRecord) toLesson() (*Lesson, error) {
 			return nil, fmt.Errorf("stages: học liệu markdown %s thiếu markdown_source", r.ID)
 		}
 		l.content = MarkdownContent{Source: *r.MarkdownSource, HTML: r.MarkdownHTML}
+	case LessonQuiz:
+		c, ok := contents.quiz[r.ID]
+		if !ok {
+			return nil, fmt.Errorf("stages: học liệu quiz %s thiếu quiz_settings", r.ID)
+		}
+		l.content = c
+	case LessonHomework:
+		c, ok := contents.homework[r.ID]
+		if !ok {
+			return nil, fmt.Errorf("stages: học liệu homework %s thiếu homework_settings", r.ID)
+		}
+		l.content = c
 	default:
 		return nil, fmt.Errorf("stages: loại học liệu lạ %q", r.Type)
 	}
 	return l, nil
 }
 
-// lessonValues tách nội dung thành các cột của bảng lessons.
+// lessonValues tách nội dung thành các cột của bảng lessons; quiz và homework chỉ có cột type, nội dung ở bảng con.
 type lessonValues struct {
 	typ             string
 	markdownSource  *string
@@ -221,20 +243,11 @@ func valuesOf(l *Lesson) (lessonValues, error) {
 	case MarkdownContent:
 		src := c.Source
 		return lessonValues{typ: string(LessonMarkdown), markdownSource: &src, markdownHTML: c.HTML}, nil
+	case QuizContent, HomeworkContent:
+		return lessonValues{typ: string(c.Type())}, nil
 	default:
 		return lessonValues{}, fmt.Errorf("stages: loại nội dung học liệu lạ %T", l.content)
 	}
-}
-
-// mediaIDs là các media học liệu tham chiếu (không trùng): video và mọi ảnh nội bộ trong HTML đã render.
-func (v lessonValues) mediaIDs() []uuid.UUID {
-	if v.videoMediaID != nil {
-		return []uuid.UUID{*v.videoMediaID}
-	}
-	if v.markdownHTML != nil {
-		return mediaIDsInHTML(*v.markdownHTML)
-	}
-	return nil
 }
 
 func (v lessonValues) equal(o lessonValues) bool {
@@ -275,6 +288,10 @@ func (PGStageVersionRepo) load(ctx context.Context, ex db.Executor, id uuid.UUID
 	if err != nil {
 		return nil, fmt.Errorf("stages: phiên bản %s: %w", rec.ID, err)
 	}
+	units, err := loadUnits(ctx, ex, id)
+	if err != nil {
+		return nil, err
+	}
 	lessons, err := loadLessons(ctx, ex, id)
 	if err != nil {
 		return nil, err
@@ -282,22 +299,41 @@ func (PGStageVersionRepo) load(ctx context.Context, ex db.Executor, id uuid.UUID
 	return &StageVersion{
 		id: rec.ID, stageID: rec.StageID, versionNo: domain.VersionNo(rec.VersionNo), status: status,
 		title: rec.Title, description: rec.Description, clonedFromID: rec.ClonedFromID,
-		lessons: lessons, publishedAt: rec.PublishedAt, archivedAt: rec.ArchivedAt, createdBy: rec.CreatedBy,
+		units: units, lessons: lessons, publishedAt: rec.PublishedAt, archivedAt: rec.ArchivedAt, createdBy: rec.CreatedBy,
 	}, nil
 }
 
+func loadUnits(ctx context.Context, ex db.Executor, versionID uuid.UUID) ([]*Unit, error) {
+	var recs []unitRecord
+	err := sqlx.SelectContext(ctx, ex, &recs, `SELECT id, unit_key, title, position FROM stage_units
+		WHERE stage_version_id = $1 ORDER BY position`, versionID)
+	if err != nil {
+		return nil, fmt.Errorf("stages: đọc bài học: %w", err)
+	}
+	out := make([]*Unit, 0, len(recs))
+	for _, rec := range recs {
+		out = append(out, &Unit{id: rec.ID, key: domain.LessonKey(rec.UnitKey), title: rec.Title, position: rec.Position})
+	}
+	return out, nil
+}
+
+// loadLessons đọc học liệu theo position phẳng; bất biến aggregate bảo đảm thứ tự này cũng nhóm theo bài học.
 func loadLessons(ctx context.Context, ex db.Executor, versionID uuid.UUID) ([]*Lesson, error) {
 	var recs []lessonRecord
-	err := sqlx.SelectContext(ctx, ex, &recs, `SELECT l.id, l.lesson_key, l.position, l.title, l.type, l.required,
+	err := sqlx.SelectContext(ctx, ex, &recs, `SELECT l.id, l.unit_id, l.lesson_key, l.position, l.title, l.type, l.required,
 		l.markdown_source, l.markdown_html, l.video_media_id, l.duration_seconds, mf.original_name AS video_file_name
 		FROM lessons l LEFT JOIN media_files mf ON mf.id = l.video_media_id
 		WHERE l.stage_version_id = $1 ORDER BY l.position`, versionID)
 	if err != nil {
 		return nil, fmt.Errorf("stages: đọc học liệu: %w", err)
 	}
+	contents, err := loadContents(ctx, ex, versionID, recs)
+	if err != nil {
+		return nil, err
+	}
 	out := make([]*Lesson, 0, len(recs))
 	for _, rec := range recs {
-		l, err := rec.toLesson()
+		l, err := rec.toLesson(contents)
 		if err != nil {
 			return nil, err
 		}
@@ -306,7 +342,7 @@ func loadLessons(ctx context.Context, ex db.Executor, versionID uuid.UUID) ([]*L
 	return out, nil
 }
 
-// Create chèn header draft rồi học liệu. Bản nháp thứ hai của cùng chặng chạm partial unique index
+// Create chèn header draft, bài học (stage_units) rồi học liệu cùng bảng con quiz/homework. Bản nháp thứ hai của cùng chặng chạm partial unique index
 // uq_stage_versions_one_draft; ON CONFLICT DO NOTHING giữ giao dịch dùng được để đọc bản nháp đang có.
 func (r PGStageVersionRepo) Create(ctx context.Context, ex db.Executor, v *StageVersion) error {
 	if v.status != domain.VersionDraft {
@@ -332,6 +368,11 @@ func (r PGStageVersionRepo) Create(ctx context.Context, ex db.Executor, v *Stage
 		}
 		return &ErrDraftExists{DraftID: d.ID, No: d.VersionNo}
 	}
+	for _, u := range v.units {
+		if err := insertUnit(ctx, ex, v.id, u); err != nil {
+			return err
+		}
+	}
 	for _, l := range v.lessons {
 		vals, err := valuesOf(l)
 		if err != nil {
@@ -340,18 +381,29 @@ func (r PGStageVersionRepo) Create(ctx context.Context, ex db.Executor, v *Stage
 		if err := insertLesson(ctx, ex, v.id, l, vals); err != nil {
 			return err
 		}
-		if err := replaceLessonMedia(ctx, ex, l.id, vals.mediaIDs()); err != nil {
+		if err := saveContent(ctx, ex, l, nil); err != nil {
+			return err
+		}
+		if err := replaceLessonMedia(ctx, ex, l.id, lessonMediaIDs(l.content)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// SaveDraft so học liệu trong DB với aggregate: xóa, sửa, thêm (kể cả markdown_html, duration_seconds), ghi lại
-// lesson_media của từng học liệu thay đổi, rồi mới UPDATE header (không đổi status). Mọi câu đều có điều kiện draft.
+// SaveDraft so bài học và học liệu trong DB với aggregate rồi mới UPDATE header (không đổi status). Thứ tự ghi: xóa
+// học liệu bị bỏ (nhả lesson_key cho học liệu thêm lại), thêm/sửa bài học, thêm/sửa học liệu (kể cả unit_id,
+// markdown_html, duration_seconds), diff bảng con quiz/homework, ghi lại lesson_media của học liệu thay đổi, cuối cùng
+// xóa bài học bị bỏ khi không còn học liệu nào trỏ tới. Ràng buộc vị trí hoãn tới commit để hoán đổi không vi phạm
+// UNIQUE giữa chừng. Mọi câu đều có điều kiện draft.
 func (r PGStageVersionRepo) SaveDraft(ctx context.Context, ex db.Executor, v *StageVersion) error {
-	if _, err := ex.ExecContext(ctx, `SET CONSTRAINTS `+pgerr.UqLessonsVersionPosition+` DEFERRED`); err != nil {
+	if _, err := ex.ExecContext(ctx, `SET CONSTRAINTS `+pgerr.UqStageUnitsVersionPosition+`, `+
+		pgerr.UqLessonsVersionPosition+`, `+contentPositionConstraints+` DEFERRED`); err != nil {
 		return fmt.Errorf("stages: hoãn kiểm tra vị trí: %w", err)
+	}
+	currentUnits, err := loadUnits(ctx, ex, v.id)
+	if err != nil {
+		return err
 	}
 	current, err := loadLessons(ctx, ex, v.id)
 	if err != nil {
@@ -372,32 +424,48 @@ func (r PGStageVersionRepo) SaveDraft(ctx context.Context, ex db.Executor, v *St
 			}
 		}
 	}
+	if err := saveUnits(ctx, ex, v, currentUnits); err != nil {
+		return err
+	}
 	for _, l := range v.lessons {
 		vals, err := valuesOf(l)
 		if err != nil {
 			return err
 		}
 		old, ok := existing[l.id]
-		switch {
-		case !ok:
+		var oldContent LessonContent
+		rowChanged := !ok
+		if !ok {
 			if err := insertLesson(ctx, ex, v.id, l, vals); err != nil {
 				return err
 			}
-		default:
+		} else {
+			oldContent = old.content
 			oldVals, err := valuesOf(old)
 			if err != nil {
 				return err
 			}
-			if old.title == l.title && old.position == l.position && old.required == l.required && oldVals.equal(vals) {
-				continue
-			}
-			if err := updateLesson(ctx, ex, v.id, l, vals); err != nil {
-				return err
+			rowChanged = old.unitID != l.unitID || old.title != l.title || old.position != l.position ||
+				old.required != l.required || !oldVals.equal(vals)
+			if rowChanged {
+				if err := updateLesson(ctx, ex, v.id, l, vals); err != nil {
+					return err
+				}
 			}
 		}
-		if err := replaceLessonMedia(ctx, ex, l.id, vals.mediaIDs()); err != nil {
+		if err := saveContent(ctx, ex, l, oldContent); err != nil {
 			return err
 		}
+		media := lessonMediaIDs(l.content)
+		if !rowChanged && slices.Equal(media, lessonMediaIDs(oldContent)) {
+			continue
+		}
+		if err := replaceLessonMedia(ctx, ex, l.id, media); err != nil {
+			return err
+		}
+	}
+	if err := deleteRemovedUnits(ctx, ex, v, currentUnits); err != nil {
+		return err
 	}
 	err = db.ExecAffectOne(ctx, ex,
 		`UPDATE stage_versions SET title = $2, description = $3, updated_at = now() WHERE id = $1 AND status = 'draft'`,
@@ -417,29 +485,96 @@ func immutableIfNoRows(err error, what string) error {
 }
 
 func lessonWriteError(err error, what string) error {
-	if code, c := constraintOf(err); code == pgerrcode.UniqueViolation && c == pgerr.UqLessonsVersionKey {
-		return ErrLessonKeyTaken
+	if code, c := constraintOf(err); code == pgerrcode.UniqueViolation {
+		switch c {
+		case pgerr.UqLessonsVersionKey:
+			return ErrLessonKeyTaken
+		case pgerr.UqStageUnitsVersionTitle:
+			return ErrUnitTitleTaken
+		case pgerr.UqQuestionsLessonKey:
+			return ErrQuestionKeyTaken
+		}
 	}
 	return fmt.Errorf("stages: %s: %w", what, pgerr.Map(err))
 }
 
-func insertLesson(ctx context.Context, ex db.Executor, versionID uuid.UUID, l *Lesson, vals lessonValues) error {
-	err := db.ExecAffectOne(ctx, ex, `INSERT INTO lessons (id, stage_version_id, lesson_key, position, title, type, required,
-		markdown_source, markdown_html, video_media_id, duration_seconds)
-		SELECT $1::uuid, sv.id, $3::text, $4::int, $5::text, $6::text, $7::boolean, $8::text, $9::text, $10::uuid, $11::int
+// saveUnits thêm bài học mới và sửa tên hoặc vị trí bài học đã có; bài học bị bỏ xóa sau cùng (deleteRemovedUnits).
+func saveUnits(ctx context.Context, ex db.Executor, v *StageVersion, current []*Unit) error {
+	existing := make(map[uuid.UUID]*Unit, len(current))
+	for _, u := range current {
+		existing[u.id] = u
+	}
+	for _, u := range v.units {
+		old, ok := existing[u.id]
+		switch {
+		case !ok:
+			if err := insertUnit(ctx, ex, v.id, u); err != nil {
+				return err
+			}
+		case old.title != u.title || old.position != u.position:
+			if err := updateUnit(ctx, ex, v.id, u); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// deleteRemovedUnits xóa bài học không còn trong aggregate. Học liệu của chúng đã bị xóa ở bước trước nên CASCADE
+// của fk_lessons_unit không xóa thêm gì ngoài ý aggregate.
+func deleteRemovedUnits(ctx context.Context, ex db.Executor, v *StageVersion, current []*Unit) error {
+	wanted := make(map[uuid.UUID]bool, len(v.units))
+	for _, u := range v.units {
+		wanted[u.id] = true
+	}
+	for _, u := range current {
+		if wanted[u.id] {
+			continue
+		}
+		err := db.ExecAffectOne(ctx, ex, `DELETE FROM stage_units su USING stage_versions sv
+			WHERE su.id = $1 AND su.stage_version_id = sv.id AND sv.id = $2 AND sv.status = 'draft'`, u.id, v.id)
+		if err := immutableIfNoRows(err, "xóa bài học"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func insertUnit(ctx context.Context, ex db.Executor, versionID uuid.UUID, u *Unit) error {
+	err := db.ExecAffectOne(ctx, ex, `INSERT INTO stage_units (id, stage_version_id, unit_key, title, position)
+		SELECT $1::uuid, sv.id, $3::text, $4::text, $5::int
 		FROM stage_versions sv WHERE sv.id = $2 AND sv.status = 'draft'`,
-		l.id, versionID, l.key.String(), l.position, l.title, vals.typ, l.required,
+		u.id, versionID, u.key.String(), u.title, u.position)
+	return immutableIfNoRows(err, "thêm bài học")
+}
+
+func updateUnit(ctx context.Context, ex db.Executor, versionID uuid.UUID, u *Unit) error {
+	err := db.ExecAffectOne(ctx, ex, `UPDATE stage_units su SET title = $3, position = $4, updated_at = now()
+		FROM stage_versions sv
+		WHERE su.id = $1 AND su.stage_version_id = sv.id AND sv.id = $2 AND sv.status = 'draft'`,
+		u.id, versionID, u.title, u.position)
+	return immutableIfNoRows(err, "sửa bài học")
+}
+
+func insertLesson(ctx context.Context, ex db.Executor, versionID uuid.UUID, l *Lesson, vals lessonValues) error {
+	err := db.ExecAffectOne(ctx, ex, `INSERT INTO lessons (id, stage_version_id, unit_id, lesson_key, position, title, type,
+		required, markdown_source, markdown_html, video_media_id, duration_seconds)
+		SELECT $1::uuid, sv.id, $3::uuid, $4::text, $5::int, $6::text, $7::text, $8::boolean, $9::text, $10::text,
+			$11::uuid, $12::int
+		FROM stage_versions sv WHERE sv.id = $2 AND sv.status = 'draft'`,
+		l.id, versionID, l.unitID, l.key.String(), l.position, l.title, vals.typ, l.required,
 		vals.markdownSource, vals.markdownHTML, vals.videoMediaID, vals.durationSeconds)
 	return immutableIfNoRows(err, "thêm học liệu")
 }
 
 func updateLesson(ctx context.Context, ex db.Executor, versionID uuid.UUID, l *Lesson, vals lessonValues) error {
 	err := db.ExecAffectOne(ctx, ex, `UPDATE lessons l SET position = $3, title = $4, type = $5, required = $6,
-		markdown_source = $7, markdown_html = $8, video_media_id = $9, duration_seconds = $10, updated_at = now()
+		markdown_source = $7, markdown_html = $8, video_media_id = $9, duration_seconds = $10, unit_id = $11,
+		updated_at = now()
 		FROM stage_versions sv
 		WHERE l.id = $1 AND l.stage_version_id = sv.id AND sv.id = $2 AND sv.status = 'draft'`,
 		l.id, versionID, l.position, l.title, vals.typ, l.required,
-		vals.markdownSource, vals.markdownHTML, vals.videoMediaID, vals.durationSeconds)
+		vals.markdownSource, vals.markdownHTML, vals.videoMediaID, vals.durationSeconds, l.unitID)
 	return immutableIfNoRows(err, "sửa học liệu")
 }
 
@@ -479,7 +614,8 @@ func replaceLessonMedia(ctx context.Context, ex db.Executor, lessonID uuid.UUID,
 	return nil
 }
 
-// TransitionStatus chỉ UPDATE header với WHERE status=from; phát hành còn đòi mọi học liệu markdown đã render.
+// TransitionStatus chỉ UPDATE header với WHERE status=from; phát hành còn đòi mọi nguồn markdown (học liệu markdown,
+// câu hỏi, giải thích, đề homework) đã render.
 func (PGStageVersionRepo) TransitionStatus(ctx context.Context, ex db.Executor, id uuid.UUID, from, to domain.VersionStatus, publishedAt *time.Time) error {
 	if !from.CanTransitionTo(to) {
 		return domain.ErrInvalidTransition
@@ -491,7 +627,11 @@ func (PGStageVersionRepo) TransitionStatus(ctx context.Context, ex db.Executor, 
 		archived_at = CASE WHEN $3::text = 'archived' THEN now() ELSE archived_at END, updated_at = now()
 		WHERE id = $1 AND status = $2::text`
 	if to == domain.VersionPublished {
-		q += ` AND NOT EXISTS (SELECT 1 FROM lessons WHERE stage_version_id = $1 AND type = 'markdown' AND markdown_html IS NULL)`
+		q += ` AND NOT EXISTS (SELECT 1 FROM lessons WHERE stage_version_id = $1 AND type = 'markdown' AND markdown_html IS NULL)
+			AND NOT EXISTS (SELECT 1 FROM questions q JOIN lessons l ON l.id = q.lesson_id
+				WHERE l.stage_version_id = $1 AND (q.body_html IS NULL OR q.explanation_html IS NULL))
+			AND NOT EXISTS (SELECT 1 FROM homework_settings hs JOIN lessons l ON l.id = hs.lesson_id
+				WHERE l.stage_version_id = $1 AND hs.brief_html IS NULL)`
 	}
 	err := db.ExecAffectOne(ctx, ex, q, id, from.String(), to.String(), publishedAt)
 	switch {
@@ -508,7 +648,7 @@ func (PGStageVersionRepo) TransitionStatus(ctx context.Context, ex db.Executor, 
 	}
 }
 
-// Delete chỉ xóa header draft (CASCADE lessons, lesson_media); bản không nháp → ErrVersionImmutable.
+// Delete chỉ xóa header draft (CASCADE lessons, lesson_media, bảng con quiz/homework); bản không nháp → ErrVersionImmutable.
 func (PGStageVersionRepo) Delete(ctx context.Context, ex db.Executor, id uuid.UUID) error {
 	err := db.ExecAffectOne(ctx, ex, `DELETE FROM stage_versions WHERE id = $1 AND status = 'draft'`, id)
 	switch {

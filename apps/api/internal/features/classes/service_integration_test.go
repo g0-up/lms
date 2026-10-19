@@ -780,7 +780,9 @@ func TestCreateAndUpdateClass(t *testing.T) {
 		t.Fatalf("audit class.created = %d", n)
 	}
 
-	// Đổi phiên bản khi còn nháp: chỉ sang bản đã phát hành, có audit.
+	// Đổi phiên bản khi còn nháp: chỉ sang bản đã phát hành, có audit; hạn nộp của lớp bị xóa, lớp khác giữ nguyên.
+	e.exec(`INSERT INTO class_lesson_deadlines (class_id, lesson_id, due_at, set_by) VALUES
+		($1, $3, now() + interval '7 days', $4), ($2, $3, now() + interval '7 days', $4)`, id, basic01ID, lessonID, adminID)
 	patch := func(field, value string) string {
 		b, _ := json.Marshal(map[string]string{field: value})
 		return string(b)
@@ -797,6 +799,12 @@ func TestCreateAndUpdateClass(t *testing.T) {
 		AND before->>'courseVersionId' = $3 AND after->>'courseVersionId' = $4`,
 		audit.ActionClassCourseVersionChanged, id, v1, basicV3ID.String()); n != 1 {
 		t.Fatalf("audit course_version_changed = %d", n)
+	}
+	if n := e.count(`SELECT count(*) FROM class_lesson_deadlines WHERE class_id = $1`, id); n != 0 {
+		t.Fatalf("hạn nộp còn %d sau khi đổi phiên bản", n)
+	}
+	if n := e.count(`SELECT count(*) FROM class_lesson_deadlines WHERE class_id = $1`, basic01ID); n != 1 {
+		t.Fatalf("hạn nộp của lớp khác = %d", n)
 	}
 	e.expectError(http.MethodPatch, classPath(id, ""), patch("endDate", "2026-10-01"), 422, "VALIDATION_FAILED", "Ngày kết thúc phải sau ngày bắt đầu.")
 	if err := json.Unmarshal(e.must(http.MethodPatch, classPath(id, ""), `{"name":"Lớp 04 mới","endDate":"2027-04-01","teacherId":"`+baoID.String()+`"}`, 200), &d); err != nil {

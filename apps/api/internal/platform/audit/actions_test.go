@@ -19,6 +19,9 @@ var contractActions = []string{
 	"class.activated", "class.ended", "class.member_invited", "class.invitation_resent", "class.member_dropped",
 	"user.disabled", "user.enabled",
 	"stage.created", "course.created", "class.created",
+	"class.homework_deadline_changed", "homework.graded", "homework.grade_updated",
+	"quiz_attempt.confirmed", "quiz_attempt.commented", "quiz_attempt.review_updated",
+	"stage_review.saved", "quiz.attempts_granted",
 }
 
 // TestActionsMatchContract đọc mọi hằng chuỗi trong actions.go bằng go/parser để hằng mới không thể lọt qua.

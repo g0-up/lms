@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="vi">
+<body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+  <p>Chào {{.Name}},</p>
+  <p>{{if .Updated}}Giảng viên đã cập nhật điểm{{else}}Giảng viên đã chấm{{end}} bài <strong>{{.LessonTitle}}</strong> của bạn trong lớp <strong>{{.ClassName}}</strong> ({{.ClassCode}}).</p>
+  <p>Tổng điểm: <strong>{{.TotalPoints}}/{{.MaxPoints}}</strong> · Kết quả: <strong>{{.ResultLabel}}</strong></p>
+  <p>Nhận xét của giảng viên:</p>
+  <p style="white-space: pre-line; padding: 8px 12px; background: #f3f4f6; border-radius: 6px;">{{.Comment}}</p>
+  <p><a href="{{.ResultURL}}" style="display: inline-block; padding: 10px 16px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Xem kết quả chi tiết</a></p>
+  <p style="color: #6b7280;">{{.AppName}}</p>
+</body>
+</html>

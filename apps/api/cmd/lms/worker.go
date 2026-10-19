@@ -9,6 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"lms/api/internal/app"
+	"lms/api/internal/features/grading"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/mailer"
 	"lms/api/internal/platform/clock"
@@ -17,7 +19,7 @@ import (
 
 var workerCmd = &cobra.Command{
 	Use:   "worker",
-	Short: "Chạy worker nền (outbox email, dọn login_attempts) tới khi nhận SIGTERM",
+	Short: "Chạy worker nền (outbox email, việc dọn dẹp và nhắc việc mỗi giờ) tới khi nhận SIGTERM",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
@@ -26,8 +28,9 @@ var workerCmd = &cobra.Command{
 	},
 }
 
-// runWorker gửi email outbox mỗi EMAIL_POLL_INTERVAL và dọn login_attempts/phiên hết hạn mỗi giờ. SMTP_HOST rỗng
-// thì dùng LogSender (chỉ log người nhận và tiêu đề).
+// runWorker gửi email outbox mỗi EMAIL_POLL_INTERVAL; mỗi giờ dọn login_attempts/phiên hết hạn, tự nộp lượt quiz quá
+// giờ và chạy việc hằng ngày của hàng chờ chấm (email tổng hợp chấm trễ, nhắc hạn nộp; theo giờ APP_TZ). SMTP_HOST
+// rỗng thì dùng LogSender (chỉ log người nhận và tiêu đề).
 func runWorker(ctx context.Context) error {
 	dbx, err := db.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -53,10 +56,14 @@ func runWorker(ctx context.Context) error {
 	cleanup := identity.NewService(identity.ServiceDeps{
 		DB: dbx, Sessions: identity.PGSessionRepo{}, Attempts: identity.PGLoginAttemptRepo{}, Clock: clk, Cfg: cfg,
 	})
+	gradingJobs := grading.NewJobs(grading.JobsDeps{
+		Tx: db.TxRunner{DB: dbx}, Repo: grading.PGRepo{}, Mail: mailer.NewService(mailer.NewOutboxRepo(), box, clk),
+		Location: cfg.Location, PublicBaseURL: cfg.PublicBaseURL, Logger: slog.Default(),
+	})
 	w, err := mailer.NewWorker(mailer.WorkerConfig{
 		Tx: db.TxRunner{DB: dbx}, Repo: mailer.NewOutboxRepo(), Renderer: renderer, Sender: sender, Box: box,
 		Clock: clk, PublicBaseURL: cfg.PublicBaseURL, PollInterval: cfg.EmailPollInterval,
-		Cleanups: []mailer.Cleanup{cleanup}, Logger: slog.Default(),
+		Cleanups: []mailer.Cleanup{cleanup, app.NewQuizzesService(dbx, clk), gradingJobs}, Logger: slog.Default(),
 	})
 	if err != nil {
 		return err

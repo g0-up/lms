@@ -12,6 +12,7 @@ import (
 	"lms/api/internal/features/classes"
 	"lms/api/internal/features/media"
 	"lms/api/internal/features/stages"
+	"lms/api/internal/features/summary"
 	"lms/api/internal/platform/clock"
 	"lms/api/internal/platform/db"
 )
@@ -100,6 +101,16 @@ func (f *fakeSigner) SignedURL(_ context.Context, user media.Principal, _ uuid.U
 	return media.SignedURL{URL: "https://storage.test/get", ExpiresAt: testNow.Add(2 * time.Hour)}, nil
 }
 
+// fakeStatuses trả nhãn trạng thái cố định (hoặc lỗi) cho mọi học liệu.
+type fakeStatuses struct {
+	statuses map[uuid.UUID]summary.ItemStatus
+	err      error
+}
+
+func (f fakeStatuses) ForMember(context.Context, db.Executor, uuid.UUID, uuid.UUID, uuid.UUID, time.Time) (map[uuid.UUID]summary.ItemStatus, error) {
+	return f.statuses, f.err
+}
+
 type runTx struct{}
 
 func (runTx) Transact(_ context.Context, fn func(db.Executor) error) error { return fn(nil) }
@@ -127,13 +138,16 @@ func newSvcEnv(t *testing.T, cs domain.ClassStatus, tx db.Tx) *svcEnv {
 		progress: &fakeProgress{rows: map[uuid.UUID]*LessonProgress{}}, signer: &fakeSigner{},
 		student: uuid.New(), class: uuid.New(), video: uuid.New(), markdown: uuid.New(), noHTML: uuid.New(), mediaID: uuid.New(),
 	}
-	stageID, html := uuid.New(), "<p>Bài đọc</p>"
+	html := "<p>Bài đọc</p>"
+	stage := testStage("Database", 1,
+		testUnit("Nhập môn",
+			LessonView{ID: e.video, Title: "Giới thiệu SQL", Type: stages.LessonVideo, Required: true},
+			LessonView{ID: e.markdown, Title: "Thiết kế bảng và khóa", Type: stages.LessonMarkdown, Required: true}),
+		testUnit("Đọc thêm", LessonView{ID: e.noHTML, Title: "Chưa render", Type: stages.LessonMarkdown, Required: false}),
+	)
+	stageID := stage.StageID
 	structure := fakeStructure{
-		stages: []StageView{{StageID: stageID, Name: "Database", Position: 1, Lessons: []LessonView{
-			{ID: e.video, Title: "Giới thiệu SQL", Type: stages.LessonVideo, Position: 1, Required: true},
-			{ID: e.markdown, Title: "Thiết kế bảng và khóa", Type: stages.LessonMarkdown, Position: 2, Required: true},
-			{ID: e.noHTML, Title: "Chưa render", Type: stages.LessonMarkdown, Position: 3, Required: false},
-		}}},
+		stages: []StageView{stage},
 		lessons: map[uuid.UUID]*LessonRow{
 			e.video:    {ID: e.video, StageID: stageID, Content: stages.VideoContent{MediaID: e.mediaID}},
 			e.markdown: {ID: e.markdown, StageID: stageID, Content: stages.MarkdownContent{HTML: &html}},
@@ -143,7 +157,7 @@ func newSvcEnv(t *testing.T, cs domain.ClassStatus, tx db.Tx) *svcEnv {
 	e.svc = NewService(Deps{
 		Tx: tx, Progress: e.progress, Structure: structure, MyClasses: fakeMyClasses{},
 		Members: fakeMembers{mc: classes.MemberContext{MemberID: uuid.New(), MemberStatus: domain.MemberActive, ClassStatus: cs}},
-		Media:   e.signer, Clock: &clock.Fake{T: testNow},
+		Media:   e.signer, Statuses: fakeStatuses{}, Clock: &clock.Fake{T: testNow},
 	})
 	return e
 }
@@ -174,6 +188,9 @@ func TestOpenLessonRecordsOnlyInActiveClass(t *testing.T) {
 	if page.Prev == nil || page.Prev.LessonID != e.video || page.Next == nil || page.Next.LessonID != e.noHTML {
 		t.Fatalf("prev=%+v next=%+v", page.Prev, page.Next)
 	}
+	if page.Unit.Title != "Nhập môn" || !page.CrossesUnit || page.NextUnitTitle != "Đọc thêm" {
+		t.Fatalf("unit=%q crossesUnit=%v nextUnitTitle=%q", page.Unit.Title, page.CrossesUnit, page.NextUnitTitle)
+	}
 
 	ended := newSvcEnv(t, domain.ClassEnded, noTx{t})
 	page, err = ended.svc.OpenLesson(ctx, ended.student, ended.class, ended.markdown)
@@ -190,6 +207,20 @@ func TestOpenLessonRecordsOnlyInActiveClass(t *testing.T) {
 	}
 	if draft.progress.opens != 0 {
 		t.Fatal("lớp draft không được ghi lần mở")
+	}
+}
+
+// Lỗi đọc trạng thái không bị nuốt: lộ trình thiếu nhãn còn tệ hơn báo lỗi.
+func TestStatusReaderErrorPropagates(t *testing.T) {
+	ctx := context.Background()
+	boom := errors.New("đọc trạng thái lỗi")
+	e := newSvcEnv(t, domain.ClassActive, noTx{t})
+	e.svc.statuses = fakeStatuses{err: boom}
+	if _, err := e.svc.Roadmap(ctx, e.student, e.class); !errors.Is(err, boom) {
+		t.Fatalf("Roadmap = %v, muốn lỗi đọc trạng thái", err)
+	}
+	if _, err := e.svc.OpenLesson(ctx, e.student, e.class, e.markdown); !errors.Is(err, boom) {
+		t.Fatalf("OpenLesson = %v, muốn lỗi đọc trạng thái", err)
 	}
 }
 

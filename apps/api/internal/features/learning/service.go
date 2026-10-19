@@ -12,6 +12,7 @@ import (
 	"lms/api/internal/features/classes"
 	"lms/api/internal/features/media"
 	"lms/api/internal/features/stages"
+	"lms/api/internal/features/summary"
 	"lms/api/internal/platform/clock"
 	"lms/api/internal/platform/db"
 )
@@ -26,6 +27,7 @@ type Service struct {
 	myClasses MyClassesRepo
 	members   classes.MembershipReader
 	media     media.URLSigner
+	statuses  summary.StatusReader
 	clock     clock.Clock
 }
 
@@ -38,6 +40,7 @@ type Deps struct {
 	MyClasses MyClassesRepo
 	Members   classes.MembershipReader
 	Media     media.URLSigner
+	Statuses  summary.StatusReader
 	Clock     clock.Clock
 }
 
@@ -45,29 +48,40 @@ type Deps struct {
 func NewService(d Deps) *Service {
 	return &Service{
 		db: d.DB, tx: d.Tx, progress: d.Progress, structure: d.Structure, myClasses: d.MyClasses,
-		members: d.Members, media: d.Media, clock: d.Clock,
+		members: d.Members, media: d.Media, statuses: d.Statuses, clock: d.Clock,
 	}
 }
 
 // LessonContentView là nội dung trả cho trang học: video có URL ký (MediaID để ký lại qua /media/{id}/url),
-// markdown có HTML đã sanitize lúc phát hành.
+// markdown có HTML đã sanitize lúc phát hành, homework có đề bài, ngưỡng đạt, tiêu chí và file kèm, quiz có tóm tắt
+// cấu hình.
 type LessonContentView struct {
 	Type      stages.LessonType
 	MediaID   uuid.UUID
 	URL       string
 	ExpiresAt time.Time
 	HTML      string
+	Homework  *stages.HomeworkContent
+	Quiz      *QuizSummary
 }
 
-// LessonPage là trang học một học liệu: học liệu kèm trạng thái của học viên, chặng chứa nó, nội dung và học liệu
-// liền trước/sau theo thứ tự toàn khóa.
+// QuizSummary là cấu hình quiz cho trang học: chế độ, số câu, tổng điểm; ngưỡng đạt, giới hạn thời gian và số lượt
+// chỉ có ở quiz đánh giá. Không có câu hỏi.
+type QuizSummary struct {
+	Mode          stages.QuizMode
+	QuestionCount int
+	MaxScore      int
+	PassPercent   *int
+	TimeLimit     *time.Duration
+	MaxAttempts   *int
+}
+
+// LessonPage là trang học một học liệu: vị trí trong lộ trình (chặng, bài học, học liệu liền trước/sau), nội dung và
+// cờ chỉ đọc.
 type LessonPage struct {
-	Lesson   LessonView
-	Stage    StageView
+	Location
 	Content  LessonContentView
 	ReadOnly bool
-	Prev     *LessonRef
-	Next     *LessonRef
 }
 
 // Completion là kết quả tích/bỏ tích: completedAt sau thay đổi và tiến độ toàn khóa.
@@ -96,7 +110,11 @@ func (s *Service) Roadmap(ctx context.Context, studentID, classID uuid.UUID) (Ro
 	if err != nil {
 		return Roadmap{}, err
 	}
-	return s.roadmapOf(ctx, s.db, cls, lc)
+	r, err := s.roadmapOf(ctx, s.db, cls, lc)
+	if err != nil {
+		return Roadmap{}, err
+	}
+	return s.withStatuses(ctx, classID, lc, r)
 }
 
 // OpenLesson trả nội dung học liệu và ghi lần mở đầu tiên khi lớp đang chạy (lần sau không đổi first_opened_at);
@@ -126,14 +144,18 @@ func (s *Service) OpenLesson(ctx context.Context, studentID, classID, lessonID u
 	if err != nil {
 		return LessonPage{}, err
 	}
-	lesson, stage, prev, next, ok := r.Locate(lessonID)
+	if r, err = s.withStatuses(ctx, classID, lc, r); err != nil {
+		return LessonPage{}, err
+	}
+	loc, ok := r.Locate(lessonID)
 	if !ok {
 		return LessonPage{}, fmt.Errorf("learning: học liệu %s vắng trong lộ trình lớp %s", lessonID, classID)
 	}
-	return LessonPage{Lesson: lesson, Stage: stage, Content: content, ReadOnly: r.ReadOnly, Prev: prev, Next: next}, nil
+	return LessonPage{Location: loc, Content: content, ReadOnly: r.ReadOnly}, nil
 }
 
-// SetCompletion tích hoặc bỏ tích hoàn thành, idempotent; chỉ khi lớp đang chạy và học liệu đã mở.
+// SetCompletion tích hoặc bỏ tích hoàn thành, idempotent; chỉ khi lớp đang chạy và học liệu đã mở. Quiz và homework
+// hoàn thành theo kết quả làm bài (CompletionWriter), không tích tay.
 func (s *Service) SetCompletion(ctx context.Context, studentID, classID, lessonID uuid.UUID, completed bool) (Completion, error) {
 	lc, err := s.learningContext(ctx, s.db, studentID, classID)
 	if err != nil {
@@ -142,8 +164,13 @@ func (s *Service) SetCompletion(ctx context.Context, studentID, classID, lessonI
 	if err := lc.CanRecord(); err != nil {
 		return Completion{}, err
 	}
-	if _, err := s.lessonOf(ctx, lc, lessonID); err != nil {
+	row, err := s.lessonOf(ctx, lc, lessonID)
+	if err != nil {
 		return Completion{}, err
+	}
+	switch row.Content.(type) {
+	case stages.QuizContent, stages.HomeworkContent:
+		return Completion{}, ErrCompletionByResult
 	}
 	var out Completion
 	err = s.tx.Transact(ctx, func(tx db.Executor) error {
@@ -198,7 +225,8 @@ func (s *Service) lessonOf(ctx context.Context, lc LearningContext, lessonID uui
 }
 
 // contentOf dựng nội dung theo loại học liệu: video ký URL qua media (cùng kiểm quyền với /media/{id}/url),
-// markdown trả HTML đã sanitize.
+// markdown trả HTML đã sanitize, homework trả đề bài, rubric và file kèm (ký URL qua /media/{id}/url khi tải), quiz
+// chỉ trả tóm tắt cấu hình.
 func (s *Service) contentOf(ctx context.Context, studentID uuid.UUID, row *LessonRow) (LessonContentView, error) {
 	switch c := row.Content.(type) {
 	case stages.VideoContent:
@@ -212,6 +240,17 @@ func (s *Service) contentOf(ctx context.Context, studentID uuid.UUID, row *Lesso
 			return LessonContentView{}, fmt.Errorf("learning: học liệu %s chưa có HTML đã phát hành", row.ID)
 		}
 		return LessonContentView{Type: stages.LessonMarkdown, HTML: *c.HTML}, nil
+	case stages.HomeworkContent:
+		if c.BriefHTML == nil {
+			return LessonContentView{}, fmt.Errorf("learning: học liệu %s chưa có đề bài đã phát hành", row.ID)
+		}
+		return LessonContentView{Type: stages.LessonHomework, Homework: &c}, nil
+	case stages.QuizContent:
+		// Trang học chỉ có tóm tắt; câu hỏi (không kèm đáp án) và lượt làm đi qua luồng làm quiz riêng.
+		return LessonContentView{Type: c.Type(), Quiz: &QuizSummary{
+			Mode: c.Mode, QuestionCount: row.QuestionCount, MaxScore: row.QuizMaxScore, PassPercent: c.PassPercent,
+			TimeLimit: c.TimeLimit, MaxAttempts: c.MaxAttempts,
+		}}, nil
 	default:
 		return LessonContentView{}, fmt.Errorf("learning: học liệu %s có nội dung %T không hỗ trợ", row.ID, row.Content)
 	}
@@ -227,6 +266,15 @@ func (s *Service) roadmapOf(ctx context.Context, ex db.Executor, cls ClassSummar
 		return Roadmap{}, err
 	}
 	return BuildRoadmap(cls, structure, progress), nil
+}
+
+// withStatuses gắn nhãn trạng thái quiz/homework do summary tính (cùng định nghĩa hoàn thành với trang tổng kết).
+func (s *Service) withStatuses(ctx context.Context, classID uuid.UUID, lc LearningContext, r Roadmap) (Roadmap, error) {
+	statuses, err := s.statuses.ForMember(ctx, s.db, classID, lc.Member.MemberID, lc.Member.CourseVersionID, s.now())
+	if err != nil {
+		return Roadmap{}, err
+	}
+	return r.WithStatuses(statuses), nil
 }
 
 // now cắt về micro giây (độ chính xác timestamptz) để giá trị trả về trùng giá trị đọc lại từ DB.

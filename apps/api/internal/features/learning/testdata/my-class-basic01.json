@@ -23,6 +23,7 @@
   "stages": [
     {
       "id": "01990000-0000-7000-8000-000000000101",
+      "lessonCount": 3,
       "lessons": [
         {
           "completedAt": "2026-10-05T08:00:00Z",
@@ -32,7 +33,8 @@
           "position": 1,
           "required": true,
           "title": "Giới thiệu SQL",
-          "type": "video"
+          "type": "video",
+          "unitId": "01990000-0000-7000-8000-000000000141"
         },
         {
           "durationSeconds": 720,
@@ -41,7 +43,8 @@
           "position": 2,
           "required": true,
           "title": "Thiết kế bảng và khóa",
-          "type": "markdown"
+          "type": "markdown",
+          "unitId": "01990000-0000-7000-8000-000000000141"
         },
         {
           "durationSeconds": 300,
@@ -49,14 +52,62 @@
           "position": 3,
           "required": false,
           "title": "Đọc thêm: chỉ mục",
-          "type": "markdown"
+          "type": "markdown",
+          "unitId": "01990000-0000-7000-8000-000000000141"
         }
       ],
       "name": "Database",
-      "position": 1
+      "position": 1,
+      "requiredDone": 1,
+      "requiredTotal": 2,
+      "unitCount": 1,
+      "units": [
+        {
+          "complete": false,
+          "id": "01990000-0000-7000-8000-000000000141",
+          "lessons": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "durationSeconds": 1104,
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "id": "01990000-0000-7000-8000-000000000991",
+              "position": 1,
+              "required": true,
+              "title": "Giới thiệu SQL",
+              "type": "video",
+              "unitId": "01990000-0000-7000-8000-000000000141"
+            },
+            {
+              "durationSeconds": 720,
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "id": "01990000-0000-7000-8000-000000000121",
+              "position": 2,
+              "required": true,
+              "title": "Thiết kế bảng và khóa",
+              "type": "markdown",
+              "unitId": "01990000-0000-7000-8000-000000000141"
+            },
+            {
+              "durationSeconds": 300,
+              "id": "01990000-0000-7000-8000-000000000122",
+              "position": 3,
+              "required": false,
+              "title": "Đọc thêm: chỉ mục",
+              "type": "markdown",
+              "unitId": "01990000-0000-7000-8000-000000000141"
+            }
+          ],
+          "optional": false,
+          "position": 1,
+          "requiredDone": 1,
+          "requiredTotal": 2,
+          "title": "Nội dung chặng"
+        }
+      ]
     },
     {
       "id": "01990000-0000-7000-8000-000000000921",
+      "lessonCount": 3,
       "lessons": [
         {
           "durationSeconds": 1330,
@@ -64,7 +115,8 @@
           "position": 1,
           "required": true,
           "title": "Mảng và danh sách liên kết",
-          "type": "video"
+          "type": "video",
+          "unitId": "01990000-0000-7000-8000-000000000926"
         },
         {
           "durationSeconds": 900,
@@ -72,7 +124,8 @@
           "position": 2,
           "required": true,
           "title": "Stack và Queue",
-          "type": "markdown"
+          "type": "markdown",
+          "unitId": "01990000-0000-7000-8000-000000000926"
         },
         {
           "durationSeconds": 1005,
@@ -80,11 +133,55 @@
           "position": 3,
           "required": true,
           "title": "Hash table",
-          "type": "video"
+          "type": "video",
+          "unitId": "01990000-0000-7000-8000-000000000926"
         }
       ],
       "name": "Data structure",
-      "position": 2
+      "position": 2,
+      "requiredDone": 0,
+      "requiredTotal": 3,
+      "unitCount": 1,
+      "units": [
+        {
+          "complete": false,
+          "id": "01990000-0000-7000-8000-000000000926",
+          "lessons": [
+            {
+              "durationSeconds": 1330,
+              "id": "01990000-0000-7000-8000-000000000923",
+              "position": 1,
+              "required": true,
+              "title": "Mảng và danh sách liên kết",
+              "type": "video",
+              "unitId": "01990000-0000-7000-8000-000000000926"
+            },
+            {
+              "durationSeconds": 900,
+              "id": "01990000-0000-7000-8000-000000000924",
+              "position": 2,
+              "required": true,
+              "title": "Stack và Queue",
+              "type": "markdown",
+              "unitId": "01990000-0000-7000-8000-000000000926"
+            },
+            {
+              "durationSeconds": 1005,
+              "id": "01990000-0000-7000-8000-000000000925",
+              "position": 3,
+              "required": true,
+              "title": "Hash table",
+              "type": "video",
+              "unitId": "01990000-0000-7000-8000-000000000926"
+            }
+          ],
+          "optional": false,
+          "position": 1,
+          "requiredDone": 0,
+          "requiredTotal": 3,
+          "title": "Nội dung chặng"
+        }
+      ]
     }
   ]
 }

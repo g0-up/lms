@@ -1,0 +1,453 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "rows": [
+    {
+      "cells": [
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 1,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": false,
+          "done": 2,
+          "hasReview": false,
+          "missing": 4,
+          "overdue": true,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 20,
+      "email": "ha.hoang@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000007",
+      "name": "Hoàng Thu Hà"
+    },
+    {
+      "cells": [
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 1,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": true,
+          "done": 6,
+          "hasReview": true,
+          "missing": 0,
+          "overdue": false,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": true,
+          "done": 5,
+          "hasReview": false,
+          "missing": 0,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 80,
+      "email": "cuong.le@outlook.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000008",
+      "name": "Lê Văn Cường"
+    },
+    {
+      "cells": [
+        {
+          "complete": true,
+          "done": 4,
+          "hasReview": false,
+          "missing": 0,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": true,
+          "done": 6,
+          "hasReview": true,
+          "missing": 0,
+          "overdue": false,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 64,
+      "email": "an.nguyen@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000009",
+      "name": "Nguyễn Hoàng An"
+    },
+    {
+      "cells": [
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 4,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 6,
+          "overdue": true,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 0,
+      "email": "dung.pham@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000010",
+      "name": "Phạm Minh Dũng"
+    },
+    {
+      "cells": [
+        {
+          "complete": true,
+          "done": 4,
+          "hasReview": false,
+          "missing": 0,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": false,
+          "done": 4,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 2,
+          "hasReview": false,
+          "missing": 3,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 40,
+      "email": "bich.tran@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000011",
+      "name": "Trần Thị Bích"
+    },
+    {
+      "cells": [
+        {
+          "complete": false,
+          "done": 2,
+          "hasReview": false,
+          "missing": 2,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 6,
+          "overdue": true,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 8,
+      "email": "khang.vu@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000012",
+      "name": "Vũ Đức Khang"
+    },
+    {
+      "cells": [
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 1,
+          "overdue": false,
+          "required": 4,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000002"
+        },
+        {
+          "complete": false,
+          "done": 3,
+          "hasReview": false,
+          "missing": 3,
+          "overdue": false,
+          "required": 6,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000004"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000005"
+        },
+        {
+          "complete": false,
+          "done": 0,
+          "hasReview": false,
+          "missing": 5,
+          "overdue": false,
+          "required": 5,
+          "rework": false,
+          "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+        }
+      ],
+      "coursePercent": 24,
+      "email": "phong.dang@gmail.com",
+      "memberId": "0199ffff-0000-7000-8000-000000000013",
+      "name": "Đặng Hải Phong"
+    }
+  ],
+  "stages": [
+    {
+      "code": "DB",
+      "name": "Database",
+      "stageId": "0199ffff-0000-7000-8000-000000000014",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000002",
+      "versionNo": 1
+    },
+    {
+      "code": "DS",
+      "name": "Data structure",
+      "stageId": "0199ffff-0000-7000-8000-000000000015",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000003",
+      "versionNo": 1
+    },
+    {
+      "code": "GO",
+      "name": "Golang basic",
+      "stageId": "0199ffff-0000-7000-8000-000000000016",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000004",
+      "versionNo": 1
+    },
+    {
+      "code": "RE",
+      "name": "ReactJS basic",
+      "stageId": "0199ffff-0000-7000-8000-000000000017",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000005",
+      "versionNo": 1
+    },
+    {
+      "code": "WEB",
+      "name": "HTML CSS JS",
+      "stageId": "0199ffff-0000-7000-8000-000000000018",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000006",
+      "versionNo": 1
+    }
+  ]
+}

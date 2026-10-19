@@ -83,9 +83,20 @@ type StageDetailDTO struct {
 	OutdatedCourses []OutdatedCourseRow `json:"outdatedCourses"`
 }
 
+// UnitDTO là bài học kèm số học liệu và số học liệu bắt buộc.
+type UnitDTO struct {
+	ID            string `json:"id"`
+	UnitKey       string `json:"unitKey"`
+	Title         string `json:"title"`
+	Position      int    `json:"position"`
+	LessonCount   int    `json:"lessonCount"`
+	RequiredCount int    `json:"requiredCount"`
+}
+
 // LessonDTO là học liệu; trường theo loại chỉ có mặt ở loại tương ứng.
 type LessonDTO struct {
 	ID              string  `json:"id"`
+	UnitID          string  `json:"unitId"`
 	LessonKey       string  `json:"lessonKey"`
 	Title           string  `json:"title"`
 	Type            string  `json:"type"`
@@ -96,6 +107,63 @@ type LessonDTO struct {
 	MarkdownHTML    *string `json:"markdownHtml,omitempty"`
 	VideoMediaID    *string `json:"videoMediaId,omitempty"`
 	VideoFileName   *string `json:"videoFileName,omitempty"`
+	// Quiz có đáp án đúng nên LessonDTO chỉ dùng cho route admin; học viên đọc qua learning.
+	Quiz     *QuizDTO     `json:"quiz,omitempty"`
+	Homework *HomeworkDTO `json:"homework,omitempty"`
+}
+
+// QuizDTO là cấu hình và câu hỏi của quiz; giới hạn chỉ có ở chế độ assessment.
+type QuizDTO struct {
+	Mode             string        `json:"mode"`
+	MaxAttempts      *int          `json:"maxAttempts"`
+	TimeLimitMinutes *int          `json:"timeLimitMinutes"`
+	Shuffle          bool          `json:"shuffle"`
+	PassPercent      *int          `json:"passPercent"`
+	Questions        []QuestionDTO `json:"questions"`
+}
+
+// QuestionDTO là câu hỏi kèm phương án và đáp án đúng; HTML chỉ có khi phiên bản không còn là nháp.
+type QuestionDTO struct {
+	ID                string      `json:"id"`
+	QuestionKey       string      `json:"questionKey"`
+	Type              string      `json:"type"`
+	BodySource        string      `json:"bodySource"`
+	BodyHTML          *string     `json:"bodyHtml,omitempty"`
+	ExplanationSource string      `json:"explanationSource"`
+	ExplanationHTML   *string     `json:"explanationHtml,omitempty"`
+	Points            int         `json:"points"`
+	Options           []OptionDTO `json:"options"`
+}
+
+// OptionDTO là một phương án.
+type OptionDTO struct {
+	ID        string `json:"id"`
+	Body      string `json:"body"`
+	IsCorrect bool   `json:"isCorrect"`
+}
+
+// HomeworkDTO là đề bài, ngưỡng đạt, rubric và file kèm; maxPoints là tổng điểm tối đa các tiêu chí.
+type HomeworkDTO struct {
+	BriefSource string          `json:"briefSource"`
+	BriefHTML   *string         `json:"briefHtml,omitempty"`
+	PassPercent int             `json:"passPercent"`
+	MaxPoints   int             `json:"maxPoints"`
+	Criteria    []CriterionDTO  `json:"criteria"`
+	Attachments []AttachmentDTO `json:"attachments"`
+}
+
+// CriterionDTO là một tiêu chí chấm.
+type CriterionDTO struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	MaxPoints   int    `json:"maxPoints"`
+}
+
+// AttachmentDTO là một file kèm đề bài.
+type AttachmentDTO struct {
+	MediaID   string `json:"mediaId"`
+	FileName  string `json:"fileName"`
+	SizeBytes int64  `json:"sizeBytes"`
 }
 
 // StageVersionDTO là phản hồi của các route /stage-versions/{vid}.
@@ -108,6 +176,7 @@ type StageVersionDTO struct {
 	Status              string         `json:"status"`
 	PublishedAt         *time.Time     `json:"publishedAt,omitempty"`
 	ClonedFromVersionNo *int           `json:"clonedFromVersionNo,omitempty"`
+	Units               []UnitDTO      `json:"units"`
 	Lessons             []LessonDTO    `json:"lessons"`
 	UsedBy              []UsedByRowDTO `json:"usedBy"`
 }
@@ -137,13 +206,75 @@ type createStageRequest struct {
 
 // lessonRequest dùng cho cả POST và PATCH; trường vắng mặt là nil.
 type lessonRequest struct {
-	LessonKey       *string    `json:"lessonKey"`
-	Title           *string    `json:"title"`
-	Type            *string    `json:"type"`
-	Required        *bool      `json:"required"`
-	DurationSeconds *int       `json:"durationSeconds"`
-	MarkdownSource  *string    `json:"markdownSource"`
-	VideoMediaID    *uuid.UUID `json:"videoMediaId"`
+	UnitID          *uuid.UUID       `json:"unitId"`
+	LessonKey       *string          `json:"lessonKey"`
+	Title           *string          `json:"title"`
+	Type            *string          `json:"type"`
+	Required        *bool            `json:"required"`
+	DurationSeconds *int             `json:"durationSeconds"`
+	MarkdownSource  *string          `json:"markdownSource"`
+	VideoMediaID    *uuid.UUID       `json:"videoMediaId"`
+	Quiz            *quizRequest     `json:"quiz"`
+	Homework        *homeworkRequest `json:"homework"`
+}
+
+// quizRequest là cấu hình quiz; kiểm tra nằm ở service/domain để trả 422 với thông điệp spec.
+type quizRequest struct {
+	Mode             *string `json:"mode"`
+	MaxAttempts      *int    `json:"maxAttempts"`
+	TimeLimitMinutes *int    `json:"timeLimitMinutes"`
+	Shuffle          *bool   `json:"shuffle"`
+	PassPercent      *int    `json:"passPercent"`
+}
+
+// homeworkRequest là đề bài, ngưỡng đạt và file kèm; attachmentMediaIds rỗng là xóa hết file kèm.
+type homeworkRequest struct {
+	BriefSource        *string     `json:"briefSource"`
+	PassPercent        *int        `json:"passPercent"`
+	AttachmentMediaIDs []uuid.UUID `json:"attachmentMediaIds"`
+}
+
+// questionRequest là thân POST/PATCH câu hỏi; PATCH cũng gửi đủ câu hỏi.
+type questionRequest struct {
+	QuestionKey       *string         `json:"questionKey"`
+	Type              string          `json:"type"`
+	BodySource        string          `json:"bodySource"`
+	ExplanationSource string          `json:"explanationSource"`
+	Points            int             `json:"points"`
+	Options           []optionRequest `json:"options"`
+}
+
+type optionRequest struct {
+	ID      *uuid.UUID `json:"id"`
+	Body    string     `json:"body"`
+	Correct bool       `json:"correct"`
+}
+
+// criterionRequest là thân POST/PATCH tiêu chí.
+type criterionRequest struct {
+	Description string `json:"description"`
+	MaxPoints   int    `json:"maxPoints"`
+}
+
+// reorderQuestionsRequest là thân PUT /questions/order: hoán vị đầy đủ id câu hỏi.
+type reorderQuestionsRequest struct {
+	QuestionIDs []uuid.UUID `json:"questionIds"`
+}
+
+// reorderCriteriaRequest là thân PUT /criteria/order: hoán vị đầy đủ id tiêu chí.
+type reorderCriteriaRequest struct {
+	CriterionIDs []uuid.UUID `json:"criterionIds"`
+}
+
+func (r questionRequest) cmd() QuestionCmd {
+	opts := make([]OptionCmd, 0, len(r.Options))
+	for _, o := range r.Options {
+		opts = append(opts, OptionCmd(o))
+	}
+	return QuestionCmd{
+		QuestionKey: r.QuestionKey, Type: r.Type, BodySource: r.BodySource, ExplanationSource: r.ExplanationSource,
+		Points: r.Points, Options: opts,
+	}
 }
 
 // previewRequest là thân POST /stages/markdown-preview.
@@ -156,15 +287,48 @@ type MarkdownPreviewDTO struct {
 	HTML string `json:"html"`
 }
 
+// unitRequest là thân POST/PATCH bài học.
+type unitRequest struct {
+	Title string `json:"title"`
+}
+
+// reorderUnitsRequest là thân PUT /units/order: hoán vị đầy đủ id bài học.
+type reorderUnitsRequest struct {
+	UnitIDs []uuid.UUID `json:"unitIds"`
+}
+
+// reorderRequest là thân PUT /lessons/order: bố cục đầy đủ, mỗi bài học kèm học liệu theo thứ tự.
 type reorderRequest struct {
+	Units []unitLessonsRequest `json:"units"`
+}
+
+type unitLessonsRequest struct {
+	UnitID    uuid.UUID   `json:"unitId"`
 	LessonIDs []uuid.UUID `json:"lessonIds"`
 }
 
+func (r reorderRequest) layout() []UnitLessons {
+	out := make([]UnitLessons, 0, len(r.Units))
+	for _, u := range r.Units {
+		out = append(out, UnitLessons(u))
+	}
+	return out
+}
+
 func (r lessonRequest) cmd() LessonCmd {
-	return LessonCmd{
-		LessonKey: r.LessonKey, Title: r.Title, Type: r.Type, Required: r.Required,
+	cmd := LessonCmd{
+		UnitID: r.UnitID, LessonKey: r.LessonKey, Title: r.Title, Type: r.Type, Required: r.Required,
 		DurationSeconds: r.DurationSeconds, VideoMediaID: r.VideoMediaID, MarkdownSource: r.MarkdownSource,
 	}
+	if r.Quiz != nil {
+		q := QuizCmd(*r.Quiz)
+		cmd.Quiz = &q
+	}
+	if r.Homework != nil {
+		h := HomeworkCmd(*r.Homework)
+		cmd.Homework = &h
+	}
+	return cmd
 }
 
 // BlockedReason là thông điệp FR-18 khi khóa học đã có bản nháp nên chưa áp được phiên bản chặng mới.
@@ -273,7 +437,7 @@ func toStageDetailDTO(d StageDetail) StageDetailDTO {
 // toLessonDTO: markdownHtml chỉ trả khi phiên bản không còn là nháp (HTML của nháp chưa render hoặc đã cũ so với source).
 func toLessonDTO(l *Lesson, status domain.VersionStatus) LessonDTO {
 	dto := LessonDTO{
-		ID: l.ID().String(), LessonKey: string(l.Key()), Title: l.Title(), Type: string(l.Content().Type()),
+		ID: l.ID().String(), UnitID: l.UnitID().String(), LessonKey: string(l.Key()), Title: l.Title(), Type: string(l.Content().Type()),
 		Required: l.Required(), Position: l.Position(),
 	}
 	switch c := l.Content().(type) {
@@ -291,12 +455,75 @@ func toLessonDTO(l *Lesson, status domain.VersionStatus) LessonDTO {
 			html := *c.HTML
 			dto.MarkdownHTML = &html
 		}
+	case QuizContent:
+		dto.Quiz = toQuizDTO(c, status)
+	case HomeworkContent:
+		dto.Homework = toHomeworkDTO(c, status)
+	}
+	return dto
+}
+
+func toQuizDTO(c QuizContent, status domain.VersionStatus) *QuizDTO {
+	dto := &QuizDTO{
+		Mode: string(c.Mode), MaxAttempts: copyPtr(c.MaxAttempts), Shuffle: c.Shuffle, PassPercent: copyPtr(c.PassPercent),
+		Questions: make([]QuestionDTO, 0, len(c.Questions)),
+	}
+	if c.TimeLimit != nil {
+		m := int(*c.TimeLimit / time.Minute)
+		dto.TimeLimitMinutes = &m
+	}
+	for _, q := range c.Questions {
+		qd := QuestionDTO{
+			ID: q.ID.String(), QuestionKey: string(q.Key), Type: string(q.Type), BodySource: q.BodySource,
+			ExplanationSource: q.ExplanationSource, Points: q.Points, Options: make([]OptionDTO, 0, len(q.Options)),
+		}
+		if status != domain.VersionDraft {
+			qd.BodyHTML, qd.ExplanationHTML = copyPtr(q.BodyHTML), copyPtr(q.ExplanationHTML)
+		}
+		for _, o := range q.Options {
+			qd.Options = append(qd.Options, OptionDTO{ID: o.ID.String(), Body: o.Body, IsCorrect: o.Correct})
+		}
+		dto.Questions = append(dto.Questions, qd)
+	}
+	return dto
+}
+
+func toHomeworkDTO(c HomeworkContent, status domain.VersionStatus) *HomeworkDTO {
+	dto := &HomeworkDTO{
+		BriefSource: c.BriefSource, PassPercent: c.PassPercent, MaxPoints: c.MaxScore(),
+		Criteria: make([]CriterionDTO, 0, len(c.Criteria)), Attachments: make([]AttachmentDTO, 0, len(c.Attachments)),
+	}
+	if status != domain.VersionDraft {
+		dto.BriefHTML = copyPtr(c.BriefHTML)
+	}
+	for _, cr := range c.Criteria {
+		dto.Criteria = append(dto.Criteria, CriterionDTO{ID: cr.ID.String(), Description: cr.Description, MaxPoints: cr.MaxPoints})
+	}
+	for _, a := range c.Attachments {
+		dto.Attachments = append(dto.Attachments, AttachmentDTO{MediaID: a.MediaID.String(), FileName: a.FileName, SizeBytes: a.SizeBytes})
+	}
+	return dto
+}
+
+func toUnitDTO(d UnitDetail) UnitDTO {
+	dto := UnitDTO{
+		ID: d.Unit.ID().String(), UnitKey: string(d.Unit.Key()), Title: d.Unit.Title(), Position: d.Unit.Position(),
+		LessonCount: len(d.Lessons),
+	}
+	for _, l := range d.Lessons {
+		if l.Required() {
+			dto.RequiredCount++
+		}
 	}
 	return dto
 }
 
 func toVersionDTO(d VersionDetail) StageVersionDTO {
 	v := d.Version
+	units := make([]UnitDTO, 0, len(v.Units()))
+	for _, u := range v.Units() {
+		units = append(units, toUnitDTO(UnitDetail{Unit: u, Lessons: v.LessonsOf(u.ID())}))
+	}
 	lessons := make([]LessonDTO, 0, len(v.Lessons()))
 	for _, l := range v.Lessons() {
 		lessons = append(lessons, toLessonDTO(l, v.Status()))
@@ -304,7 +531,7 @@ func toVersionDTO(d VersionDetail) StageVersionDTO {
 	return StageVersionDTO{
 		ID: v.ID().String(), StageID: v.StageID().String(), StageCode: d.Stage.Code, StageName: d.Stage.Name,
 		VersionNo: v.VersionNo().Int(), Status: v.Status().String(), PublishedAt: utcPtr(v.PublishedAt()),
-		ClonedFromVersionNo: noPtr(d.ClonedFromVersionNo), Lessons: lessons, UsedBy: usedByDTOs(d.UsedBy),
+		ClonedFromVersionNo: noPtr(d.ClonedFromVersionNo), Units: units, Lessons: lessons, UsedBy: usedByDTOs(d.UsedBy),
 	}
 }
 

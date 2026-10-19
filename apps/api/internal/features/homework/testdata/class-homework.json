@@ -1,0 +1,64 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "01990000-0000-7000-8000-000000000301",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "items": [
+    {
+      "deadline": "2026-10-05T08:00:00Z",
+      "lesson": {
+        "id": "01990000-0000-7000-8000-000000000928",
+        "title": "Bài tập: truy vấn SELECT"
+      },
+      "maxPoints": 100,
+      "members": [
+        {
+          "latest": {
+            "fileCount": 1,
+            "hasRepo": true,
+            "isLate": true,
+            "maxPoints": 100,
+            "no": 2,
+            "submissionId": "0199ffff-0000-7000-8000-000000000001",
+            "submittedAt": "2026-10-05T08:00:00Z",
+            "totalPoints": 85
+          },
+          "memberId": "01990000-0000-7000-8000-000000000311",
+          "name": "Nguyễn Hoàng An",
+          "status": "passed",
+          "waitingDays": null
+        },
+        {
+          "latest": {
+            "fileCount": 0,
+            "hasRepo": true,
+            "isLate": true,
+            "maxPoints": null,
+            "no": 1,
+            "submissionId": "0199ffff-0000-7000-8000-000000000002",
+            "submittedAt": "2026-10-05T08:00:00Z",
+            "totalPoints": null
+          },
+          "memberId": "01990000-0000-7000-8000-000000000914",
+          "name": "Vũ Đức Khang",
+          "status": "pending",
+          "waitingDays": 2
+        }
+      ],
+      "passPercent": 70,
+      "stage": {
+        "id": "01990000-0000-7000-8000-000000000101",
+        "name": "Database"
+      },
+      "stats": {
+        "overdueNotSubmitted": 0,
+        "passed": 1,
+        "pending": 1,
+        "rework": 0,
+        "submitted": 2
+      }
+    }
+  ]
+}

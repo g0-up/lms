@@ -1,0 +1,12 @@
+Chào {{.Name}},
+
+{{if .Updated}}Giảng viên đã cập nhật điểm{{else}}Giảng viên đã chấm{{end}} bài "{{.LessonTitle}}" của bạn trong lớp {{.ClassName}} ({{.ClassCode}}).
+
+Tổng điểm: {{.TotalPoints}}/{{.MaxPoints}} · Kết quả: {{.ResultLabel}}
+
+Nhận xét của giảng viên:
+{{.Comment}}
+
+Xem kết quả chi tiết tại: {{.ResultURL}}
+
+{{.AppName}}

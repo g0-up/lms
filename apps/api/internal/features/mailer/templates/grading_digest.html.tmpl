@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="vi">
+<body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.5;">
+  <p>Chào {{.Name}},</p>
+  <p>Có <strong>{{.Count}}</strong> bài chờ chấm hoặc xác nhận đã quá 3 ngày trong các lớp bạn phụ trách:</p>
+  <ul>
+    {{range .Items}}<li><strong>{{.StudentName}}</strong> · {{.KindLabel}} <strong>{{.LessonTitle}}</strong> · lớp {{.ClassName}} ({{.ClassCode}}) · đã chờ {{.Waited}}</li>
+    {{end}}
+  </ul>
+  <p><a href="{{.QueueURL}}" style="display: inline-block; padding: 10px 16px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">Mở hàng chờ chấm</a></p>
+  <p style="color: #6b7280;">{{.AppName}}</p>
+</body>
+</html>

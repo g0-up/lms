@@ -1,0 +1,160 @@
+{
+  "items": [
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000003",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000004",
+        "title": "Kiểm tra cuối chặng HTML CSS JS"
+      },
+      "maxPoints": 10,
+      "no": 1,
+      "passed": false,
+      "points": 5,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "name": "Nguyễn Hoàng An"
+      }
+    },
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000006",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000007",
+        "title": "Kiểm tra cuối chặng Go"
+      },
+      "maxPoints": 5,
+      "no": 2,
+      "passed": false,
+      "points": 3,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000008",
+        "name": "Lê Văn Cường"
+      }
+    },
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000009",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000010",
+        "title": "Kiểm tra cuối chặng Database"
+      },
+      "maxPoints": 5,
+      "no": 1,
+      "passed": true,
+      "points": 4,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000011",
+        "name": "Đặng Hải Phong"
+      }
+    },
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000012",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000013",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      "maxPoints": 5,
+      "no": 1,
+      "passed": true,
+      "points": 5,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "name": "Nguyễn Hoàng An"
+      }
+    },
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000014",
+      "kind": "homework",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000015",
+        "title": "Bài tập: Cài đặt Stack và Queue"
+      },
+      "maxPoints": 100,
+      "no": 2,
+      "passed": true,
+      "points": 94,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000005",
+        "name": "Nguyễn Hoàng An"
+      }
+    },
+    {
+      "at": "2026-10-05T08:00:00Z",
+      "by": {
+        "id": "0199ffff-0000-7000-8000-000000000001",
+        "name": "Lê Thu Hương"
+      },
+      "class": {
+        "code": "basic01",
+        "id": "0199ffff-0000-7000-8000-000000000002",
+        "name": "Lập trình cơ bản – khóa 1"
+      },
+      "itemId": "0199ffff-0000-7000-8000-000000000016",
+      "kind": "quiz",
+      "lesson": {
+        "id": "0199ffff-0000-7000-8000-000000000013",
+        "title": "Kiểm tra cuối chặng Data structure"
+      },
+      "maxPoints": 5,
+      "no": 1,
+      "passed": true,
+      "points": 4,
+      "student": {
+        "id": "0199ffff-0000-7000-8000-000000000008",
+        "name": "Lê Văn Cường"
+      }
+    }
+  ]
+}

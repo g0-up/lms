@@ -54,14 +54,41 @@ type RoadmapLessonDTO struct {
 	DurationSeconds *int       `json:"durationSeconds,omitempty"`
 	FirstOpenedAt   *time.Time `json:"firstOpenedAt,omitempty"`
 	CompletedAt     *time.Time `json:"completedAt,omitempty"`
+	UnitID          string     `json:"unitId"`
+	Status          *StatusDTO `json:"status,omitempty"`
 }
 
-// RoadmapStageDTO là một chặng trong lộ trình; id là id chặng (không phải phiên bản chặng).
+// StatusDTO là nhãn trạng thái quiz/homework ("Chờ chấm", "Quá hạn", "Tốt nhất 80%"…); tone là ok|info|warn|danger|
+// optional. Vắng với video và markdown.
+type StatusDTO struct {
+	Label string `json:"label"`
+	Tone  string `json:"tone"`
+}
+
+// RoadmapUnitDTO là một bài học trong chặng; nhãn "Bài i.j" do web ghép từ position của chặng và bài học.
+type RoadmapUnitDTO struct {
+	ID            string             `json:"id"`
+	Title         string             `json:"title"`
+	Position      int                `json:"position"`
+	RequiredDone  int                `json:"requiredDone"`
+	RequiredTotal int                `json:"requiredTotal"`
+	Complete      bool               `json:"complete"`
+	Optional      bool               `json:"optional"`
+	Lessons       []RoadmapLessonDTO `json:"lessons"`
+}
+
+// RoadmapStageDTO là một chặng trong lộ trình; id là id chặng (không phải phiên bản chặng). lessons là học liệu
+// phẳng theo thứ tự, units nhóm cùng học liệu đó theo bài học.
 type RoadmapStageDTO struct {
-	ID       string             `json:"id"`
-	Name     string             `json:"name"`
-	Position int                `json:"position"`
-	Lessons  []RoadmapLessonDTO `json:"lessons"`
+	ID            string             `json:"id"`
+	Name          string             `json:"name"`
+	Position      int                `json:"position"`
+	UnitCount     int                `json:"unitCount"`
+	LessonCount   int                `json:"lessonCount"`
+	RequiredDone  int                `json:"requiredDone"`
+	RequiredTotal int                `json:"requiredTotal"`
+	Units         []RoadmapUnitDTO   `json:"units"`
+	Lessons       []RoadmapLessonDTO `json:"lessons"`
 }
 
 // RoadmapDTO là phản hồi GET /me/classes/{id}.
@@ -79,8 +106,16 @@ type RoadmapDTO struct {
 
 // StageRefDTO là chặng chứa học liệu trên trang học.
 type StageRefDTO struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Position int    `json:"position"`
+}
+
+// UnitRefDTO là bài học chứa học liệu trên trang học (breadcrumb và nhãn "Bài i.j").
+type UnitRefDTO struct {
+	ID       string `json:"id"`
+	Title    string `json:"title"`
+	Position int    `json:"position"`
 }
 
 // LessonDTO là học liệu trên trang học.
@@ -92,15 +127,54 @@ type LessonDTO struct {
 	Position        int         `json:"position"`
 	DurationSeconds *int        `json:"durationSeconds,omitempty"`
 	Stage           StageRefDTO `json:"stage"`
+	Unit            UnitRefDTO  `json:"unit"`
+	Status          *StatusDTO  `json:"status,omitempty"`
 }
 
-// ContentDTO là {type:"video", mediaId, url, expiresAt} hoặc {type:"markdown", html}; trường của loại kia vắng.
+// ContentDTO là {type:"video", mediaId, url, expiresAt}, {type:"markdown", html}, {type:"homework", homework} hoặc
+// {type:"quiz", quiz}; trường của loại khác vắng.
 type ContentDTO struct {
-	Type      string     `json:"type"`
-	MediaID   string     `json:"mediaId,omitempty"`
-	URL       string     `json:"url,omitempty"`
-	ExpiresAt *time.Time `json:"expiresAt,omitempty"`
-	HTML      *string    `json:"html,omitempty"`
+	Type      string       `json:"type"`
+	MediaID   string       `json:"mediaId,omitempty"`
+	URL       string       `json:"url,omitempty"`
+	ExpiresAt *time.Time   `json:"expiresAt,omitempty"`
+	HTML      *string      `json:"html,omitempty"`
+	Homework  *HomeworkDTO `json:"homework,omitempty"`
+	Quiz      *QuizDTO     `json:"quiz,omitempty"`
+}
+
+// QuizDTO là tóm tắt quiz trên trang học; câu hỏi và lượt làm lấy qua /me/classes/{id}/lessons/{lid}/attempts.
+type QuizDTO struct {
+	Mode             string `json:"mode"`
+	QuestionCount    int    `json:"questionCount"`
+	MaxScore         int    `json:"maxScore"`
+	PassPercent      *int   `json:"passPercent,omitempty"`
+	TimeLimitMinutes *int   `json:"timeLimitMinutes,omitempty"`
+	MaxAttempts      *int   `json:"maxAttempts,omitempty"`
+}
+
+// HomeworkDTO là đề bài (HTML đã sanitize), ngưỡng đạt, tổng điểm tối đa, tiêu chí và file kèm theo thứ tự. File kèm
+// tải qua GET /media/{mediaId}/url (ký dạng attachment).
+type HomeworkDTO struct {
+	BriefHTML   string          `json:"briefHtml"`
+	PassPercent int             `json:"passPercent"`
+	MaxPoints   int             `json:"maxPoints"`
+	Criteria    []CriterionDTO  `json:"criteria"`
+	Attachments []AttachmentDTO `json:"attachments"`
+}
+
+// CriterionDTO là một tiêu chí chấm.
+type CriterionDTO struct {
+	ID          string `json:"id"`
+	Description string `json:"description"`
+	MaxPoints   int    `json:"maxPoints"`
+}
+
+// AttachmentDTO là một file kèm đề bài.
+type AttachmentDTO struct {
+	MediaID   string `json:"mediaId"`
+	FileName  string `json:"fileName"`
+	SizeBytes int64  `json:"sizeBytes"`
 }
 
 // ProgressDTO là tiến độ của học viên trên học liệu; firstOpenedAt null khi lớp đã kết thúc và chưa từng mở.
@@ -115,14 +189,17 @@ type LessonLinkDTO struct {
 	Title    string `json:"title"`
 }
 
-// LessonPageDTO là phản hồi GET /me/classes/{id}/lessons/{lid}.
+// LessonPageDTO là phản hồi GET /me/classes/{id}/lessons/{lid}. crossesUnit khi học liệu tiếp thuộc bài học khác;
+// nextUnitTitle là tên bài học đó (vắng khi không qua ranh giới).
 type LessonPageDTO struct {
-	Lesson   LessonDTO      `json:"lesson"`
-	Content  ContentDTO     `json:"content"`
-	Progress ProgressDTO    `json:"progress"`
-	ReadOnly bool           `json:"readOnly"`
-	Prev     *LessonLinkDTO `json:"prev,omitempty"`
-	Next     *LessonLinkDTO `json:"next,omitempty"`
+	Lesson        LessonDTO      `json:"lesson"`
+	Content       ContentDTO     `json:"content"`
+	Progress      ProgressDTO    `json:"progress"`
+	ReadOnly      bool           `json:"readOnly"`
+	Prev          *LessonLinkDTO `json:"prev,omitempty"`
+	Next          *LessonLinkDTO `json:"next,omitempty"`
+	CrossesUnit   bool           `json:"crossesUnit"`
+	NextUnitTitle string         `json:"nextUnitTitle,omitempty"`
 }
 
 // CompletionDTO là phản hồi PUT …/completion; completedAt null sau khi bỏ tích.
@@ -186,14 +263,37 @@ func toRoadmapDTO(r Roadmap) RoadmapDTO {
 		Stages: make([]RoadmapStageDTO, 0, len(r.Stages)), SelfReported: r.SelfReported,
 	}
 	for _, st := range r.Stages {
-		s := RoadmapStageDTO{ID: st.StageID.String(), Name: st.Name, Position: st.Position, Lessons: make([]RoadmapLessonDTO, 0, len(st.Lessons))}
-		for _, l := range st.Lessons {
-			s.Lessons = append(s.Lessons, RoadmapLessonDTO{
-				ID: l.ID.String(), Title: l.Title, Type: string(l.Type), Required: l.Required, Position: l.Position,
-				DurationSeconds: l.DurationSeconds, FirstOpenedAt: utc(l.FirstOpenedAt), CompletedAt: utc(l.CompletedAt),
+		s := RoadmapStageDTO{
+			ID: st.StageID.String(), Name: st.Name, Position: st.Position, UnitCount: len(st.Units), LessonCount: len(st.Lessons),
+			RequiredDone: st.RequiredDone, RequiredTotal: st.RequiredTotal,
+			Units: make([]RoadmapUnitDTO, 0, len(st.Units)), Lessons: roadmapLessonDTOs(st.Lessons),
+		}
+		for _, u := range st.Units {
+			s.Units = append(s.Units, RoadmapUnitDTO{
+				ID: u.ID.String(), Title: u.Title, Position: u.Position, RequiredDone: u.RequiredDone,
+				RequiredTotal: u.RequiredTotal, Complete: u.Complete, Optional: u.Optional, Lessons: roadmapLessonDTOs(u.Lessons),
 			})
 		}
 		out.Stages = append(out.Stages, s)
+	}
+	return out
+}
+
+func statusDTO(s *LessonStatus) *StatusDTO {
+	if s == nil {
+		return nil
+	}
+	return &StatusDTO{Label: s.Label, Tone: s.Tone}
+}
+
+func roadmapLessonDTOs(lessons []LessonView) []RoadmapLessonDTO {
+	out := make([]RoadmapLessonDTO, 0, len(lessons))
+	for _, l := range lessons {
+		out = append(out, RoadmapLessonDTO{
+			ID: l.ID.String(), Title: l.Title, Type: string(l.Type), Required: l.Required, Position: l.Position,
+			DurationSeconds: l.DurationSeconds, FirstOpenedAt: utc(l.FirstOpenedAt), CompletedAt: utc(l.CompletedAt),
+			UnitID: l.UnitID.String(), Status: statusDTO(l.Status),
+		})
 	}
 	return out
 }
@@ -208,18 +308,56 @@ func toLessonPageDTO(p LessonPage) LessonPageDTO {
 	case stages.LessonMarkdown:
 		html := p.Content.HTML
 		content.HTML = &html
+	case stages.LessonHomework:
+		if hw := p.Content.Homework; hw != nil {
+			content.Homework = toHomeworkDTO(*hw)
+		}
+	case stages.LessonQuiz:
+		if q := p.Content.Quiz; q != nil {
+			content.Quiz = toQuizDTO(*q)
+		}
 	}
 	return LessonPageDTO{
 		Lesson: LessonDTO{
 			ID: l.ID.String(), Title: l.Title, Type: string(l.Type), Required: l.Required, Position: l.Position,
-			DurationSeconds: l.DurationSeconds, Stage: StageRefDTO{ID: p.Stage.StageID.String(), Name: p.Stage.Name},
+			DurationSeconds: l.DurationSeconds,
+			Stage:           StageRefDTO{ID: p.Stage.StageID.String(), Name: p.Stage.Name, Position: p.Stage.Position},
+			Unit:            UnitRefDTO{ID: p.Unit.ID.String(), Title: p.Unit.Title, Position: p.Unit.Position},
+			Status:          statusDTO(l.Status),
 		},
 		Content:  content,
 		Progress: ProgressDTO{FirstOpenedAt: utc(l.FirstOpenedAt), CompletedAt: utc(l.CompletedAt)},
 		ReadOnly: p.ReadOnly, Prev: lessonLinkDTO(p.Prev), Next: lessonLinkDTO(p.Next),
+		CrossesUnit: p.CrossesUnit, NextUnitTitle: p.NextUnitTitle,
 	}
+}
+
+func toHomeworkDTO(c stages.HomeworkContent) *HomeworkDTO {
+	out := &HomeworkDTO{PassPercent: c.PassPercent, MaxPoints: c.MaxScore(), Criteria: []CriterionDTO{}, Attachments: []AttachmentDTO{}}
+	if c.BriefHTML != nil {
+		out.BriefHTML = *c.BriefHTML
+	}
+	for _, cr := range c.Criteria {
+		out.Criteria = append(out.Criteria, CriterionDTO{ID: cr.ID.String(), Description: cr.Description, MaxPoints: cr.MaxPoints})
+	}
+	for _, a := range c.Attachments {
+		out.Attachments = append(out.Attachments, AttachmentDTO{MediaID: a.MediaID.String(), FileName: a.FileName, SizeBytes: a.SizeBytes})
+	}
+	return out
 }
 
 func toCompletionDTO(c Completion) CompletionDTO {
 	return CompletionDTO{CompletedAt: utc(c.CompletedAt), Percent: c.Percent, RequiredDone: c.RequiredDone, RequiredTotal: c.RequiredTotal}
+}
+
+func toQuizDTO(q QuizSummary) *QuizDTO {
+	out := &QuizDTO{
+		Mode: string(q.Mode), QuestionCount: q.QuestionCount, MaxScore: q.MaxScore, PassPercent: q.PassPercent,
+		MaxAttempts: q.MaxAttempts,
+	}
+	if q.TimeLimit != nil {
+		m := int(*q.TimeLimit / time.Minute)
+		out.TimeLimitMinutes = &m
+	}
+	return out
 }

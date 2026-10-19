@@ -89,6 +89,73 @@ func TestProgressRepoOpenAndSetCompleted(t *testing.T) {
 	}
 }
 
+// TestCompletionWriter: hoàn thành theo kết quả tạo tiến độ khi chưa mở, giữ mốc hoàn thành đầu tiên khi ghi lại,
+// lùi first_opened_at khi mốc hoàn thành sớm hơn (giữ ck_lesson_progress_order) và xóa được mốc khi làm lại.
+func TestCompletionWriter(t *testing.T) {
+	e := newIT(t)
+	repo := PGProgressRepo{}
+	now := e.clk.Now()
+	err := e.inTx(func(tx db.Executor) error {
+		read := func(lessonID uuid.UUID) *LessonProgress {
+			p, err := repo.Get(e.ctx(), tx, memberAnID, lessonID)
+			if err != nil || p == nil {
+				t.Fatalf("Get %s = %+v, %v", lessonID, p, err)
+			}
+			return p
+		}
+		// Chưa mở: tạo dòng với first_opened_at = completed_at = at.
+		if err := repo.MarkCompleted(e.ctx(), tx, memberAnID, lessonTableID, now); err != nil {
+			t.Fatal(err)
+		}
+		if p := read(lessonTableID); !p.FirstOpenedAt().Equal(now) || p.CompletedAt() == nil || !p.CompletedAt().Equal(now) {
+			t.Fatalf("đánh dấu khi chưa mở = %+v", p)
+		}
+		// Ghi lại giữ mốc cũ.
+		if err := repo.MarkCompleted(e.ctx(), tx, memberAnID, lessonTableID, now.Add(time.Hour)); err != nil {
+			t.Fatal(err)
+		}
+		if p := read(lessonTableID); !p.CompletedAt().Equal(now) {
+			t.Fatalf("đánh dấu lại đổi mốc = %+v", p)
+		}
+		// Bỏ hoàn thành rồi đánh dấu lại: mốc mới; bỏ hai lần không lỗi.
+		for range 2 {
+			if err := repo.ClearCompleted(e.ctx(), tx, memberAnID, lessonTableID, now.Add(2*time.Hour)); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if p := read(lessonTableID); p.CompletedAt() != nil || !p.FirstOpenedAt().Equal(now) {
+			t.Fatalf("bỏ hoàn thành = %+v", p)
+		}
+		if err := repo.MarkCompleted(e.ctx(), tx, memberAnID, lessonTableID, now.Add(3*time.Hour)); err != nil {
+			t.Fatal(err)
+		}
+		if p := read(lessonTableID); !p.CompletedAt().Equal(now.Add(3 * time.Hour)) {
+			t.Fatalf("đánh dấu sau khi bỏ = %+v", p)
+		}
+		// Đã mở sau mốc hoàn thành (đồng hồ lệch): first_opened_at lùi về mốc hoàn thành.
+		if _, err := repo.Open(e.ctx(), tx, OpenLesson(memberAnID, lessonIndexID, now.Add(time.Hour))); err != nil {
+			t.Fatal(err)
+		}
+		if err := repo.MarkCompleted(e.ctx(), tx, memberAnID, lessonIndexID, now); err != nil {
+			t.Fatal(err)
+		}
+		if p := read(lessonIndexID); !p.FirstOpenedAt().Equal(now) || !p.CompletedAt().Equal(now) {
+			t.Fatalf("đánh dấu sớm hơn lần mở = %+v", p)
+		}
+		// Chưa có dòng: bỏ hoàn thành không tạo dòng.
+		if err := repo.ClearCompleted(e.ctx(), tx, memberAnID, lessonIntroID, now); err != nil {
+			t.Fatal(err)
+		}
+		if p, err := repo.Get(e.ctx(), tx, memberAnID, lessonIntroID); err != nil || p != nil {
+			t.Fatalf("bỏ hoàn thành khi chưa mở = %+v, %v", p, err)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestCourseStructureRepo(t *testing.T) {
 	e := newIT(t)
 	repo := PGCourseStructureRepo{}

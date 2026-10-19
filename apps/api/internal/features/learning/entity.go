@@ -18,7 +18,9 @@ var (
 	ErrLessonNotInCourse = domain.ErrNotFound.WithMsg("Học liệu không thuộc phiên bản khóa học của lớp.")
 	ErrMemberNotFound    = domain.ErrNotFound.WithMsg("Không tìm thấy thành viên.")
 	ErrNotOpened         = domain.ErrConflict.WithMsg("Mở học liệu trước khi tích hoàn thành.")
-	ErrClassNotActive    = domain.ErrInvalidTransition.WithMsg("Lớp chưa bắt đầu hoặc đã kết thúc; không ghi nhận tiến độ.")
+	// ErrCompletionByResult: quiz và homework hoàn thành theo kết quả làm bài, PUT …/completion trả 422.
+	ErrCompletionByResult = domain.ErrInvalid.WithMsg("Học liệu này hoàn thành theo kết quả làm bài, không tích tay.")
+	ErrClassNotActive     = domain.ErrInvalidTransition.WithMsg("Lớp chưa bắt đầu hoặc đã kết thúc; không ghi nhận tiến độ.")
 	// ErrClassNotStarted: lớp nháp chỉ cho xem lộ trình; nội dung (video, ảnh trong bài đọc) chỉ cấp khi lớp đã
 	// kích hoạt, cùng quy tắc với quyền xem media.
 	ErrClassNotStarted = domain.ErrInvalidTransition.WithMsg("Lớp chưa bắt đầu. Bạn sẽ vào học được khi lớp kích hoạt.")

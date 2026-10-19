@@ -204,7 +204,8 @@ func (s *Service) CreateClass(ctx context.Context, actor Actor, cmd CreateClassC
 	return out, err
 }
 
-// UpdateClass áp bản vá cài đặt lớp. Đổi phiên bản khóa học chỉ khi lớp còn nháp và chỉ sang bản đã phát hành.
+// UpdateClass áp bản vá cài đặt lớp. Đổi phiên bản khóa học chỉ khi lớp còn nháp và chỉ sang bản đã phát hành; hạn
+// nộp của lớp bị xóa trong cùng transaction.
 func (s *Service) UpdateClass(ctx context.Context, actor Actor, id uuid.UUID, cmd UpdateClassCmd) (*ClassDetail, error) {
 	now := s.clock.Now()
 	var out *ClassDetail
@@ -224,6 +225,9 @@ func (s *Service) UpdateClass(ctx context.Context, actor Actor, id uuid.UUID, cm
 			}
 		}
 		if c.CourseVersionID() != prevVersion {
+			if err := s.classes.DeleteDeadlines(ctx, tx, c.ID()); err != nil {
+				return err
+			}
 			if err := s.record(ctx, tx, actor, audit.ActionClassCourseVersionChanged, c.ID(),
 				map[string]any{"courseVersionId": prevVersion}, map[string]any{"courseVersionId": c.CourseVersionID()}); err != nil {
 				return err

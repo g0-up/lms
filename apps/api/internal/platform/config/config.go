@@ -66,6 +66,7 @@ type Config struct {
 	MediaURLTTL      time.Duration `env:"MEDIA_URL_TTL" envDefault:"2h"`
 	MaxVideoBytes    int64         `env:"MAX_VIDEO_BYTES" envDefault:"2147483648"`
 	MaxImageBytes    int64         `env:"MAX_IMAGE_BYTES" envDefault:"10485760"`
+	MaxDocumentBytes int64         `env:"MAX_DOCUMENT_BYTES" envDefault:"20971520"`
 
 	StaleDays    int            `env:"STALE_DAYS" envDefault:"7"`
 	SeedPassword string         `env:"SEED_PASSWORD"` // chỉ lệnh seed, dev/e2e

@@ -1,0 +1,1031 @@
+{
+  "class": {
+    "code": "basic01",
+    "id": "0199ffff-0000-7000-8000-000000000001",
+    "name": "Lập trình cơ bản – khóa 1",
+    "status": "active"
+  },
+  "course": {
+    "stages": [
+      {
+        "assessments": [
+          {
+            "bestPercent": 80,
+            "lessonId": "0199ffff-0000-7000-8000-000000000002",
+            "passed": true,
+            "title": "Kiểm tra cuối chặng Database"
+          }
+        ],
+        "complete": true,
+        "homework": [],
+        "missingCount": 0,
+        "name": "Database",
+        "stageVersionId": "0199ffff-0000-7000-8000-000000000003"
+      },
+      {
+        "assessments": [
+          {
+            "bestPercent": 100,
+            "lessonId": "0199ffff-0000-7000-8000-000000000004",
+            "passed": true,
+            "title": "Kiểm tra cuối chặng Data structure"
+          }
+        ],
+        "complete": true,
+        "homework": [
+          {
+            "lessonId": "0199ffff-0000-7000-8000-000000000005",
+            "max": 100,
+            "status": "passed",
+            "title": "Bài tập: Cài đặt Stack và Queue",
+            "total": 94
+          }
+        ],
+        "missingCount": 0,
+        "name": "Data structure",
+        "stageVersionId": "0199ffff-0000-7000-8000-000000000006"
+      },
+      {
+        "assessments": [
+          {
+            "bestPercent": 60,
+            "lessonId": "0199ffff-0000-7000-8000-000000000007",
+            "passed": false,
+            "title": "Kiểm tra cuối chặng Go"
+          }
+        ],
+        "complete": false,
+        "homework": [
+          {
+            "lessonId": "0199ffff-0000-7000-8000-000000000008",
+            "max": null,
+            "status": "not_submitted",
+            "title": "Bài tập: Đọc CSV và thống kê",
+            "total": null
+          }
+        ],
+        "missingCount": 2,
+        "name": "Golang basic",
+        "stageVersionId": "0199ffff-0000-7000-8000-000000000009"
+      },
+      {
+        "assessments": [
+          {
+            "bestPercent": null,
+            "lessonId": "0199ffff-0000-7000-8000-000000000010",
+            "passed": false,
+            "title": "Kiểm tra cuối chặng ReactJS"
+          }
+        ],
+        "complete": false,
+        "homework": [],
+        "missingCount": 2,
+        "name": "ReactJS basic",
+        "stageVersionId": "0199ffff-0000-7000-8000-000000000011"
+      },
+      {
+        "assessments": [
+          {
+            "bestPercent": null,
+            "lessonId": "0199ffff-0000-7000-8000-000000000012",
+            "passed": false,
+            "title": "Kiểm tra cuối chặng HTML CSS JS"
+          }
+        ],
+        "complete": false,
+        "homework": [],
+        "missingCount": 5,
+        "name": "HTML CSS JS",
+        "stageVersionId": "0199ffff-0000-7000-8000-000000000013"
+      }
+    ],
+    "stagesComplete": 2,
+    "stagesTotal": 5
+  },
+  "coursePercent": 64,
+  "requiredDone": 16,
+  "requiredTotal": 25,
+  "stages": [
+    {
+      "code": "DB",
+      "complete": true,
+      "done": 4,
+      "missing": [],
+      "name": "Database",
+      "overdue": false,
+      "percent": 100,
+      "required": 4,
+      "review": null,
+      "rework": false,
+      "stageId": "0199ffff-0000-7000-8000-000000000014",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000003",
+      "units": [
+        {
+          "id": "0199ffff-0000-7000-8000-000000000015",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000016",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Giới thiệu SQL",
+              "type": "video"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000017",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 4,
+                  "percent": 75,
+                  "score": 3
+                },
+                "latest": {
+                  "max": 4,
+                  "percent": 75,
+                  "reviewStatus": null,
+                  "score": 3
+                },
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 1
+              },
+              "required": true,
+              "status": {
+                "detail": "1 lượt · Gần nhất 75%",
+                "done": true,
+                "label": "Đã làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Luyện tập: Truy vấn SQL cơ bản",
+              "type": "quiz"
+            }
+          ],
+          "position": 1,
+          "title": "Nhập môn SQL"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000018",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000019",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Thiết kế bảng và khóa",
+              "type": "markdown"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000020",
+              "required": false,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Đọc thêm: chỉ mục",
+              "type": "markdown"
+            }
+          ],
+          "position": 2,
+          "title": "Thiết kế bảng"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000021",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000002",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 5,
+                  "percent": 80,
+                  "score": 4
+                },
+                "latest": {
+                  "max": 5,
+                  "percent": 80,
+                  "reviewStatus": "confirmed",
+                  "score": 4
+                },
+                "limit": 2,
+                "mode": "assessment",
+                "open": false,
+                "passPercent": 70,
+                "submitted": 1
+              },
+              "required": true,
+              "status": {
+                "detail": "Tốt nhất 80% · 1/2 lượt · Đã xác nhận",
+                "done": true,
+                "label": "Đạt 80%",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Kiểm tra cuối chặng Database",
+              "type": "quiz"
+            }
+          ],
+          "position": 3,
+          "title": "Kiểm tra cuối chặng"
+        }
+      ],
+      "versionNo": 1
+    },
+    {
+      "code": "DS",
+      "complete": true,
+      "done": 6,
+      "missing": [],
+      "name": "Data structure",
+      "overdue": false,
+      "percent": 100,
+      "required": 6,
+      "review": {
+        "authorName": "Lê Thu Hương",
+        "body": "An nắm chắc stack và queue, bài nộp lại sửa đúng hướng. Chặng Go nên ôn lại phần đồng bộ goroutine trước bài kiểm tra.",
+        "createdAt": "2026-10-05T08:00:00Z",
+        "revision": 1,
+        "updatedAt": "2026-10-05T08:00:00Z"
+      },
+      "rework": false,
+      "stageId": "0199ffff-0000-7000-8000-000000000022",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000006",
+      "units": [
+        {
+          "id": "0199ffff-0000-7000-8000-000000000023",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000024",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Mảng và danh sách liên kết",
+              "type": "video"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000025",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Stack và Queue",
+              "type": "markdown"
+            }
+          ],
+          "position": 1,
+          "title": "Mảng, Stack và Queue"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000026",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000027",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Hash table",
+              "type": "video"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000028",
+              "quiz": {
+                "attemptsUsed": 2,
+                "best": {
+                  "max": 5,
+                  "percent": 100,
+                  "score": 5
+                },
+                "latest": {
+                  "max": 5,
+                  "percent": 100,
+                  "reviewStatus": null,
+                  "score": 5
+                },
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 2
+              },
+              "required": true,
+              "status": {
+                "detail": "2 lượt · Gần nhất 100%",
+                "done": true,
+                "label": "Đã làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Luyện tập: Stack, Queue và Hash",
+              "type": "quiz"
+            }
+          ],
+          "position": 2,
+          "title": "Hash table"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000029",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "homework": {
+                "dueAt": "2026-10-05T08:00:00Z",
+                "latest": {
+                  "attemptNo": 2,
+                  "isLate": true,
+                  "max": 100,
+                  "status": "passed",
+                  "submittedAt": "2026-10-05T08:00:00Z",
+                  "total": 94
+                },
+                "submissionCount": 2
+              },
+              "lessonId": "0199ffff-0000-7000-8000-000000000005",
+              "required": true,
+              "status": {
+                "detail": "2 lần nộp · 94/100 điểm · nộp muộn",
+                "done": true,
+                "label": "Đạt",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Bài tập: Cài đặt Stack và Queue",
+              "type": "homework"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000004",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 5,
+                  "percent": 100,
+                  "score": 5
+                },
+                "latest": {
+                  "max": 5,
+                  "percent": 100,
+                  "reviewStatus": "confirmed",
+                  "score": 5
+                },
+                "limit": 2,
+                "mode": "assessment",
+                "open": false,
+                "passPercent": 70,
+                "submitted": 1
+              },
+              "required": true,
+              "status": {
+                "detail": "Tốt nhất 100% · 1/2 lượt · Đã xác nhận",
+                "done": true,
+                "label": "Đạt 100%",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Kiểm tra cuối chặng Data structure",
+              "type": "quiz"
+            }
+          ],
+          "position": 3,
+          "title": "Kiểm tra cuối chặng"
+        }
+      ],
+      "versionNo": 1
+    },
+    {
+      "code": "GO",
+      "complete": false,
+      "done": 3,
+      "missing": [
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000008",
+          "title": "Bài tập: Đọc CSV và thống kê",
+          "unitTitle": "Kiểm tra cuối chặng"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000007",
+          "title": "Kiểm tra cuối chặng Go",
+          "unitTitle": "Kiểm tra cuối chặng"
+        }
+      ],
+      "name": "Golang basic",
+      "overdue": false,
+      "percent": 60,
+      "required": 5,
+      "review": null,
+      "rework": false,
+      "stageId": "0199ffff-0000-7000-8000-000000000030",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000009",
+      "units": [
+        {
+          "id": "0199ffff-0000-7000-8000-000000000031",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000032",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Cài đặt và Hello World",
+              "type": "video"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000033",
+              "required": false,
+              "status": {
+                "detail": "Chưa mở",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Hello World từng bước",
+              "type": "markdown"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000034",
+              "quiz": {
+                "attemptsUsed": 0,
+                "best": null,
+                "latest": null,
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 0
+              },
+              "required": false,
+              "status": {
+                "detail": "Chưa làm",
+                "done": false,
+                "label": "Chưa làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Luyện tập: Lệnh go và cấu trúc chương trình",
+              "type": "quiz"
+            }
+          ],
+          "position": 1,
+          "title": "Cài đặt và Hello World"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000035",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000036",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Kiểu dữ liệu và hàm",
+              "type": "markdown"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000037",
+              "required": false,
+              "status": {
+                "detail": "Chưa mở",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Bài tập tổng hợp",
+              "type": "markdown"
+            }
+          ],
+          "position": 2,
+          "title": "Kiểu dữ liệu và hàm"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000038",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000039",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Goroutine cơ bản",
+              "type": "video"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000040",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 4,
+                  "percent": 75,
+                  "score": 3
+                },
+                "latest": {
+                  "max": 4,
+                  "percent": 75,
+                  "reviewStatus": null,
+                  "score": 3
+                },
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 1
+              },
+              "required": false,
+              "status": {
+                "detail": "1 lượt · Gần nhất 75%",
+                "done": true,
+                "label": "Đã làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Luyện tập: Goroutine và channel",
+              "type": "quiz"
+            }
+          ],
+          "position": 3,
+          "title": "Goroutine và channel"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000041",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "homework": {
+                "dueAt": "2026-10-05T08:00:00Z",
+                "latest": null,
+                "submissionCount": 0
+              },
+              "lessonId": "0199ffff-0000-7000-8000-000000000008",
+              "required": true,
+              "status": {
+                "detail": "Chưa nộp",
+                "done": false,
+                "label": "Chưa nộp",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Bài tập: Đọc CSV và thống kê",
+              "type": "homework"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000007",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 5,
+                  "percent": 60,
+                  "score": 3
+                },
+                "latest": {
+                  "max": 5,
+                  "percent": 60,
+                  "reviewStatus": "pending",
+                  "score": 3
+                },
+                "limit": 2,
+                "mode": "assessment",
+                "open": false,
+                "passPercent": 70,
+                "submitted": 1
+              },
+              "required": true,
+              "status": {
+                "detail": "Tốt nhất 60% · 1/2 lượt · Chờ xác nhận",
+                "done": false,
+                "label": "Chưa đạt 60%",
+                "overdue": false,
+                "rework": false,
+                "tone": "warn"
+              },
+              "title": "Kiểm tra cuối chặng Go",
+              "type": "quiz"
+            }
+          ],
+          "position": 4,
+          "title": "Kiểm tra cuối chặng"
+        }
+      ],
+      "versionNo": 1
+    },
+    {
+      "code": "RE",
+      "complete": false,
+      "done": 3,
+      "missing": [
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000042",
+          "title": "Hooks",
+          "unitTitle": "Hooks"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000010",
+          "title": "Kiểm tra cuối chặng ReactJS",
+          "unitTitle": "Kiểm tra cuối chặng"
+        }
+      ],
+      "name": "ReactJS basic",
+      "overdue": false,
+      "percent": 60,
+      "required": 5,
+      "review": null,
+      "rework": false,
+      "stageId": "0199ffff-0000-7000-8000-000000000043",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000011",
+      "units": [
+        {
+          "id": "0199ffff-0000-7000-8000-000000000044",
+          "items": [
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000045",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Component và props",
+              "type": "video"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000046",
+              "required": true,
+              "status": {
+                "detail": "Đã tích hoàn thành",
+                "done": true,
+                "label": "Đã học xong",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "State và sự kiện",
+              "type": "markdown"
+            },
+            {
+              "completedAt": "2026-10-05T08:00:00Z",
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000047",
+              "quiz": {
+                "attemptsUsed": 1,
+                "best": {
+                  "max": 4,
+                  "percent": 75,
+                  "score": 3
+                },
+                "latest": {
+                  "max": 4,
+                  "percent": 75,
+                  "reviewStatus": null,
+                  "score": 3
+                },
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 1
+              },
+              "required": true,
+              "status": {
+                "detail": "1 lượt · Gần nhất 75%",
+                "done": true,
+                "label": "Đã làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "ok"
+              },
+              "title": "Luyện tập: Component, props và state",
+              "type": "quiz"
+            }
+          ],
+          "position": 1,
+          "title": "Component, props và state"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000048",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": "2026-10-05T08:00:00Z",
+              "lessonId": "0199ffff-0000-7000-8000-000000000042",
+              "required": true,
+              "status": {
+                "detail": "Đã mở, chưa tích hoàn thành",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Hooks",
+              "type": "video"
+            }
+          ],
+          "position": 2,
+          "title": "Hooks"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000049",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000010",
+              "quiz": {
+                "attemptsUsed": 0,
+                "best": null,
+                "latest": null,
+                "limit": 2,
+                "mode": "assessment",
+                "open": false,
+                "passPercent": 70,
+                "submitted": 0
+              },
+              "required": true,
+              "status": {
+                "detail": "Chưa làm · 2 lượt",
+                "done": false,
+                "label": "Chưa làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Kiểm tra cuối chặng ReactJS",
+              "type": "quiz"
+            }
+          ],
+          "position": 3,
+          "title": "Kiểm tra cuối chặng"
+        }
+      ],
+      "versionNo": 1
+    },
+    {
+      "code": "WEB",
+      "complete": false,
+      "done": 0,
+      "missing": [
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000050",
+          "title": "HTML ngữ nghĩa",
+          "unitTitle": "HTML và CSS"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000051",
+          "title": "CSS layout",
+          "unitTitle": "HTML và CSS"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000052",
+          "title": "Luyện tập: HTML ngữ nghĩa và CSS layout",
+          "unitTitle": "HTML và CSS"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000053",
+          "title": "JavaScript và DOM",
+          "unitTitle": "JavaScript và DOM"
+        },
+        {
+          "lessonId": "0199ffff-0000-7000-8000-000000000012",
+          "title": "Kiểm tra cuối chặng HTML CSS JS",
+          "unitTitle": "Kiểm tra cuối chặng"
+        }
+      ],
+      "name": "HTML CSS JS",
+      "overdue": false,
+      "percent": 0,
+      "required": 5,
+      "review": null,
+      "rework": false,
+      "stageId": "0199ffff-0000-7000-8000-000000000054",
+      "stageVersionId": "0199ffff-0000-7000-8000-000000000013",
+      "units": [
+        {
+          "id": "0199ffff-0000-7000-8000-000000000055",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000050",
+              "required": true,
+              "status": {
+                "detail": "Chưa mở",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "HTML ngữ nghĩa",
+              "type": "markdown"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000051",
+              "required": true,
+              "status": {
+                "detail": "Chưa mở",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "CSS layout",
+              "type": "video"
+            },
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000052",
+              "quiz": {
+                "attemptsUsed": 0,
+                "best": null,
+                "latest": null,
+                "limit": null,
+                "mode": "practice",
+                "open": false,
+                "passPercent": null,
+                "submitted": 0
+              },
+              "required": true,
+              "status": {
+                "detail": "Chưa làm",
+                "done": false,
+                "label": "Chưa làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Luyện tập: HTML ngữ nghĩa và CSS layout",
+              "type": "quiz"
+            }
+          ],
+          "position": 1,
+          "title": "HTML và CSS"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000056",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000053",
+              "required": true,
+              "status": {
+                "detail": "Chưa mở",
+                "done": false,
+                "label": "Chưa học",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "JavaScript và DOM",
+              "type": "video"
+            }
+          ],
+          "position": 2,
+          "title": "JavaScript và DOM"
+        },
+        {
+          "id": "0199ffff-0000-7000-8000-000000000057",
+          "items": [
+            {
+              "completedAt": null,
+              "firstOpenedAt": null,
+              "lessonId": "0199ffff-0000-7000-8000-000000000012",
+              "quiz": {
+                "attemptsUsed": 0,
+                "best": null,
+                "latest": null,
+                "limit": 3,
+                "mode": "assessment",
+                "open": false,
+                "passPercent": 80,
+                "submitted": 0
+              },
+              "required": true,
+              "status": {
+                "detail": "Chưa làm · 3 lượt",
+                "done": false,
+                "label": "Chưa làm",
+                "overdue": false,
+                "rework": false,
+                "tone": "optional"
+              },
+              "title": "Kiểm tra cuối chặng HTML CSS JS",
+              "type": "quiz"
+            }
+          ],
+          "position": 3,
+          "title": "Kiểm tra cuối chặng"
+        }
+      ],
+      "versionNo": 1
+    }
+  ]
+}

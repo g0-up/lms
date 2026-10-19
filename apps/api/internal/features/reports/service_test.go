@@ -12,6 +12,7 @@ import (
 
 	"lms/api/internal/domain"
 	"lms/api/internal/features/classes"
+	"lms/api/internal/features/grading"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/learning"
 	"lms/api/internal/features/stages"
@@ -58,6 +59,19 @@ func (f *fakeReports) MemberRow(context.Context, db.Executor, uuid.UUID, uuid.UU
 func (f *fakeReports) Summary(_ context.Context, _ db.Executor, _ uuid.UUID, q SummaryQuery) (Summary, error) {
 	f.summaryQ = &q
 	return Summary{MemberCount: len(f.rows), ActiveCount: len(f.rows)}, nil
+}
+
+// fakeBacklog ghi lại mốc now nhận được để kiểm Dashboard truyền đồng hồ của service.
+type fakeBacklog struct {
+	rows    []grading.TeacherBacklog
+	overdue int
+	err     error
+	gotNow  time.Time
+}
+
+func (f *fakeBacklog) Backlog(_ context.Context, _ db.Executor, now time.Time) ([]grading.TeacherBacklog, int, error) {
+	f.gotNow = now
+	return f.rows, f.overdue, f.err
 }
 
 type fakeDashboard struct {
@@ -130,16 +144,19 @@ type serviceFixture struct {
 	tx        *fakeTx
 	reports   *fakeReports
 	dashboard *fakeDashboard
+	backlog   *fakeBacklog
 	teacherID uuid.UUID
 	classID   uuid.UUID
 }
 
 func newServiceFixture(progress fakeProgress, outdated fakeOutdated, au fakeAudit, users fakeUsers) serviceFixture {
-	f := serviceFixture{tx: &fakeTx{}, teacherID: uuid.New(), classID: uuid.New(), dashboard: &fakeDashboard{}}
+	f := serviceFixture{
+		tx: &fakeTx{}, teacherID: uuid.New(), classID: uuid.New(), dashboard: &fakeDashboard{}, backlog: &fakeBacklog{},
+	}
 	f.reports = &fakeReports{header: &ClassHeader{ID: f.classID, Code: "basic01", TeacherID: f.teacherID}}
 	f.svc = NewService(Deps{
 		Tx: f.tx, Reports: f.reports, Dashboard: f.dashboard, Progress: progress, Outdated: outdated,
-		Audit: au, Users: users, Clock: &clock.Fake{T: testNow}, StaleDays: 7,
+		Audit: au, Users: users, Backlog: f.backlog, Clock: &clock.Fake{T: testNow}, StaleDays: 7,
 	})
 	return f
 }
@@ -244,6 +261,12 @@ func TestDashboard(t *testing.T) {
 	f := newServiceFixture(fakeProgress{avg: map[uuid.UUID]int{c1: 42}}, outdated, au, users)
 	f.dashboard.classes = []ClassRow{{ID: c1, Code: "basic01"}, {ID: c2, Code: "basic03"}}
 	f.dashboard.targets = map[TargetRef]TargetInfo{{targetClass, classID}: {Name: "basic02"}}
+	avg := 30.5
+	backlog := []grading.TeacherBacklog{
+		{TeacherID: uuid.New(), TeacherName: "Lê Thu Hương", Pending: 7, Overdue: 2, AvgHours: &avg},
+		{TeacherID: uuid.New(), TeacherName: "Phạm Quốc Bảo", Pending: 4, Overdue: 1},
+	}
+	f.backlog.rows, f.backlog.overdue = backlog, 3
 	ctx := context.Background()
 
 	_, err = f.svc.Dashboard(ctx, Actor{ID: uuid.New(), Role: domain.RoleTeacher})
@@ -265,6 +288,22 @@ func TestDashboard(t *testing.T) {
 	assert.Equal(t, "Kích hoạt lớp", d.RecentActivity[0].ActionLabel)
 	assert.Equal(t, "basic02", d.RecentActivity[0].Target.Label)
 	assert.Equal(t, "Hệ thống", d.RecentActivity[1].ActorName)
+	assert.Equal(t, backlog, d.GradingBacklog)
+	assert.Equal(t, 3, d.OverdueCount)
+	assert.Equal(t, testNow, f.backlog.gotNow, "quá hạn tính theo đồng hồ của service")
+
+	dto := toDashboardDTO(d)
+	assert.Equal(t, 3, dto.OverdueCount)
+	assert.Equal(t, []GradingBacklogDTO{
+		{TeacherID: backlog[0].TeacherID.String(), TeacherName: "Lê Thu Hương", Pending: 7, Overdue: 2, AvgHours: &avg},
+		{TeacherID: backlog[1].TeacherID.String(), TeacherName: "Phạm Quốc Bảo", Pending: 4, Overdue: 1},
+	}, dto.GradingBacklog)
+
+	backlogErr := errors.New("backlog lỗi")
+	f.backlog.err = backlogErr
+	_, err = f.svc.Dashboard(ctx, Actor{ID: adminID, Role: domain.RoleAdmin})
+	assert.ErrorIs(t, err, backlogErr)
+	f.backlog.err = nil
 
 	f.svc.outdated = fakeOutdated{err: errors.New("db down")}
 	_, err = f.svc.Dashboard(ctx, Actor{ID: adminID, Role: domain.RoleAdmin})

@@ -27,6 +27,7 @@ import (
 
 	"lms/api/internal/domain"
 	"lms/api/internal/features/courses"
+	"lms/api/internal/features/grading"
 	"lms/api/internal/features/identity"
 	"lms/api/internal/features/learning"
 	"lms/api/internal/features/media"
@@ -75,6 +76,7 @@ type itEnv struct {
 	ident   *identity.Service
 	stages  *stages.Service
 	courses *courses.Service
+	grading *grading.Service
 	engine  *gin.Engine
 }
 
@@ -111,9 +113,11 @@ func newIT(t *testing.T) *itEnv {
 		DB: dbx, Tx: db.TxRunner{DB: dbx}, Courses: courses.PGCourseRepo{}, Versions: courses.PGCourseVersionRepo{},
 		StageVersions: stageRefs{}, Clock: clk, Audit: rec, IDs: ids.V7{},
 	})
+	e.grading = grading.NewService(grading.Deps{Tx: ReadTx{DB: dbx}, Repo: grading.PGRepo{}, Clock: clk})
 	svc := NewService(Deps{
 		Tx: ReadTx{DB: dbx}, Reports: PGReportRepo{}, Dashboard: PGDashboardRepo{}, Progress: learning.PGProgressReader{},
-		Outdated: e.stages, Audit: audit.PGReader{}, Users: identity.PGUserRepo{}, Clock: clk, StaleDays: 7,
+		Outdated: e.stages, Audit: audit.PGReader{}, Users: identity.PGUserRepo{}, Backlog: e.grading, Clock: clk,
+		StaleDays: 7,
 	})
 
 	gin.SetMode(gin.TestMode)
@@ -297,15 +301,17 @@ func TestHTTPClassReportColumnsAndDefaults(t *testing.T) {
 	assert.Equal(t, wantNames, names)
 	assert.NotContains(t, emails(r.Rows), thaoEmail)
 
-	// Đủ cột FR-40 trên dòng của An: % từng chặng theo thứ tự chặng, % tổng chỉ tính bài bắt buộc (10/14).
+	// Đủ cột FR-40 trên dòng của An: % từng chặng theo thứ tự chặng, % tổng chỉ tính bài bắt buộc (16/25; homework
+	// Data structure hoàn thành nhờ lần nộp lại được chấm Đạt; quiz luyện tập hoàn thành khi đã nộp, quiz đánh giá
+	// Database và Data structure Đạt, còn lượt Go 3/5 chưa đạt ngưỡng 70% nên chặng Go chưa đủ).
 	an := rowByEmail(t, r.Rows, anEmail)
 	assert.Equal(t, "Nguyễn Hoàng An", an.Name)
 	assert.Equal(t, "active", an.AccountStatus)
 	assert.Equal(t, "active", an.MemberStatus)
 	assert.False(t, an.MustChangePassword)
-	assert.Equal(t, 10, an.RequiredDone)
-	assert.Equal(t, 14, an.RequiredTotal)
-	assert.Equal(t, 71, an.Percent)
+	assert.Equal(t, 16, an.RequiredDone)
+	assert.Equal(t, 25, an.RequiredTotal)
+	assert.Equal(t, 64, an.Percent)
 	require.Len(t, an.StagePercents, 5)
 	pcts := make([]int, 5)
 	for i, sp := range an.StagePercents {
@@ -313,7 +319,7 @@ func TestHTTPClassReportColumnsAndDefaults(t *testing.T) {
 		assert.Equal(t, r.Stages[i].RequiredTotal, sp.RequiredTotal)
 		pcts[i] = sp.Percent
 	}
-	assert.Equal(t, []int{100, 100, 100, 67, 0}, pcts)
+	assert.Equal(t, []int{100, 100, 60, 60, 0}, pcts)
 	require.NotNil(t, an.Invite)
 	assert.Equal(t, "invite", an.Invite.Kind)
 	require.NotNil(t, an.Invite.Status)
@@ -330,7 +336,7 @@ func TestHTTPClassReportColumnsAndDefaults(t *testing.T) {
 
 	// Tổng hợp theo cùng quy tắc includeDropped; ngưỡng mặc định 7 ngày và 50%.
 	assert.Equal(t, SummaryDTO{
-		MemberCount: 7, ActiveCount: 7, AvgPercent: r.Summary.AvgPercent, NotLoggedInCount: 1, InactiveCount: 2, BelowCount: 4,
+		MemberCount: 7, ActiveCount: 7, AvgPercent: r.Summary.AvgPercent, NotLoggedInCount: 1, InactiveCount: 2, BelowCount: 5,
 		InactiveDays: 7, BelowPercent: 50,
 	}, r.Summary)
 	sum := 0
@@ -366,7 +372,7 @@ func TestHTTPClassReportFiltersAndSorts(t *testing.T) {
 	assert.Equal(t, []string{dungEmail}, filtered("notLoggedIn=true"))
 	assert.ElementsMatch(t, []string{dungEmail, khangEmail}, filtered("inactiveDays=7"))
 	below := filtered("belowPercent=50")
-	assert.Len(t, below, 4)
+	assert.Len(t, below, 5)
 	for _, em := range below {
 		assert.Less(t, rowByEmail(t, all.Rows, em).Percent, 50, em)
 	}
@@ -448,7 +454,7 @@ func TestHTTPClassReportFiltersAndSorts(t *testing.T) {
 		assert.Equal(t, emails(want), emails(got), s)
 		assert.Equal(t, s, e.report(admin, basic01, "sort="+s).Filter.Sort)
 	}
-	assert.Equal(t, cuongEmail, e.report(admin, basic01, "sort=pct-desc").Rows[0].Email, "Cường 13/14 dẫn đầu")
+	assert.Equal(t, cuongEmail, e.report(admin, basic01, "sort=pct-desc").Rows[0].Email, "Cường 14/25 dẫn đầu")
 	act := e.report(admin, basic01, "sort=activity").Rows
 	assert.Equal(t, dungEmail, act[len(act)-1].Email, "chưa hoạt động nằm cuối")
 	assert.Equal(t, dungEmail, e.report(admin, basic01, "sort=activity-asc").Rows[0].Email)
@@ -518,9 +524,9 @@ func TestHTTPMemberReport(t *testing.T) {
 	assert.True(t, r.SelfReported)
 	assert.Equal(t, basic01Code, r.Class.Code)
 	assert.Equal(t, anMember.String(), r.Member.MemberID)
-	assert.Equal(t, 71, r.Member.Percent)
+	assert.Equal(t, 64, r.Member.Percent)
 
-	// Đủ mọi học liệu của course version (16 bài, kể cả bài không bắt buộc) với state và mốc thời gian.
+	// Đủ mọi học liệu của course version (30 bài, kể cả bài không bắt buộc) với state và mốc thời gian.
 	require.Len(t, r.Stages, 5)
 	lessons := 0
 	states := map[string]int{}
@@ -542,10 +548,10 @@ func TestHTTPMemberReport(t *testing.T) {
 			}
 		}
 	}
-	assert.Equal(t, 16, lessons)
-	assert.Equal(t, map[string]int{"completed": 11, "opened": 1, "not_opened": 4}, states)
-	assert.Equal(t, "Hooks", r.Stages[3].Lessons[2].Title)
-	assert.Equal(t, "opened", r.Stages[3].Lessons[2].State)
+	assert.Equal(t, 30, lessons)
+	assert.Equal(t, map[string]int{"completed": 18, "opened": 2, "not_opened": 10}, states)
+	assert.Equal(t, "Hooks", r.Stages[3].Lessons[3].Title)
+	assert.Equal(t, "opened", r.Stages[3].Lessons[3].State)
 	assertGolden(t, "member-report.json", raw)
 
 	// Thành viên đã rời lớp vẫn xem được drilldown.
@@ -633,7 +639,8 @@ func TestHTTPDashboard(t *testing.T) {
 	}
 	for i, a := range d.RecentActivity {
 		assert.True(t, labels[a.ActionLabel], a.ActionLabel)
-		assert.Equal(t, "Trần Minh Quân", a.ActorName)
+		// Admin và giảng viên (đặt hạn nộp, chấm bài) đều có mặt trong nhật ký seed.
+		assert.Contains(t, []string{"Trần Minh Quân", "Lê Thu Hương", "Phạm Quốc Bảo"}, a.ActorName)
 		assert.NotEmpty(t, a.Target.Label)
 		if i > 0 {
 			assert.False(t, a.At.After(d.RecentActivity[i-1].At))
@@ -643,6 +650,26 @@ func TestHTTPDashboard(t *testing.T) {
 	assert.Equal(t, "Database v2", d.RecentActivity[0].Target.Label)
 	assert.Equal(t, "Nhân bản chặng", d.RecentActivity[1].ActionLabel)
 	assert.Equal(t, "Database v1 → v2", d.RecentActivity[1].Summary)
+
+	// gradingBacklog/overdueCount dùng đúng truy vấn hàng chờ nên khớp hàng chờ Admin và của từng giảng viên. Seed có
+	// ba mục quá 3 ngày: Bích ds-hw và Hà db-test ở basic01 (Hương), Phong ds-hw ở basic02 (Bảo).
+	adminQueue, err := e.grading.Queue(ctx, grading.Actor{ID: adminID, Role: domain.RoleAdmin}, grading.Filter{})
+	require.NoError(t, err)
+	assert.Equal(t, adminQueue.OverdueCount, d.OverdueCount)
+	assert.Equal(t, 3, d.OverdueCount)
+	require.Len(t, d.GradingBacklog, 2)
+	sum := 0
+	for i, b := range d.GradingBacklog {
+		assert.Equal(t, []string{"Lê Thu Hương", "Phạm Quốc Bảo"}[i], b.TeacherName, "theo tên")
+		q, err := e.grading.Queue(ctx, grading.Actor{ID: uuid.MustParse(b.TeacherID), Role: domain.RoleTeacher},
+			grading.Filter{})
+		require.NoError(t, err)
+		assert.Equal(t, q.Total, b.Pending, b.TeacherName)
+		assert.Equal(t, q.OverdueCount, b.Overdue, b.TeacherName)
+		assert.NotNil(t, b.AvgHours, "seed có bài %s đã chấm", b.TeacherName)
+		sum += b.Overdue
+	}
+	assert.Equal(t, d.OverdueCount, sum)
 	assertGolden(t, "dashboard.json", raw)
 
 	// FR-17: áp dụng Database v2 cho BASIC → hết lỗi thời.

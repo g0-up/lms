@@ -20,12 +20,21 @@ const (
 	TemplateAdded         TemplateName = "added"
 	TemplateResend        TemplateName = "resend"
 	TemplatePasswordReset TemplateName = "password_reset"
+	// TemplateHomeworkGraded báo kết quả chấm (hoặc sửa điểm) homework cho học viên.
+	TemplateHomeworkGraded TemplateName = "homework_graded"
+	// TemplateQuizReviewed báo giảng viên đã xác nhận, nhận xét hoặc sửa nhận xét một lượt quiz.
+	TemplateQuizReviewed TemplateName = "quiz_reviewed"
+	// TemplateGradingDigest là email tổng hợp hằng ngày các mục chờ chấm hoặc xác nhận quá hạn gửi giảng viên.
+	TemplateGradingDigest TemplateName = "grading_digest"
+	// TemplateDeadlineReminder nhắc học viên chưa nộp homework sắp tới hạn.
+	TemplateDeadlineReminder TemplateName = "deadline_reminder"
 )
 
-// Valid cho biết t là một trong 4 template cho phép.
+// Valid cho biết t là một trong 8 template cho phép.
 func (t TemplateName) Valid() bool {
 	switch t {
-	case TemplateInvite, TemplateAdded, TemplateResend, TemplatePasswordReset:
+	case TemplateInvite, TemplateAdded, TemplateResend, TemplatePasswordReset, TemplateHomeworkGraded,
+		TemplateQuizReviewed, TemplateGradingDigest, TemplateDeadlineReminder:
 		return true
 	}
 	return false

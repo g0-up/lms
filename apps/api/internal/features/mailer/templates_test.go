@@ -73,6 +73,145 @@ func TestRenderAdded(t *testing.T) {
 	assert.NotContains(t, strings.ToLower(m.Text), "mật khẩu tạm:")
 }
 
+func homeworkPayload() map[string]any {
+	return map[string]any{
+		"Name": "An Nguyễn", "ClassName": "Backend cơ bản K01", "ClassCode": "BASIC01",
+		"LessonTitle": "Bài tập: Thiết kế CSDL", "TotalPoints": 8, "MaxPoints": 10, "ResultLabel": "Đạt",
+		"Comment": "Bảng <users> thiếu khóa ngoại.", "Updated": false,
+		"ResultURL": "http://localhost:5173/learn/classes/c1/lessons/l1",
+	}
+}
+
+func TestRenderHomeworkGraded(t *testing.T) {
+	r := testRenderer(t)
+	m, err := r.Render(TemplateHomeworkGraded, "an.nguyen@gmail.com", homeworkPayload())
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] Bài đã được chấm: Bài tập: Thiết kế CSDL · Đạt", m.Subject)
+	for _, body := range []string{m.Text, m.HTML} {
+		assert.Contains(t, body, "An Nguyễn")
+		assert.Contains(t, body, "Backend cơ bản K01")
+		assert.Contains(t, body, "8/10")
+		assert.Contains(t, body, "Đạt")
+		assert.Contains(t, body, "http://localhost:5173/learn/classes/c1/lessons/l1")
+	}
+	assert.Contains(t, m.Text, "Bảng <users> thiếu khóa ngoại.")
+	assert.Contains(t, m.HTML, "Bảng &lt;users&gt; thiếu khóa ngoại.", "nhận xét của giảng viên được escape trong HTML")
+
+	data := homeworkPayload()
+	data["Updated"], data["ResultLabel"] = true, "Cần làm lại"
+	m, err = r.Render(TemplateHomeworkGraded, "an.nguyen@gmail.com", data)
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] Điểm đã được cập nhật: Bài tập: Thiết kế CSDL · Cần làm lại", m.Subject)
+	assert.Contains(t, m.Text, "cập nhật điểm")
+}
+
+func quizPayload() map[string]any {
+	return map[string]any{
+		"Name": "Cường Lê", "ClassName": "Backend cơ bản K01", "ClassCode": "BASIC01",
+		"QuizTitle": "Kiểm tra cuối chặng Go", "AttemptNo": 2, "Percent": 60, "ResultLabel": "Chưa đạt",
+		"Assessment": true, "Updated": false, "Comment": "Ôn lại bài <Cài đặt> trước khi xin thêm lượt.",
+		"ResultURL": "http://localhost:5173/learn/classes/c1/lessons/l1?result=a1",
+	}
+}
+
+func TestRenderQuizReviewed(t *testing.T) {
+	r := testRenderer(t)
+	m, err := r.Render(TemplateQuizReviewed, "cuong.le@outlook.com", quizPayload())
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] Giảng viên đã xác nhận kết quả: Kiểm tra cuối chặng Go lượt #2 · 60% · Chưa đạt", m.Subject)
+	for _, body := range []string{m.Text, m.HTML} {
+		assert.Contains(t, body, "Cường Lê")
+		assert.Contains(t, body, "Backend cơ bản K01")
+		assert.Contains(t, body, "lượt #2")
+		assert.Contains(t, body, "60%")
+		assert.Contains(t, body, "Chưa đạt")
+		assert.Contains(t, body, "http://localhost:5173/learn/classes/c1/lessons/l1?result=a1")
+	}
+	assert.Contains(t, m.Text, "Ôn lại bài <Cài đặt> trước khi xin thêm lượt.")
+	assert.Contains(t, m.HTML, "Ôn lại bài &lt;Cài đặt&gt;", "nhận xét của giảng viên được escape trong HTML")
+
+	data := quizPayload()
+	data["Updated"] = true
+	m, err = r.Render(TemplateQuizReviewed, "cuong.le@outlook.com", data)
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] Nhận xét đã được cập nhật: Kiểm tra cuối chặng Go lượt #2 · 60% · Chưa đạt", m.Subject)
+	assert.Contains(t, m.Text, "cập nhật nhận xét")
+
+	data = quizPayload()
+	data["Assessment"], data["QuizTitle"], data["AttemptNo"] = false, "Goroutine và channel", 1
+	delete(data, "Percent")
+	delete(data, "ResultLabel")
+	m, err = r.Render(TemplateQuizReviewed, "cuong.le@outlook.com", data)
+	require.NoError(t, err, "quiz học liệu không cần % và kết quả")
+	assert.Equal(t, "[GoUp LMS] Giảng viên đã nhận xét: Goroutine và channel lượt #1", m.Subject)
+	for _, body := range []string{m.Text, m.HTML} {
+		assert.NotContains(t, body, "%")
+		assert.NotContains(t, body, "Kết quả:")
+	}
+}
+
+func digestPayload() map[string]any {
+	return map[string]any{
+		"Name": "Lê Thu Hương", "Count": 2, "QueueURL": "http://localhost:5173/teach/grading?overdue=1",
+		"Items": []any{
+			map[string]any{
+				"StudentName": "Bích Trần", "KindLabel": "bài tập", "ClassCode": "BASIC01", "ClassName": "Backend cơ bản K01",
+				"LessonTitle": "Bài tập: Thiết kế <CSDL>", "Waited": "4,5 ngày",
+			},
+			map[string]any{
+				"StudentName": "Hà Phạm", "KindLabel": "quiz", "ClassCode": "BASIC01", "ClassName": "Backend cơ bản K01",
+				"LessonTitle": "Kiểm tra cơ sở dữ liệu", "Waited": "3,5 ngày",
+			},
+		},
+	}
+}
+
+func TestRenderGradingDigest(t *testing.T) {
+	r := testRenderer(t)
+	m, err := r.Render(TemplateGradingDigest, "huong.le@goup.vn", digestPayload())
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] 2 bài chờ chấm hoặc xác nhận quá 3 ngày: Bích Trần (bài tập), Hà Phạm (quiz)", m.Subject)
+	for _, body := range []string{m.Text, m.HTML} {
+		assert.Contains(t, body, "Lê Thu Hương")
+		assert.Contains(t, body, "Bích Trần")
+		assert.Contains(t, body, "Hà Phạm")
+		assert.Contains(t, body, "Backend cơ bản K01")
+		assert.Contains(t, body, "Kiểm tra cơ sở dữ liệu")
+		assert.Contains(t, body, "4,5 ngày")
+		assert.Contains(t, body, "3,5 ngày")
+		assert.Contains(t, body, "http://localhost:5173/teach/grading?overdue=1")
+	}
+	assert.Contains(t, m.Text, "Bài tập: Thiết kế <CSDL>")
+	assert.Contains(t, m.HTML, "Bài tập: Thiết kế &lt;CSDL&gt;", "tiêu đề học liệu được escape trong HTML")
+}
+
+func reminderPayload() map[string]any {
+	return map[string]any{
+		"Name": "An Nguyễn", "ClassCode": "BASIC01", "ClassName": "Backend cơ bản K01",
+		"LessonTitle": "Bài tập: Goroutine", "DueLabel": "20/10/2026 17:00",
+		"LessonURL": "http://localhost:5173/learn/classes/c1/lessons/l1",
+	}
+}
+
+func TestRenderDeadlineReminder(t *testing.T) {
+	r := testRenderer(t)
+	m, err := r.Render(TemplateDeadlineReminder, "an.nguyen@gmail.com", reminderPayload())
+	require.NoError(t, err)
+	assert.Equal(t, "[GoUp LMS] Nhắc hạn nộp: Bài tập: Goroutine · hạn 20/10/2026 17:00", m.Subject)
+	for _, body := range []string{m.Text, m.HTML} {
+		assert.Contains(t, body, "An Nguyễn")
+		assert.Contains(t, body, "Bài tập: Goroutine")
+		assert.Contains(t, body, "Backend cơ bản K01")
+		assert.Contains(t, body, "20/10/2026 17:00")
+		assert.Contains(t, body, "http://localhost:5173/learn/classes/c1/lessons/l1")
+	}
+
+	data := reminderPayload()
+	delete(data, "LessonURL")
+	_, err = r.Render(TemplateDeadlineReminder, "an.nguyen@gmail.com", data)
+	require.Error(t, err, "thiếu link phải lỗi thay vì gửi email không có đường dẫn")
+}
+
 func TestRenderPasswordReset(t *testing.T) {
 	r := testRenderer(t)
 	link := "http://localhost:5173/reset-password#token=abc_DEF-123"
@@ -111,7 +250,8 @@ func TestRenderMissingKeyFailsWithoutLeakingValues(t *testing.T) {
 
 func TestEveryTemplateHasSubjectAndBodies(t *testing.T) {
 	r := testRenderer(t)
-	for _, name := range []TemplateName{TemplateInvite, TemplateAdded, TemplateResend, TemplatePasswordReset} {
+	for _, name := range []TemplateName{TemplateInvite, TemplateAdded, TemplateResend, TemplatePasswordReset, TemplateHomeworkGraded,
+		TemplateQuizReviewed, TemplateGradingDigest, TemplateDeadlineReminder} {
 		assert.True(t, name.Valid())
 		assert.Contains(t, r.html, name)
 		assert.Contains(t, r.text, name)

@@ -37,6 +37,13 @@ func (h *Handler) Register(rg *gin.RouterGroup, requireAdmin gin.HandlerFunc) {
 	rg.GET("/:id/content", h.content)
 }
 
+// RegisterStudent gắn upload file bài tập của học viên vào nhóm /me/uploads (router đã gắn requireStudent và
+// limiter); quyền và giới hạn kiểm ở service.
+func (h *Handler) RegisterStudent(rg *gin.RouterGroup) {
+	rg.POST("", h.initUpload)
+	rg.POST("/:id/complete", h.completeUpload)
+}
+
 func (h *Handler) initUpload(c *gin.Context) {
 	p, ok := h.mustPrincipal(c)
 	if !ok {

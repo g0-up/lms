@@ -64,6 +64,13 @@ func TestMapRealPostgresErrors(t *testing.T) {
 			args:   []any{stageDSID, testdb.AdminQuanTranID},
 			status: 409, code: apperr.CodeConflict, msg: "Mã đã tồn tại",
 		},
+		{
+			name: "unit title differing only in case and surrounding spaces",
+			query: `INSERT INTO stage_units (id, stage_version_id, unit_key, title, position)
+				VALUES ('01990000-0000-7000-8000-0000000001f3', $1, 'khac', '  nội dung chặng ', 2)`,
+			args:   []any{testdb.StageDBV2ID},
+			status: 409, code: apperr.CodeConflict, msg: "Tên bài học đã có trong phiên bản này",
+		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

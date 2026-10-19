@@ -37,10 +37,22 @@ func (h *Handler) Register(rg *gin.RouterGroup, guards ...gin.HandlerFunc) {
 	sv := rg.Group("/stage-versions", guards...)
 	sv.GET("/:vid", h.getVersion)
 	sv.DELETE("/:vid", h.deleteVersion)
+	sv.POST("/:vid/units", h.addUnit)
+	sv.PUT("/:vid/units/order", h.reorderUnits)
+	sv.PATCH("/:vid/units/:uid", h.renameUnit)
+	sv.DELETE("/:vid/units/:uid", h.removeUnit)
 	sv.POST("/:vid/lessons", h.addLesson)
 	sv.PUT("/:vid/lessons/order", h.reorder)
 	sv.PATCH("/:vid/lessons/:lid", h.updateLesson)
 	sv.DELETE("/:vid/lessons/:lid", h.removeLesson)
+	sv.POST("/:vid/lessons/:lid/questions", h.addQuestion)
+	sv.PUT("/:vid/lessons/:lid/questions/order", h.reorderQuestions)
+	sv.PATCH("/:vid/lessons/:lid/questions/:qid", h.updateQuestion)
+	sv.DELETE("/:vid/lessons/:lid/questions/:qid", h.removeQuestion)
+	sv.POST("/:vid/lessons/:lid/criteria", h.addCriterion)
+	sv.PUT("/:vid/lessons/:lid/criteria/order", h.reorderCriteria)
+	sv.PATCH("/:vid/lessons/:lid/criteria/:cid", h.updateCriterion)
+	sv.DELETE("/:vid/lessons/:lid/criteria/:cid", h.removeCriterion)
 	sv.POST("/:vid/publish", h.publish)
 	sv.POST("/:vid/clone", h.clone)
 	sv.POST("/:vid/archive", h.archive)
@@ -179,7 +191,201 @@ func (h *Handler) reorder(c *gin.Context) {
 		httpx.Fail(c, err)
 		return
 	}
-	d, err := h.svc.ReorderLessons(c.Request.Context(), actor, vid, req.LessonIDs)
+	d, err := h.svc.ReorderLessons(c.Request.Context(), actor, vid, req.layout())
+	h.respondVersion(c, http.StatusOK, d, err)
+}
+
+func (h *Handler) addQuestion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	var req questionRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.AddQuestion(c.Request.Context(), actor, vid, lid, req.cmd())
+	h.respondLesson(c, http.StatusCreated, l, err)
+}
+
+func (h *Handler) updateQuestion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	qid, ok := uuidParam(c, "qid")
+	if !ok {
+		return
+	}
+	var req questionRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.UpdateQuestion(c.Request.Context(), actor, vid, lid, qid, req.cmd())
+	h.respondLesson(c, http.StatusOK, l, err)
+}
+
+func (h *Handler) removeQuestion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	qid, ok := uuidParam(c, "qid")
+	if !ok {
+		return
+	}
+	if err := h.svc.RemoveQuestion(c.Request.Context(), actor, vid, lid, qid); err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.NoContent(c)
+}
+
+func (h *Handler) reorderQuestions(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	var req reorderQuestionsRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.ReorderQuestions(c.Request.Context(), actor, vid, lid, req.QuestionIDs)
+	h.respondLesson(c, http.StatusOK, l, err)
+}
+
+func (h *Handler) addCriterion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	var req criterionRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.AddCriterion(c.Request.Context(), actor, vid, lid, CriterionCmd(req))
+	h.respondLesson(c, http.StatusCreated, l, err)
+}
+
+func (h *Handler) updateCriterion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	cid, ok := uuidParam(c, "cid")
+	if !ok {
+		return
+	}
+	var req criterionRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.UpdateCriterion(c.Request.Context(), actor, vid, lid, cid, CriterionCmd(req))
+	h.respondLesson(c, http.StatusOK, l, err)
+}
+
+func (h *Handler) removeCriterion(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	cid, ok := uuidParam(c, "cid")
+	if !ok {
+		return
+	}
+	if err := h.svc.RemoveCriterion(c.Request.Context(), actor, vid, lid, cid); err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.NoContent(c)
+}
+
+func (h *Handler) reorderCriteria(c *gin.Context) {
+	actor, vid, lid, ok := h.actorVersionLesson(c)
+	if !ok {
+		return
+	}
+	var req reorderCriteriaRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	l, err := h.svc.ReorderCriteria(c.Request.Context(), actor, vid, lid, req.CriterionIDs)
+	h.respondLesson(c, http.StatusOK, l, err)
+}
+
+func (h *Handler) addUnit(c *gin.Context) {
+	actor, vid, ok := h.actorAndVersion(c)
+	if !ok {
+		return
+	}
+	var req unitRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	d, err := h.svc.AddUnit(c.Request.Context(), actor, vid, req.Title)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.OK(c, http.StatusCreated, toUnitDTO(d))
+}
+
+func (h *Handler) renameUnit(c *gin.Context) {
+	actor, vid, ok := h.actorAndVersion(c)
+	if !ok {
+		return
+	}
+	uid, ok := uuidParam(c, "uid")
+	if !ok {
+		return
+	}
+	var req unitRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	d, err := h.svc.RenameUnit(c.Request.Context(), actor, vid, uid, req.Title)
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.OK(c, http.StatusOK, toUnitDTO(d))
+}
+
+func (h *Handler) removeUnit(c *gin.Context) {
+	actor, vid, ok := h.actorAndVersion(c)
+	if !ok {
+		return
+	}
+	uid, ok := uuidParam(c, "uid")
+	if !ok {
+		return
+	}
+	if _, err := h.svc.RemoveUnit(c.Request.Context(), actor, vid, uid); err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.NoContent(c)
+}
+
+func (h *Handler) reorderUnits(c *gin.Context) {
+	actor, vid, ok := h.actorAndVersion(c)
+	if !ok {
+		return
+	}
+	var req reorderUnitsRequest
+	if err := httpx.BindJSON(c, &req); err != nil {
+		httpx.Fail(c, err)
+		return
+	}
+	d, err := h.svc.ReorderUnits(c.Request.Context(), actor, vid, req.UnitIDs)
 	h.respondVersion(c, http.StatusOK, d, err)
 }
 
@@ -229,6 +435,27 @@ func (h *Handler) respondVersion(c *gin.Context, status int, d VersionDetail, er
 		return
 	}
 	httpx.OK(c, status, toVersionDTO(d))
+}
+
+// respondLesson trả học liệu của bản nháp sau lệnh soạn câu hỏi/tiêu chí.
+func (h *Handler) respondLesson(c *gin.Context, status int, l *Lesson, err error) {
+	if err != nil {
+		fail(c, err)
+		return
+	}
+	httpx.OK(c, status, toLessonDTO(l, domain.VersionDraft))
+}
+
+func (h *Handler) actorVersionLesson(c *gin.Context) (Actor, uuid.UUID, uuid.UUID, bool) {
+	actor, vid, ok := h.actorAndVersion(c)
+	if !ok {
+		return Actor{}, uuid.Nil, uuid.Nil, false
+	}
+	lid, ok := uuidParam(c, "lid")
+	if !ok {
+		return Actor{}, uuid.Nil, uuid.Nil, false
+	}
+	return actor, vid, lid, true
 }
 
 func (h *Handler) actorAndVersion(c *gin.Context) (Actor, uuid.UUID, bool) {

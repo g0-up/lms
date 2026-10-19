@@ -5,6 +5,7 @@ package media
 import (
 	"fmt"
 	"mime"
+	"path/filepath"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -40,14 +41,15 @@ type Kind string
 
 // Các loại media.
 const (
-	KindVideo Kind = "video"
-	KindImage Kind = "image"
+	KindVideo    Kind = "video"
+	KindImage    Kind = "image"
+	KindDocument Kind = "document"
 )
 
 // ParseKind đọc kind từ request.
 func ParseKind(s string) (Kind, error) {
 	switch k := Kind(s); k {
-	case KindVideo, KindImage:
+	case KindVideo, KindImage, KindDocument:
 		return k, nil
 	}
 	return "", ErrInvalidKind
@@ -69,15 +71,33 @@ var allowedTypes = map[Kind]map[string]string{
 	KindImage: {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif"},
 }
 
-// Limits là dung lượng tối đa theo loại (MAX_VIDEO_BYTES, MAX_IMAGE_BYTES).
+// documentTypes là allowlist file kèm bài tập theo đuôi tên file → content type chuẩn. Trình duyệt gửi MIME thất thường
+// (.sql có thể rỗng, application/sql hay application/octet-stream) nên server bỏ qua MIME client và quyết định theo
+// đuôi; type chuẩn được ký vào URL PUT và lưu lại. HTML, SVG và file chạy được không có trong bảng.
+var documentTypes = map[string]string{
+	".zip":  "application/zip",
+	".pdf":  "application/pdf",
+	".md":   "text/plain; charset=utf-8",
+	".txt":  "text/plain; charset=utf-8",
+	".sql":  "text/plain; charset=utf-8",
+	".png":  "image/png",
+	".jpg":  "image/jpeg",
+	".jpeg": "image/jpeg",
+}
+
+// Limits là dung lượng tối đa theo loại (MAX_VIDEO_BYTES, MAX_IMAGE_BYTES, MAX_DOCUMENT_BYTES).
 type Limits struct {
-	MaxVideoBytes int64
-	MaxImageBytes int64
+	MaxVideoBytes    int64
+	MaxImageBytes    int64
+	MaxDocumentBytes int64
 }
 
 func (l Limits) max(k Kind) int64 {
-	if k == KindVideo {
+	switch k {
+	case KindVideo:
 		return l.MaxVideoBytes
+	case KindDocument:
+		return l.MaxDocumentBytes
 	}
 	return l.MaxImageBytes
 }
@@ -97,20 +117,20 @@ type MediaFile struct {
 }
 
 // NewPendingUpload kiểm loại, content type, tên và dung lượng rồi tạo bản ghi pending với storage key
-// media/{kind}/{yyyy}/{mm}/{id}{ext}.
+// media/{kind}/{yyyy}/{mm}/{id}{ext}. Kind document lấy content type từ đuôi tên file, bỏ qua contentType client gửi.
 func NewPendingUpload(id uuid.UUID, kind Kind, fileName, contentType string, size int64, by uuid.UUID, now time.Time, limits Limits) (*MediaFile, error) {
-	types, ok := allowedTypes[kind]
-	if !ok {
-		return nil, ErrInvalidKind
-	}
-	ct := normalizeContentType(contentType)
-	ext, ok := types[ct]
-	if !ok {
-		return nil, ErrUnsupportedType
+	if kind != KindDocument {
+		if _, ok := allowedTypes[kind]; !ok {
+			return nil, ErrInvalidKind
+		}
 	}
 	fileName = strings.TrimSpace(fileName)
 	if fileName == "" || utf8.RuneCountInString(fileName) > maxFileNameRunes || strings.ContainsAny(fileName, "/\\\x00") {
 		return nil, ErrInvalidFileName
+	}
+	ct, ext, err := resolveType(kind, fileName, contentType)
+	if err != nil {
+		return nil, err
 	}
 	if size <= 0 {
 		return nil, ErrInvalidSize
@@ -125,12 +145,36 @@ func NewPendingUpload(id uuid.UUID, kind Kind, fileName, contentType string, siz
 	}, nil
 }
 
+// resolveType trả content type lưu và đuôi storage key. Video, ảnh: type client gửi phải nằm trong allowlist. Document:
+// type chuẩn theo đuôi tên file (giữ tham số charset để trình duyệt hiện đúng tiếng Việt).
+func resolveType(kind Kind, fileName, contentType string) (string, string, error) {
+	if kind == KindDocument {
+		ct, err := DocumentContentType(fileName)
+		return ct, strings.ToLower(filepath.Ext(fileName)), err
+	}
+	ct := normalizeContentType(contentType)
+	ext, ok := allowedTypes[kind][ct]
+	if !ok {
+		return "", "", ErrUnsupportedType
+	}
+	return ct, ext, nil
+}
+
+// DocumentContentType là content type chuẩn của file kèm theo đuôi tên file; đuôi ngoài allowlist trả ErrUnsupportedType.
+func DocumentContentType(fileName string) (string, error) {
+	ct, ok := documentTypes[strings.ToLower(filepath.Ext(fileName))]
+	if !ok {
+		return "", ErrUnsupportedType
+	}
+	return ct, nil
+}
+
 // MarkReady xác nhận object trên storage khớp dung lượng và content type đã ký. Gọi lại khi đã ready là no-op.
 func (m *MediaFile) MarkReady(stat storage.ObjectStat, now time.Time) error {
 	if m.status == StatusReady {
 		return nil
 	}
-	if stat.Size != m.sizeBytes || normalizeContentType(stat.ContentType) != m.contentType {
+	if stat.Size != m.sizeBytes || normalizeContentType(stat.ContentType) != normalizeContentType(m.contentType) {
 		return ErrUploadMismatch
 	}
 	m.status, m.readyAt = StatusReady, &now
@@ -149,7 +193,7 @@ func (m *MediaFile) Kind() Kind { return m.kind }
 // FileName là tên file gốc, chỉ để hiển thị.
 func (m *MediaFile) FileName() string { return m.fileName }
 
-// ContentType là content type đã chuẩn hóa.
+// ContentType là content type đã chuẩn hóa (document giữ tham số charset của type chuẩn).
 func (m *MediaFile) ContentType() string { return m.contentType }
 
 // SizeBytes là dung lượng khai báo (và đã khớp khi ready).
@@ -161,7 +205,7 @@ func (m *MediaFile) Status() Status { return m.status }
 // IsReady cho biết file đã upload xong.
 func (m *MediaFile) IsReady() bool { return m.status == StatusReady }
 
-// UploadedBy là admin đã upload.
+// UploadedBy là người đã upload (admin, hoặc học viên với file bài tập).
 func (m *MediaFile) UploadedBy() uuid.UUID { return m.uploadedBy }
 
 // CreatedAt là lúc tạo bản ghi.

@@ -9,7 +9,8 @@
       "position": 1,
       "required": true,
       "title": "Thiết kế bảng và khóa",
-      "type": "markdown"
+      "type": "markdown",
+      "unitId": "01990000-0000-7000-8000-000000000142"
     },
     {
       "id": "01990000-0000-7000-8000-000000000132",
@@ -18,13 +19,24 @@
       "position": 2,
       "required": false,
       "title": "Đọc thêm: chỉ mục",
-      "type": "markdown"
+      "type": "markdown",
+      "unitId": "01990000-0000-7000-8000-000000000142"
     }
   ],
   "stageCode": "DB",
   "stageId": "01990000-0000-7000-8000-000000000101",
   "stageName": "Database",
   "status": "draft",
+  "units": [
+    {
+      "id": "01990000-0000-7000-8000-000000000142",
+      "lessonCount": 2,
+      "position": 1,
+      "requiredCount": 1,
+      "title": "Nội dung chặng",
+      "unitKey": "noi-dung-chang"
+    }
+  ],
   "usedBy": [],
   "versionNo": 2
 }

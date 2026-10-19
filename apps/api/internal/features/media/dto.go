@@ -14,9 +14,10 @@ type MediaDTO struct {
 
 // UploadTicketDTO là phản hồi POST /media/uploads.
 type UploadTicketDTO struct {
-	MediaID   string    `json:"mediaId"`
-	UploadURL string    `json:"uploadUrl"`
-	ExpiresAt time.Time `json:"expiresAt"`
+	MediaID   string            `json:"mediaId"`
+	UploadURL string            `json:"uploadUrl"`
+	Headers   map[string]string `json:"headers"`
+	ExpiresAt time.Time         `json:"expiresAt"`
 }
 
 // SignedURLDTO là phản hồi GET /media/{id}/url.
@@ -42,7 +43,7 @@ func ToDTO(m *MediaFile) MediaDTO {
 }
 
 func ticketDTO(t UploadTicket) UploadTicketDTO {
-	return UploadTicketDTO{MediaID: t.MediaID.String(), UploadURL: t.UploadURL, ExpiresAt: t.ExpiresAt.UTC()}
+	return UploadTicketDTO{MediaID: t.MediaID.String(), UploadURL: t.UploadURL, Headers: t.Headers, ExpiresAt: t.ExpiresAt.UTC()}
 }
 
 func signedURLDTO(s SignedURL) SignedURLDTO {

@@ -34,38 +34,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Hoàng Thu Hà",
-      "percent": 29,
-      "requiredDone": 4,
-      "requiredTotal": 14,
+      "percent": 20,
+      "requiredDone": 5,
+      "requiredTotal": 25,
       "stagePercents": [
         {
-          "percent": 100,
-          "requiredDone": 2,
-          "requiredTotal": 2,
+          "percent": 75,
+          "requiredDone": 3,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
-          "percent": 67,
+          "percent": 33,
           "requiredDone": 2,
-          "requiredTotal": 3,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -86,38 +86,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Lê Văn Cường",
-      "percent": 93,
-      "requiredDone": 13,
-      "requiredTotal": 14,
+      "percent": 80,
+      "requiredDone": 20,
+      "requiredTotal": 25,
       "stagePercents": [
         {
-          "percent": 100,
-          "requiredDone": 2,
-          "requiredTotal": 2,
+          "percent": 75,
+          "requiredDone": 3,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
           "percent": 100,
-          "requiredDone": 3,
-          "requiredTotal": 3,
+          "requiredDone": 6,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
-          "percent": 100,
+          "percent": 60,
           "requiredDone": 3,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 100,
-          "requiredDone": 3,
-          "requiredTotal": 3,
+          "requiredDone": 5,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
-          "percent": 67,
-          "requiredDone": 2,
-          "requiredTotal": 3,
+          "percent": 60,
+          "requiredDone": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -138,38 +138,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Nguyễn Hoàng An",
-      "percent": 71,
-      "requiredDone": 10,
-      "requiredTotal": 14,
+      "percent": 64,
+      "requiredDone": 16,
+      "requiredTotal": 25,
       "stagePercents": [
         {
           "percent": 100,
-          "requiredDone": 2,
-          "requiredTotal": 2,
+          "requiredDone": 4,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
           "percent": 100,
-          "requiredDone": 3,
-          "requiredTotal": 3,
+          "requiredDone": 6,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
-          "percent": 100,
+          "percent": 60,
           "requiredDone": 3,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
-          "percent": 67,
-          "requiredDone": 2,
-          "requiredTotal": 3,
+          "percent": 60,
+          "requiredDone": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -192,36 +192,36 @@
       "name": "Phạm Minh Dũng",
       "percent": 0,
       "requiredDone": 0,
-      "requiredTotal": 14,
+      "requiredTotal": 25,
       "stagePercents": [
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 2,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -242,38 +242,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Trần Thị Bích",
-      "percent": 50,
-      "requiredDone": 7,
-      "requiredTotal": 14,
+      "percent": 40,
+      "requiredDone": 10,
+      "requiredTotal": 25,
       "stagePercents": [
         {
           "percent": 100,
-          "requiredDone": 2,
-          "requiredTotal": 2,
+          "requiredDone": 4,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
-          "percent": 100,
-          "requiredDone": 3,
-          "requiredTotal": 3,
+          "percent": 67,
+          "requiredDone": 4,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
-          "percent": 67,
+          "percent": 40,
           "requiredDone": 2,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -294,38 +294,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Vũ Đức Khang",
-      "percent": 14,
+      "percent": 8,
       "requiredDone": 2,
-      "requiredTotal": 14,
+      "requiredTotal": 25,
       "stagePercents": [
         {
-          "percent": 100,
+          "percent": 50,
           "requiredDone": 2,
-          "requiredTotal": 2,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -346,38 +346,38 @@
       "memberStatus": "active",
       "mustChangePassword": false,
       "name": "Đặng Hải Phong",
-      "percent": 29,
-      "requiredDone": 4,
-      "requiredTotal": 14,
+      "percent": 24,
+      "requiredDone": 6,
+      "requiredTotal": 25,
       "stagePercents": [
         {
-          "percent": 100,
-          "requiredDone": 2,
-          "requiredTotal": 2,
+          "percent": 75,
+          "requiredDone": 3,
+          "requiredTotal": 4,
           "stageId": "0199ffff-0000-7000-8000-000000000004"
         },
         {
-          "percent": 67,
-          "requiredDone": 2,
-          "requiredTotal": 3,
+          "percent": 50,
+          "requiredDone": 3,
+          "requiredTotal": 6,
           "stageId": "0199ffff-0000-7000-8000-000000000005"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000006"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000007"
         },
         {
           "percent": 0,
           "requiredDone": 0,
-          "requiredTotal": 3,
+          "requiredTotal": 5,
           "stageId": "0199ffff-0000-7000-8000-000000000008"
         }
       ],
@@ -390,7 +390,7 @@
       "code": "DB",
       "name": "Database",
       "position": 1,
-      "requiredTotal": 2,
+      "requiredTotal": 4,
       "stageId": "0199ffff-0000-7000-8000-000000000004",
       "versionNo": 1
     },
@@ -398,7 +398,7 @@
       "code": "DS",
       "name": "Data structure",
       "position": 2,
-      "requiredTotal": 3,
+      "requiredTotal": 6,
       "stageId": "0199ffff-0000-7000-8000-000000000005",
       "versionNo": 1
     },
@@ -406,7 +406,7 @@
       "code": "GO",
       "name": "Golang basic",
       "position": 3,
-      "requiredTotal": 3,
+      "requiredTotal": 5,
       "stageId": "0199ffff-0000-7000-8000-000000000006",
       "versionNo": 1
     },
@@ -414,7 +414,7 @@
       "code": "RE",
       "name": "ReactJS basic",
       "position": 4,
-      "requiredTotal": 3,
+      "requiredTotal": 5,
       "stageId": "0199ffff-0000-7000-8000-000000000007",
       "versionNo": 1
     },
@@ -422,15 +422,15 @@
       "code": "WEB",
       "name": "HTML CSS JS",
       "position": 5,
-      "requiredTotal": 3,
+      "requiredTotal": 5,
       "stageId": "0199ffff-0000-7000-8000-000000000008",
       "versionNo": 1
     }
   ],
   "summary": {
     "activeCount": 7,
-    "avgPercent": 41,
-    "belowCount": 4,
+    "avgPercent": 34,
+    "belowCount": 5,
     "belowPercent": 50,
     "inactiveCount": 2,
     "inactiveDays": 7,

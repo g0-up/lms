@@ -15,12 +15,22 @@ const AppName = "GoUp LMS"
 //go:embed templates/*.tmpl
 var templateFS embed.FS
 
-// subjects là tiêu đề email theo template; {{.ClassCode}} được render như text.
+// subjects là tiêu đề email theo template; {{.ClassCode}} được render như text. homework_graded đổi tiêu đề khi
+// là lần sửa điểm (Updated); quiz_reviewed đổi theo lần sửa (Updated) và loại quiz (Assessment kèm % và kết quả);
+// grading_digest liệt kê học viên và loại của từng mục quá hạn.
 var subjects = map[TemplateName]string{
 	TemplateInvite:        "[" + AppName + "] Lời mời vào lớp {{.ClassCode}}",
 	TemplateAdded:         "[" + AppName + "] Bạn đã được thêm vào lớp {{.ClassCode}}",
 	TemplateResend:        "[" + AppName + "] Mật khẩu tạm mới cho lớp {{.ClassCode}}",
 	TemplatePasswordReset: "[" + AppName + "] Đặt lại mật khẩu",
+	TemplateHomeworkGraded: "[" + AppName + "] {{if .Updated}}Điểm đã được cập nhật{{else}}Bài đã được chấm{{end}}: " +
+		"{{.LessonTitle}} · {{.ResultLabel}}",
+	TemplateQuizReviewed: "[" + AppName + "] {{if .Updated}}Nhận xét đã được cập nhật{{else if .Assessment}}" +
+		"Giảng viên đã xác nhận kết quả{{else}}Giảng viên đã nhận xét{{end}}: {{.QuizTitle}} lượt #{{.AttemptNo}}" +
+		"{{if .Assessment}} · {{.Percent}}% · {{.ResultLabel}}{{end}}",
+	TemplateGradingDigest: "[" + AppName + "] {{.Count}} bài chờ chấm hoặc xác nhận quá 3 ngày: " +
+		"{{range $i, $it := .Items}}{{if $i}}, {{end}}{{$it.StudentName}} ({{$it.KindLabel}}){{end}}",
+	TemplateDeadlineReminder: "[" + AppName + "] Nhắc hạn nộp: {{.LessonTitle}} · hạn {{.DueLabel}}",
 }
 
 // Renderer render email từ template nhúng; HTML qua html/template (tự escape), text và subject qua text/template.

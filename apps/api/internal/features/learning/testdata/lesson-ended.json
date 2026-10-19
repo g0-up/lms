@@ -3,6 +3,7 @@
     "html": "<h1>Chỉ mục</h1>\n<p>Chỉ mục giúp truy vấn nhanh hơn.</p>\n",
     "type": "markdown"
   },
+  "crossesUnit": true,
   "lesson": {
     "durationSeconds": 300,
     "id": "01990000-0000-7000-8000-000000000122",
@@ -10,15 +11,22 @@
     "required": false,
     "stage": {
       "id": "01990000-0000-7000-8000-000000000101",
-      "name": "Database"
+      "name": "Database",
+      "position": 1
     },
     "title": "Đọc thêm: chỉ mục",
-    "type": "markdown"
+    "type": "markdown",
+    "unit": {
+      "id": "01990000-0000-7000-8000-000000000141",
+      "position": 1,
+      "title": "Nội dung chặng"
+    }
   },
   "next": {
     "lessonId": "01990000-0000-7000-8000-000000000923",
     "title": "Mảng và danh sách liên kết"
   },
+  "nextUnitTitle": "Nội dung chặng",
   "prev": {
     "lessonId": "01990000-0000-7000-8000-000000000121",
     "title": "Thiết kế bảng và khóa"

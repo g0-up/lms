@@ -102,10 +102,13 @@ func (m *MinIO) PresignPut(ctx context.Context, key, contentType string, size in
 	return u.String(), map[string]string{"Content-Type": contentType}, nil
 }
 
-func (m *MinIO) PresignGet(ctx context.Context, key string, ttl time.Duration, responseContentType string) (string, error) {
+func (m *MinIO) PresignGet(ctx context.Context, key string, ttl time.Duration, opts GetOptions) (string, error) {
 	params := url.Values{}
-	if responseContentType != "" {
-		params.Set("response-content-type", responseContentType)
+	if opts.ContentType != "" {
+		params.Set("response-content-type", opts.ContentType)
+	}
+	if cd := opts.ContentDisposition(); cd != "" {
+		params.Set("response-content-disposition", cd)
 	}
 	u, err := m.public.PresignedGetObject(ctx, m.bucket, key, ttl, params)
 	if err != nil {

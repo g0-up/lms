@@ -29,6 +29,7 @@ type PGMyClassesRepo struct{}
 type PGProgressReader struct{}
 
 var (
+	_ CompletionWriter    = PGProgressRepo{}
 	_ ProgressRepo        = PGProgressRepo{}
 	_ CourseStructureRepo = PGCourseStructureRepo{}
 	_ MyClassesRepo       = PGMyClassesRepo{}
@@ -106,6 +107,29 @@ func (PGProgressRepo) SetCompleted(ctx context.Context, ex db.Executor, p *Lesso
 	}
 }
 
+// MarkCompleted là một câu upsert nên chạy được cả khi học viên chưa từng mở học liệu (nộp bài từ trang khác).
+func (PGProgressRepo) MarkCompleted(ctx context.Context, ex db.Executor, memberID, lessonID uuid.UUID, at time.Time) error {
+	_, err := ex.ExecContext(ctx, `INSERT INTO lesson_progress (class_member_id, lesson_id, first_opened_at, completed_at, updated_at)
+		VALUES ($1, $2, $3, $3, $3)
+		ON CONFLICT (class_member_id, lesson_id) DO UPDATE SET
+		  first_opened_at = LEAST(lesson_progress.first_opened_at, EXCLUDED.first_opened_at),
+		  completed_at = COALESCE(lesson_progress.completed_at, EXCLUDED.completed_at),
+		  updated_at = EXCLUDED.updated_at`, memberID, lessonID, at)
+	if err != nil {
+		return fmt.Errorf("learning: ghi hoàn thành theo kết quả: %w", pgerr.Map(err))
+	}
+	return nil
+}
+
+func (PGProgressRepo) ClearCompleted(ctx context.Context, ex db.Executor, memberID, lessonID uuid.UUID, at time.Time) error {
+	_, err := ex.ExecContext(ctx, `UPDATE lesson_progress SET completed_at = NULL, updated_at = $3
+		WHERE class_member_id = $1 AND lesson_id = $2 AND completed_at IS NOT NULL`, memberID, lessonID, at)
+	if err != nil {
+		return fmt.Errorf("learning: xóa hoàn thành theo kết quả: %w", pgerr.Map(err))
+	}
+	return nil
+}
+
 func (PGProgressRepo) ByMember(ctx context.Context, ex db.Executor, memberID uuid.UUID) (map[uuid.UUID]*LessonProgress, error) {
 	var recs []progressRecord
 	if err := sqlx.SelectContext(ctx, ex, &recs, `SELECT lesson_id, first_opened_at, completed_at FROM lesson_progress
@@ -126,6 +150,10 @@ type structureRecord struct {
 	Name            string     `db:"name"`
 	VersionNo       int        `db:"version_no"`
 	StagePosition   int        `db:"stage_position"`
+	UnitID          *uuid.UUID `db:"unit_id"`
+	UnitKey         *string    `db:"unit_key"`
+	UnitTitle       *string    `db:"unit_title"`
+	UnitPosition    *int       `db:"unit_position"`
 	LessonID        *uuid.UUID `db:"lesson_id"`
 	LessonKey       *string    `db:"lesson_key"`
 	Title           *string    `db:"title"`
@@ -135,17 +163,20 @@ type structureRecord struct {
 	DurationSeconds *int       `db:"duration_seconds"`
 }
 
-// StagesOfCourseVersion đọc chặng và học liệu bằng một truy vấn; chặng chưa có học liệu vẫn có mặt.
+// StagesOfCourseVersion đọc chặng, bài học và học liệu bằng một truy vấn; chặng chưa có bài học và bài học chưa có
+// học liệu vẫn có mặt. Sắp theo (chặng, bài học, học liệu) nên Lessons phẳng giữ đúng thứ tự position.
 func (PGCourseStructureRepo) StagesOfCourseVersion(ctx context.Context, ex db.Executor, courseVersionID uuid.UUID) ([]StageView, error) {
 	var recs []structureRecord
 	if err := sqlx.SelectContext(ctx, ex, &recs, `SELECT cvs.stage_id, cvs.stage_version_id, s.code, s.name, sv.version_no,
-		cvs.position AS stage_position, l.id AS lesson_id, l.lesson_key, l.title, l.type, l.position, l.required, l.duration_seconds
+		cvs.position AS stage_position, u.id AS unit_id, u.unit_key, u.title AS unit_title, u.position AS unit_position,
+		l.id AS lesson_id, l.lesson_key, l.title, l.type, l.position, l.required, l.duration_seconds
 		FROM course_version_stages cvs
 		JOIN stages s ON s.id = cvs.stage_id
 		JOIN stage_versions sv ON sv.id = cvs.stage_version_id
-		LEFT JOIN lessons l ON l.stage_version_id = cvs.stage_version_id
+		LEFT JOIN stage_units u ON u.stage_version_id = cvs.stage_version_id
+		LEFT JOIN lessons l ON l.unit_id = u.id
 		WHERE cvs.course_version_id = $1
-		ORDER BY cvs.position, l.position`, courseVersionID); err != nil {
+		ORDER BY cvs.position, u.position, l.position`, courseVersionID); err != nil {
 		return nil, fmt.Errorf("learning: đọc cấu trúc khóa học: %w", err)
 	}
 	out := []StageView{}
@@ -153,17 +184,29 @@ func (PGCourseStructureRepo) StagesOfCourseVersion(ctx context.Context, ex db.Ex
 		if len(out) == 0 || out[len(out)-1].StageVersionID != r.StageVersionID {
 			out = append(out, StageView{
 				StageID: r.StageID, StageVersionID: r.StageVersionID, Code: r.Code, Name: r.Name,
-				VersionNo: domain.VersionNo(r.VersionNo), Position: r.StagePosition, Lessons: []LessonView{},
+				VersionNo: domain.VersionNo(r.VersionNo), Position: r.StagePosition, Units: []UnitView{}, Lessons: []LessonView{},
+			})
+		}
+		st := &out[len(out)-1]
+		if r.UnitID == nil || r.UnitKey == nil || r.UnitTitle == nil || r.UnitPosition == nil {
+			continue
+		}
+		if len(st.Units) == 0 || st.Units[len(st.Units)-1].ID != *r.UnitID {
+			st.Units = append(st.Units, UnitView{
+				ID: *r.UnitID, Key: domain.LessonKey(*r.UnitKey), Title: *r.UnitTitle, Position: *r.UnitPosition, Lessons: []LessonView{},
 			})
 		}
 		if r.LessonID == nil || r.LessonKey == nil || r.Title == nil || r.Type == nil || r.Position == nil || r.Required == nil {
 			continue
 		}
-		st := &out[len(out)-1]
-		st.Lessons = append(st.Lessons, LessonView{
+		l := LessonView{
 			ID: *r.LessonID, Key: domain.LessonKey(*r.LessonKey), Title: *r.Title, Type: stages.LessonType(*r.Type),
 			Position: *r.Position, Required: *r.Required, State: StateNotOpened, DurationSeconds: r.DurationSeconds,
-		})
+			UnitID: *r.UnitID,
+		}
+		u := &st.Units[len(st.Units)-1]
+		u.Lessons = append(u.Lessons, l)
+		st.Lessons = append(st.Lessons, l)
 	}
 	return out, nil
 }
@@ -181,12 +224,29 @@ func (PGCourseStructureRepo) LessonInCourseVersion(ctx context.Context, ex db.Ex
 		VideoMediaID    *uuid.UUID `db:"video_media_id"`
 		StageID         uuid.UUID  `db:"stage_id"`
 		StageName       string     `db:"stage_name"`
+		QuizMode        *string    `db:"quiz_mode"`
+		MaxAttempts     *int       `db:"max_attempts"`
+		TimeLimitSecs   *int       `db:"time_limit_seconds"`
+		Shuffle         *bool      `db:"shuffle"`
+		QuizPassPercent *int       `db:"quiz_pass_percent"`
+		BriefHTML       *string    `db:"brief_html"`
+		HWPassPercent   *int       `db:"homework_pass_percent"`
+		QuestionCount   int        `db:"question_count"`
+		QuizMaxScore    int        `db:"quiz_max_score"`
 	}
+	// Chỉ đọc cấu hình quiz/homework cùng số câu và tổng điểm; câu hỏi và phương án (kèm đáp án đúng) không bao giờ đi
+	// qua đường của học viên.
 	err := sqlx.GetContext(ctx, ex, &r, `SELECT l.id, l.lesson_key, l.title, l.type, l.position, l.required, l.duration_seconds,
-		l.markdown_html, l.video_media_id, cvs.stage_id, s.name AS stage_name
+		l.markdown_html, l.video_media_id, cvs.stage_id, s.name AS stage_name,
+		qs.mode AS quiz_mode, qs.max_attempts, qs.time_limit_seconds, qs.shuffle, qs.pass_percent AS quiz_pass_percent,
+		hs.brief_html, hs.pass_percent AS homework_pass_percent, qc.question_count, qc.quiz_max_score
 		FROM course_version_stages cvs
 		JOIN lessons l ON l.stage_version_id = cvs.stage_version_id
 		JOIN stages s ON s.id = cvs.stage_id
+		LEFT JOIN quiz_settings qs ON qs.lesson_id = l.id
+		LEFT JOIN homework_settings hs ON hs.lesson_id = l.id
+		CROSS JOIN LATERAL (SELECT count(*) AS question_count, COALESCE(sum(q.points), 0) AS quiz_max_score
+			FROM questions q WHERE q.lesson_id = l.id) qc
 		WHERE cvs.course_version_id = $1 AND l.id = $2`, courseVersionID, lessonID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -197,6 +257,7 @@ func (PGCourseStructureRepo) LessonInCourseVersion(ctx context.Context, ex db.Ex
 	row := &LessonRow{
 		ID: r.ID, Key: domain.LessonKey(r.LessonKey), Title: r.Title, Position: r.Position, Required: r.Required,
 		DurationSeconds: r.DurationSeconds, StageID: r.StageID, StageName: r.StageName,
+		QuestionCount: r.QuestionCount, QuizMaxScore: r.QuizMaxScore,
 	}
 	switch stages.LessonType(r.Type) {
 	case stages.LessonVideo:
@@ -206,10 +267,65 @@ func (PGCourseStructureRepo) LessonInCourseVersion(ctx context.Context, ex db.Ex
 		row.Content = stages.VideoContent{MediaID: *r.VideoMediaID, DurationSeconds: r.DurationSeconds}
 	case stages.LessonMarkdown:
 		row.Content = stages.MarkdownContent{HTML: r.MarkdownHTML}
+	case stages.LessonQuiz:
+		if r.QuizMode == nil || r.Shuffle == nil {
+			return nil, fmt.Errorf("learning: học liệu quiz %s thiếu cấu hình", r.ID)
+		}
+		mode, err := stages.ParseQuizMode(*r.QuizMode)
+		if err != nil {
+			return nil, fmt.Errorf("learning: học liệu quiz %s: %w", r.ID, err)
+		}
+		c := stages.QuizContent{Mode: mode, MaxAttempts: r.MaxAttempts, Shuffle: *r.Shuffle, PassPercent: r.QuizPassPercent}
+		if r.TimeLimitSecs != nil {
+			d := time.Duration(*r.TimeLimitSecs) * time.Second
+			c.TimeLimit = &d
+		}
+		row.Content = c
+	case stages.LessonHomework:
+		if r.HWPassPercent == nil {
+			return nil, fmt.Errorf("learning: học liệu homework %s thiếu cấu hình", r.ID)
+		}
+		c, err := homeworkDetail(ctx, ex, r.ID)
+		if err != nil {
+			return nil, err
+		}
+		c.BriefHTML, c.PassPercent = r.BriefHTML, *r.HWPassPercent
+		row.Content = c
 	default:
 		return nil, fmt.Errorf("learning: loại học liệu %q không hỗ trợ", r.Type)
 	}
 	return row, nil
+}
+
+// homeworkDetail đọc rubric và file kèm (theo position) của một homework; đề bài và ngưỡng do caller điền.
+func homeworkDetail(ctx context.Context, ex db.Executor, lessonID uuid.UUID) (stages.HomeworkContent, error) {
+	var criteria []struct {
+		ID          uuid.UUID `db:"id"`
+		Description string    `db:"description"`
+		MaxPoints   int       `db:"max_points"`
+	}
+	if err := sqlx.SelectContext(ctx, ex, &criteria, `SELECT id, description, max_points FROM rubric_criteria
+		WHERE lesson_id = $1 ORDER BY position`, lessonID); err != nil {
+		return stages.HomeworkContent{}, fmt.Errorf("learning: đọc tiêu chí chấm: %w", err)
+	}
+	var attachments []struct {
+		MediaID   uuid.UUID `db:"media_id"`
+		FileName  string    `db:"file_name"`
+		SizeBytes int64     `db:"size_bytes"`
+	}
+	if err := sqlx.SelectContext(ctx, ex, &attachments, `SELECT a.media_id, mf.original_name AS file_name, mf.size_bytes
+		FROM homework_attachments a JOIN media_files mf ON mf.id = a.media_id
+		WHERE a.lesson_id = $1 ORDER BY a.position`, lessonID); err != nil {
+		return stages.HomeworkContent{}, fmt.Errorf("learning: đọc file kèm: %w", err)
+	}
+	c := stages.HomeworkContent{Criteria: []*stages.Criterion{}, Attachments: []stages.Attachment{}}
+	for _, cr := range criteria {
+		c.Criteria = append(c.Criteria, &stages.Criterion{ID: cr.ID, Description: cr.Description, MaxPoints: cr.MaxPoints})
+	}
+	for _, a := range attachments {
+		c.Attachments = append(c.Attachments, stages.Attachment{MediaID: a.MediaID, FileName: a.FileName, SizeBytes: a.SizeBytes})
+	}
+	return c, nil
 }
 
 const classSummaryColumns = `c.id, c.code, c.name, c.status, c.start_date, c.end_date, t.full_name AS teacher_name,

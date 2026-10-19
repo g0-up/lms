@@ -26,38 +26,38 @@
     "memberStatus": "active",
     "mustChangePassword": false,
     "name": "Nguyễn Hoàng An",
-    "percent": 71,
-    "requiredDone": 10,
-    "requiredTotal": 14,
+    "percent": 64,
+    "requiredDone": 16,
+    "requiredTotal": 25,
     "stagePercents": [
       {
         "percent": 100,
-        "requiredDone": 2,
-        "requiredTotal": 2,
+        "requiredDone": 4,
+        "requiredTotal": 4,
         "stageId": "0199ffff-0000-7000-8000-000000000004"
       },
       {
         "percent": 100,
-        "requiredDone": 3,
-        "requiredTotal": 3,
+        "requiredDone": 6,
+        "requiredTotal": 6,
         "stageId": "0199ffff-0000-7000-8000-000000000005"
       },
       {
-        "percent": 100,
+        "percent": 60,
         "requiredDone": 3,
-        "requiredTotal": 3,
+        "requiredTotal": 5,
         "stageId": "0199ffff-0000-7000-8000-000000000006"
       },
       {
-        "percent": 67,
-        "requiredDone": 2,
-        "requiredTotal": 3,
+        "percent": 60,
+        "requiredDone": 3,
+        "requiredTotal": 5,
         "stageId": "0199ffff-0000-7000-8000-000000000007"
       },
       {
         "percent": 0,
         "requiredDone": 0,
-        "requiredTotal": 3,
+        "requiredTotal": 5,
         "stageId": "0199ffff-0000-7000-8000-000000000008"
       }
     ],
@@ -85,18 +85,38 @@
           "position": 2,
           "required": true,
           "state": "completed",
-          "title": "Thiết kế bảng và khóa",
-          "type": "markdown"
+          "title": "Luyện tập: Truy vấn SQL cơ bản",
+          "type": "quiz"
         },
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
           "id": "0199ffff-0000-7000-8000-000000000012",
           "position": 3,
+          "required": true,
+          "state": "completed",
+          "title": "Thiết kế bảng và khóa",
+          "type": "markdown"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000013",
+          "position": 4,
           "required": false,
           "state": "completed",
           "title": "Đọc thêm: chỉ mục",
           "type": "markdown"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000014",
+          "position": 5,
+          "required": true,
+          "state": "completed",
+          "title": "Kiểm tra cuối chặng Database",
+          "type": "quiz"
         }
       ],
       "name": "Database",
@@ -110,7 +130,7 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000013",
+          "id": "0199ffff-0000-7000-8000-000000000015",
           "position": 1,
           "required": true,
           "state": "completed",
@@ -120,7 +140,7 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000014",
+          "id": "0199ffff-0000-7000-8000-000000000016",
           "position": 2,
           "required": true,
           "state": "completed",
@@ -130,12 +150,42 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000015",
+          "id": "0199ffff-0000-7000-8000-000000000017",
           "position": 3,
           "required": true,
           "state": "completed",
           "title": "Hash table",
           "type": "video"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000018",
+          "position": 4,
+          "required": true,
+          "state": "completed",
+          "title": "Luyện tập: Stack, Queue và Hash",
+          "type": "quiz"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000019",
+          "position": 5,
+          "required": true,
+          "state": "completed",
+          "title": "Bài tập: Cài đặt Stack và Queue",
+          "type": "homework"
+        },
+        {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000020",
+          "position": 6,
+          "required": true,
+          "state": "completed",
+          "title": "Kiểm tra cuối chặng Data structure",
+          "type": "quiz"
         }
       ],
       "name": "Data structure",
@@ -149,7 +199,7 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000016",
+          "id": "0199ffff-0000-7000-8000-000000000021",
           "position": 1,
           "required": true,
           "state": "completed",
@@ -157,38 +207,88 @@
           "type": "video"
         },
         {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000022",
+          "position": 2,
+          "required": false,
+          "state": "not_opened",
+          "title": "Hello World từng bước",
+          "type": "markdown"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000023",
+          "position": 3,
+          "required": false,
+          "state": "not_opened",
+          "title": "Luyện tập: Lệnh go và cấu trúc chương trình",
+          "type": "quiz"
+        },
+        {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000017",
-          "position": 2,
+          "id": "0199ffff-0000-7000-8000-000000000024",
+          "position": 4,
           "required": true,
           "state": "completed",
           "title": "Kiểu dữ liệu và hàm",
           "type": "markdown"
         },
         {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000025",
+          "position": 5,
+          "required": false,
+          "state": "not_opened",
+          "title": "Bài tập tổng hợp",
+          "type": "markdown"
+        },
+        {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000018",
-          "position": 3,
+          "id": "0199ffff-0000-7000-8000-000000000026",
+          "position": 6,
           "required": true,
           "state": "completed",
           "title": "Goroutine cơ bản",
           "type": "video"
         },
         {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000027",
+          "position": 7,
+          "required": false,
+          "state": "completed",
+          "title": "Luyện tập: Goroutine và channel",
+          "type": "quiz"
+        },
+        {
           "completedAt": null,
           "firstOpenedAt": null,
-          "id": "0199ffff-0000-7000-8000-000000000019",
-          "position": 4,
-          "required": false,
+          "id": "0199ffff-0000-7000-8000-000000000028",
+          "position": 8,
+          "required": true,
           "state": "not_opened",
-          "title": "Bài tập tổng hợp",
-          "type": "markdown"
+          "title": "Bài tập: Đọc CSV và thống kê",
+          "type": "homework"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000029",
+          "position": 9,
+          "required": true,
+          "state": "opened",
+          "title": "Kiểm tra cuối chặng Go",
+          "type": "quiz"
         }
       ],
       "name": "Golang basic",
-      "percent": 100,
+      "percent": 60,
       "stageId": "0199ffff-0000-7000-8000-000000000006",
       "versionNo": 1
     },
@@ -198,7 +298,7 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000020",
+          "id": "0199ffff-0000-7000-8000-000000000030",
           "position": 1,
           "required": true,
           "state": "completed",
@@ -208,7 +308,7 @@
         {
           "completedAt": "2026-10-05T08:00:00Z",
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000021",
+          "id": "0199ffff-0000-7000-8000-000000000031",
           "position": 2,
           "required": true,
           "state": "completed",
@@ -216,18 +316,38 @@
           "type": "markdown"
         },
         {
+          "completedAt": "2026-10-05T08:00:00Z",
+          "firstOpenedAt": "2026-10-05T08:00:00Z",
+          "id": "0199ffff-0000-7000-8000-000000000032",
+          "position": 3,
+          "required": true,
+          "state": "completed",
+          "title": "Luyện tập: Component, props và state",
+          "type": "quiz"
+        },
+        {
           "completedAt": null,
           "firstOpenedAt": "2026-10-05T08:00:00Z",
-          "id": "0199ffff-0000-7000-8000-000000000022",
-          "position": 3,
+          "id": "0199ffff-0000-7000-8000-000000000033",
+          "position": 4,
           "required": true,
           "state": "opened",
           "title": "Hooks",
           "type": "video"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000034",
+          "position": 5,
+          "required": true,
+          "state": "not_opened",
+          "title": "Kiểm tra cuối chặng ReactJS",
+          "type": "quiz"
         }
       ],
       "name": "ReactJS basic",
-      "percent": 67,
+      "percent": 60,
       "stageId": "0199ffff-0000-7000-8000-000000000007",
       "versionNo": 1
     },
@@ -237,7 +357,7 @@
         {
           "completedAt": null,
           "firstOpenedAt": null,
-          "id": "0199ffff-0000-7000-8000-000000000023",
+          "id": "0199ffff-0000-7000-8000-000000000035",
           "position": 1,
           "required": true,
           "state": "not_opened",
@@ -247,7 +367,7 @@
         {
           "completedAt": null,
           "firstOpenedAt": null,
-          "id": "0199ffff-0000-7000-8000-000000000024",
+          "id": "0199ffff-0000-7000-8000-000000000036",
           "position": 2,
           "required": true,
           "state": "not_opened",
@@ -257,12 +377,32 @@
         {
           "completedAt": null,
           "firstOpenedAt": null,
-          "id": "0199ffff-0000-7000-8000-000000000025",
+          "id": "0199ffff-0000-7000-8000-000000000037",
           "position": 3,
+          "required": true,
+          "state": "not_opened",
+          "title": "Luyện tập: HTML ngữ nghĩa và CSS layout",
+          "type": "quiz"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000038",
+          "position": 4,
           "required": true,
           "state": "not_opened",
           "title": "JavaScript và DOM",
           "type": "video"
+        },
+        {
+          "completedAt": null,
+          "firstOpenedAt": null,
+          "id": "0199ffff-0000-7000-8000-000000000039",
+          "position": 5,
+          "required": true,
+          "state": "not_opened",
+          "title": "Kiểm tra cuối chặng HTML CSS JS",
+          "type": "quiz"
         }
       ],
       "name": "HTML CSS JS",

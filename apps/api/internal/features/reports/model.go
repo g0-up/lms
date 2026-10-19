@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"lms/api/internal/domain"
+	"lms/api/internal/features/grading"
 	"lms/api/internal/features/learning"
 	"lms/api/internal/platform/audit"
 )
@@ -176,13 +177,16 @@ type ActivityRow struct {
 	Summary     string
 }
 
-// Dashboard là trang tổng quan của admin.
+// Dashboard là trang tổng quan của admin. GradingBacklog là tồn đọng chấm bài theo giảng viên, OverdueCount là tổng
+// số mục chờ quá hạn của toàn hệ thống.
 type Dashboard struct {
 	KPIs           KPIs
 	Hints          Hints
 	Outdated       []OutdatedRow
 	Classes        []ClassRow
 	RecentActivity []ActivityRow
+	GradingBacklog []grading.TeacherBacklog
+	OverdueCount   int
 }
 
 // recentActivityLimit là số dòng nhật ký trên dashboard.
@@ -213,6 +217,14 @@ var actionLabels = map[string]string{
 	audit.ActionClassMemberDropped:        "Gỡ học viên khỏi lớp",
 	audit.ActionUserDisabled:              "Vô hiệu hóa tài khoản",
 	audit.ActionUserEnabled:               "Kích hoạt lại tài khoản",
+	audit.ActionClassDeadlineChanged:      "Đặt hạn nộp",
+	audit.ActionHomeworkGraded:            "Chấm bài",
+	audit.ActionHomeworkGradeUpdated:      "Sửa điểm",
+	audit.ActionQuizAttemptConfirmed:      "Xác nhận quiz",
+	audit.ActionQuizAttemptCommented:      "Nhận xét quiz",
+	audit.ActionQuizAttemptReviewUpdated:  "Sửa nhận xét quiz",
+	audit.ActionStageReviewSaved:          "Nhận xét tổng kết chặng",
+	audit.ActionQuizAttemptsGranted:       "Cấp thêm lượt",
 }
 
 // actionLabel trả nhãn của action; action chưa có nhãn trả chính nó và ok=false để nơi gọi log cảnh báo.
@@ -280,6 +292,9 @@ type activityPayload struct {
 	UserID           *uuid.UUID `json:"userId"`
 	CourseVersionID  *uuid.UUID `json:"courseVersionId"`
 	ToStageVersionID *uuid.UUID `json:"toStageVersionId"`
+	LessonTitle      string     `json:"lessonTitle"`
+	StageName        string     `json:"stageName"`
+	StudentName      string     `json:"studentName"`
 }
 
 // parsePayload đọc jsonb before/after; NULL hoặc JSON không phải object cho payload rỗng (nhật ký vẫn hiển thị
@@ -413,7 +428,8 @@ func subjectName(targetType string, after activityPayload, lk activityLookups) s
 
 // summarize dựng tóm tắt một dòng nhật ký từ before/after đã đọc và nhãn đối tượng, theo mẫu nhật ký prototype:
 // "Database (DB)", "Database v1 → v2", "Lập trình cơ bản v2", "Database v2 → Lập trình cơ bản v2",
-// "basic01: v1 → v2", "basic01: mời an.nguyen@gmail.com". Action không có mẫu riêng dùng nhãn đối tượng.
+// "basic01: v1 → v2", "basic01: mời an.nguyen@gmail.com", "Bài tập: Thiết kế CSDL · An Nguyễn". Action không có
+// mẫu riêng dùng nhãn đối tượng.
 func summarize(action string, before, after activityPayload, target string, lk activityLookups) string {
 	switch action {
 	case audit.ActionStageCreated, audit.ActionCourseCreated:
@@ -449,6 +465,19 @@ func summarize(action string, before, after activityPayload, target string, lk a
 	case audit.ActionClassMemberDropped:
 		if email := lk.userEmail(after.UserID, after.Email); email != "" {
 			return fmt.Sprintf("%s: gỡ %s", target, email)
+		}
+	case audit.ActionHomeworkGraded, audit.ActionHomeworkGradeUpdated, audit.ActionQuizAttemptConfirmed,
+		audit.ActionQuizAttemptCommented, audit.ActionQuizAttemptReviewUpdated, audit.ActionQuizAttemptsGranted:
+		if after.LessonTitle != "" && after.StudentName != "" {
+			return fmt.Sprintf("%s · %s", after.LessonTitle, after.StudentName)
+		}
+	case audit.ActionStageReviewSaved:
+		if after.StageName != "" && after.StudentName != "" {
+			return fmt.Sprintf("%s · %s", after.StageName, after.StudentName)
+		}
+	case audit.ActionClassDeadlineChanged:
+		if after.LessonTitle != "" {
+			return after.LessonTitle
 		}
 	}
 	return target

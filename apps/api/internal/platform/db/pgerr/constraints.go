@@ -57,12 +57,26 @@ const (
 	CkStageVersionsVersionNo      = "ck_stage_versions_version_no"
 )
 
+// Bảng stage_units.
+const (
+	PkStageUnits                = "pk_stage_units"
+	UqStageUnitsIdVersion       = "uq_stage_units_id_version"
+	UqStageUnitsVersionKey      = "uq_stage_units_version_key"
+	UqStageUnitsVersionPosition = "uq_stage_units_version_position"
+	UqStageUnitsVersionTitle    = "uq_stage_units_version_title"
+	FkStageUnitsStageVersion    = "fk_stage_units_stage_version"
+	CkStageUnitsKey             = "ck_stage_units_key"
+	CkStageUnitsPosition        = "ck_stage_units_position"
+	CkStageUnitsTitle           = "ck_stage_units_title"
+)
+
 // Bảng lessons.
 const (
 	PkLessons                = "pk_lessons"
 	UqLessonsVersionKey      = "uq_lessons_version_key"
 	UqLessonsVersionPosition = "uq_lessons_version_position"
 	FkLessonsStageVersion    = "fk_lessons_stage_version"
+	FkLessonsUnit            = "fk_lessons_unit"
 	FkLessonsVideoMedia      = "fk_lessons_video_media"
 	CkLessonsDuration        = "ck_lessons_duration"
 	CkLessonsKey             = "ck_lessons_key"
@@ -175,4 +189,163 @@ const (
 const (
 	PkAuditLogs      = "pk_audit_logs"
 	FkAuditLogsActor = "fk_audit_logs_actor"
+)
+
+// Bảng quiz_settings.
+const (
+	PkQuizSettings       = "pk_quiz_settings"
+	FkQuizSettingsLesson = "fk_quiz_settings_lesson"
+	CkQuizSettingsMode   = "ck_quiz_settings_mode"
+	CkQuizSettingsRules  = "ck_quiz_settings_rules"
+)
+
+// Bảng questions.
+const (
+	PkQuestions               = "pk_questions"
+	UqQuestionsLessonKey      = "uq_questions_lesson_key"
+	UqQuestionsLessonPosition = "uq_questions_lesson_position"
+	FkQuestionsLesson         = "fk_questions_lesson"
+	CkQuestionsKey            = "ck_questions_key"
+	CkQuestionsPoints         = "ck_questions_points"
+	CkQuestionsType           = "ck_questions_type"
+)
+
+// Bảng question_options.
+const (
+	PkQuestionOptions                 = "pk_question_options"
+	UqQuestionOptionsQuestionPosition = "uq_question_options_question_position"
+	FkQuestionOptionsQuestion         = "fk_question_options_question"
+	CkQuestionOptionsBody             = "ck_question_options_body"
+)
+
+// Bảng homework_settings.
+const (
+	PkHomeworkSettings            = "pk_homework_settings"
+	FkHomeworkSettingsLesson      = "fk_homework_settings_lesson"
+	CkHomeworkSettingsPassPercent = "ck_homework_settings_pass_percent" //nolint:gosec // tên constraint, không phải thông tin đăng nhập
+)
+
+// Bảng rubric_criteria.
+const (
+	PkRubricCriteria               = "pk_rubric_criteria"
+	UqRubricCriteriaLessonPosition = "uq_rubric_criteria_lesson_position"
+	FkRubricCriteriaLesson         = "fk_rubric_criteria_lesson"
+	CkRubricCriteriaMaxPoints      = "ck_rubric_criteria_max_points"
+)
+
+// Bảng homework_attachments.
+const (
+	PkHomeworkAttachments               = "pk_homework_attachments"
+	UqHomeworkAttachmentsLessonPosition = "uq_homework_attachments_lesson_position"
+	FkHomeworkAttachmentsLesson         = "fk_homework_attachments_lesson"
+	FkHomeworkAttachmentsMedia          = "fk_homework_attachments_media"
+)
+
+// Bảng class_lesson_deadlines.
+const (
+	PkClassLessonDeadlines       = "pk_class_lesson_deadlines"
+	FkClassLessonDeadlinesClass  = "fk_class_lesson_deadlines_class"
+	FkClassLessonDeadlinesLesson = "fk_class_lesson_deadlines_lesson"
+	FkClassLessonDeadlinesSetBy  = "fk_class_lesson_deadlines_set_by"
+)
+
+// Bảng submissions.
+const (
+	PkSubmissions                = "pk_submissions"
+	UqSubmissionsMemberLessonNo  = "uq_submissions_member_lesson_no"
+	UqSubmissionsOnePending      = "uq_submissions_one_pending"
+	FkSubmissionsLesson          = "fk_submissions_lesson"
+	FkSubmissionsMember          = "fk_submissions_member"
+	CkSubmissionsAttemptNo       = "ck_submissions_attempt_no"
+	CkSubmissionsCommitNeedsRepo = "ck_submissions_commit_needs_repo"
+	CkSubmissionsRepoUrl         = "ck_submissions_repo_url"
+	CkSubmissionsStatus          = "ck_submissions_status"
+)
+
+// Bảng submission_files.
+const (
+	PkSubmissionFiles           = "pk_submission_files"
+	UqSubmissionFilesMedia      = "uq_submission_files_media"
+	UqSubmissionFilesPosition   = "uq_submission_files_position"
+	FkSubmissionFilesMedia      = "fk_submission_files_media"
+	FkSubmissionFilesSubmission = "fk_submission_files_submission"
+)
+
+// Bảng submission_grades.
+const (
+	PkSubmissionGrades           = "pk_submission_grades"
+	FkSubmissionGradesGradedBy   = "fk_submission_grades_graded_by"
+	FkSubmissionGradesSubmission = "fk_submission_grades_submission"
+	CkSubmissionGradesComment    = "ck_submission_grades_comment"
+	CkSubmissionGradesPoints     = "ck_submission_grades_points"
+	CkSubmissionGradesResult     = "ck_submission_grades_result"
+)
+
+// Bảng grade_criterion_scores.
+const (
+	PkGradeCriterionScores          = "pk_grade_criterion_scores"
+	FkGradeCriterionScoresCriterion = "fk_grade_criterion_scores_criterion"
+	FkGradeCriterionScoresGrade     = "fk_grade_criterion_scores_grade"
+	CkGradeCriterionScoresPoints    = "ck_grade_criterion_scores_points"
+)
+
+// Bảng quiz_attempts.
+const (
+	PkQuizAttempts                  = "pk_quiz_attempts"
+	UqQuizAttemptsMemberLessonNo    = "uq_quiz_attempts_member_lesson_no"
+	UqQuizAttemptsOneOpen           = "uq_quiz_attempts_one_open"
+	UqQuizAttemptsOnePending        = "uq_quiz_attempts_one_pending"
+	FkQuizAttemptsLesson            = "fk_quiz_attempts_lesson"
+	FkQuizAttemptsMember            = "fk_quiz_attempts_member"
+	CkQuizAttemptsReviewAfterSubmit = "ck_quiz_attempts_review_after_submit"
+	CkQuizAttemptsReviewStatus      = "ck_quiz_attempts_review_status"
+	CkQuizAttemptsScored            = "ck_quiz_attempts_scored"
+)
+
+// Bảng quiz_attempt_answers.
+const (
+	PkQuizAttemptAnswers         = "pk_quiz_attempt_answers"
+	FkQuizAttemptAnswersAttempt  = "fk_quiz_attempt_answers_attempt"
+	FkQuizAttemptAnswersQuestion = "fk_quiz_attempt_answers_question"
+)
+
+// Bảng quiz_attempt_reviews.
+const (
+	PkQuizAttemptReviews         = "pk_quiz_attempt_reviews"
+	FkQuizAttemptReviewsAttempt  = "fk_quiz_attempt_reviews_attempt"
+	FkQuizAttemptReviewsReviewer = "fk_quiz_attempt_reviews_reviewer"
+	CkQuizAttemptReviewsComment  = "ck_quiz_attempt_reviews_comment"
+)
+
+// Bảng quiz_review_notes.
+const (
+	UqQuizReviewNotesReviewQuestion = "uq_quiz_review_notes_review_question"
+	FkQuizReviewNotesQuestion       = "fk_quiz_review_notes_question"
+	FkQuizReviewNotesReview         = "fk_quiz_review_notes_review"
+	CkQuizReviewNotesNote           = "ck_quiz_review_notes_note"
+)
+
+// Bảng quiz_attempt_grants.
+const (
+	PkQuizAttemptGrants          = "pk_quiz_attempt_grants"
+	FkQuizAttemptGrantsGrantedBy = "fk_quiz_attempt_grants_granted_by"
+	FkQuizAttemptGrantsLesson    = "fk_quiz_attempt_grants_lesson"
+	FkQuizAttemptGrantsMember    = "fk_quiz_attempt_grants_member"
+	CkQuizAttemptGrantsExtra     = "ck_quiz_attempt_grants_extra"
+	CkQuizAttemptGrantsReason    = "ck_quiz_attempt_grants_reason"
+)
+
+// Bảng stage_reviews.
+const (
+	PkStageReviews              = "pk_stage_reviews"
+	UqStageReviewsMemberVersion = "uq_stage_reviews_member_version"
+	FkStageReviewsAuthor        = "fk_stage_reviews_author"
+	FkStageReviewsMember        = "fk_stage_reviews_member"
+	FkStageReviewsStageVersion  = "fk_stage_reviews_stage_version"
+	CkStageReviewsBody          = "ck_stage_reviews_body"
+)
+
+// Bảng scheduled_job_runs.
+const (
+	PkScheduledJobRuns = "pk_scheduled_job_runs"
 )
