@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
+import { HomeworkTab, QuizTab } from "@/features/grading";
+import { SummaryTab } from "@/features/summary";
 import { isApiError } from "@/shared/api/errors";
 import { useDocumentTitle } from "@/shared/hooks/use-document-title";
 import { Alert, AlertActions } from "@/shared/ui/alert";
@@ -9,16 +11,20 @@ import { Button } from "@/shared/ui/button";
 import { Crumbs } from "@/shared/ui/crumbs";
 import { PageHead } from "@/shared/ui/page-head";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { TabBar } from "@/shared/ui/tab-bar";
 import { ReportPanel } from "../components/report-panel";
 import { useTeachClass } from "../hooks/use-teach-classes";
 import { fmtDay } from "../model/day";
 import { NOT_OWN_CLASS } from "../model/messages";
+import { TEACH_CLASS_TABS, TEACH_CLASS_TAB_LABEL, parseTeachTab } from "../model/teach-class-tabs";
 
 const myClassesCrumb = { label: "Lớp của tôi", to: "/teach" };
 
 export function Component() {
   const { classId = "" } = useParams();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const tab = parseTeachTab(params.get("tab"));
   const { data, error, isPending, refetch } = useTeachClass(classId);
   useDocumentTitle(data?.code ?? "Lớp");
 
@@ -64,7 +70,15 @@ export function Component() {
         badges={<StatusBadge status={data.status} />}
         lede={`${data.courseVersion.courseName} v${String(data.courseVersion.versionNo)} · ${fmtDay(data.startDate)} → ${fmtDay(data.endDate)}`}
       />
-      <ReportPanel classId={data.id} basePath={`/teach/classes/${data.id}`} />
+      <TabBar
+        tabs={TEACH_CLASS_TABS.map((key) => ({ key, label: TEACH_CLASS_TAB_LABEL[key] }))}
+        active={tab}
+        hrefFor={(key) => `?tab=${key}`}
+      />
+      {tab === "report" ? <ReportPanel classId={data.id} basePath={`/teach/classes/${data.id}`} /> : null}
+      {tab === "summary" ? <SummaryTab classId={data.id} basePath={`/teach/classes/${data.id}?tab=summary`} /> : null}
+      {tab === "homework" ? <HomeworkTab classId={data.id} basePath="/teach" /> : null}
+      {tab === "quiz" ? <QuizTab classId={data.id} basePath="/teach" /> : null}
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { percentOf } from "@/shared/domain";
 import { fixtures } from "../test/golden";
-import { formatDuration, lessonSub, stageProgress } from "./progress";
+import { formatDuration, lessonSub, stageProgress, unitProgress } from "./progress";
 import type { RoadmapLesson } from "./schemas";
 
 const lesson = (over: Partial<RoadmapLesson>): RoadmapLesson => ({
@@ -10,6 +10,7 @@ const lesson = (over: Partial<RoadmapLesson>): RoadmapLesson => ({
   type: "markdown",
   required: true,
   position: 1,
+  unitId: "u",
   ...over,
 });
 
@@ -43,6 +44,42 @@ describe("stageProgress", () => {
   });
 });
 
+describe("unitProgress", () => {
+  const done = "2026-10-05T08:00:00Z";
+
+  it("agrees with the API's counts for every golden bài học", () => {
+    for (const stage of [...fixtures.roadmapActive.stages, ...fixtures.roadmapTwoUnits.stages]) {
+      for (const unit of stage.units) {
+        expect(unitProgress(unit)).toEqual({
+          done: unit.requiredDone,
+          total: unit.requiredTotal,
+          optional: unit.optional,
+          complete: unit.complete,
+        });
+      }
+    }
+  });
+
+  it("is complete once every required lesson is done, whatever the optional ones", () => {
+    expect(unitProgress({ lessons: [lesson({ completedAt: done }), lesson({ required: false })] })).toMatchObject({
+      done: 1,
+      total: 1,
+      complete: true,
+    });
+    expect(unitProgress({ lessons: [lesson({ completedAt: done }), lesson({})] }).complete).toBe(false);
+  });
+
+  it("never completes a bài học without required lessons", () => {
+    expect(unitProgress({ lessons: [lesson({ required: false, completedAt: done })] })).toEqual({
+      done: 0,
+      total: 0,
+      optional: true,
+      complete: false,
+    });
+    expect(unitProgress({ lessons: [] })).toMatchObject({ optional: true, complete: false });
+  });
+});
+
 describe("formatDuration", () => {
   it("formats seconds as mm:ss", () => {
     expect(formatDuration(1104)).toBe("18:24");
@@ -60,5 +97,15 @@ describe("lessonSub", () => {
     expect(
       lessonSub(lesson({ firstOpenedAt: "2026-10-05T08:00:00Z", completedAt: "2026-10-05T09:00:00Z" })),
     ).toBe("Bài đọc");
+  });
+
+  it("names quizzes and homework instead of calling them readings", () => {
+    expect(lessonSub(lesson({ type: "quiz" }))).toBe("Quiz");
+    expect(lessonSub(lesson({ type: "homework", required: false }))).toBe("Bài tập · không bắt buộc");
+  });
+
+  it("does not mark a graded lesson as opened: its result completes it, not a tick", () => {
+    expect(lessonSub(lesson({ type: "homework", firstOpenedAt: "2026-10-05T08:00:00Z" }))).toBe("Bài tập");
+    expect(lessonSub(lesson({ type: "quiz", firstOpenedAt: "2026-10-05T08:00:00Z" }))).toBe("Quiz");
   });
 });

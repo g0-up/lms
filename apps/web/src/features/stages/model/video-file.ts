@@ -5,7 +5,6 @@ export const MAX_VIDEO_BYTES = 2 * 1024 ** 3;
 
 export const VIDEO_TYPE_MESSAGE = "Định dạng không hỗ trợ.";
 export const VIDEO_SIZE_MESSAGE = "File vượt dung lượng cho phép.";
-export const UPLOAD_FAILED_MESSAGE = "Tải file lên thất bại. Thử lại.";
 
 /** Why the file cannot be uploaded, or null. */
 export function videoFileError(file: Pick<File, "type" | "size">): string | null {

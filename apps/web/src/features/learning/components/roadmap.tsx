@@ -6,7 +6,7 @@ export interface RoadmapProps {
   onToggle: (lessonId: string, completed: boolean) => void;
 }
 
-/** Stages of the class's course version in order, each with its lessons. */
+/** Stages of the class's course version in order, each with its bài học and their lessons. */
 export function Roadmap({ roadmap, onToggle }: RoadmapProps) {
   return (
     <div className="grid gap-6">

@@ -1,12 +1,18 @@
-import { FileText, Play } from "lucide-react";
+import { CircleHelp, ClipboardList, FileText, Play, type LucideIcon } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 
-export type LessonType = "video" | "markdown";
+export type LessonType = "video" | "markdown" | "quiz" | "homework";
 
-/** 32px square marking a lesson as Video or Markdown. */
+const TYPES: Record<LessonType, { label: string; Icon: LucideIcon }> = {
+  video: { label: "Video", Icon: Play },
+  markdown: { label: "Markdown", Icon: FileText },
+  quiz: { label: "Quiz", Icon: CircleHelp },
+  homework: { label: "Bài tập", Icon: ClipboardList },
+};
+
+/** 32px square marking a lesson's type. */
 export function TypeIcon({ type, className }: { type: LessonType; className?: string }) {
-  const label = type === "video" ? "Video" : "Markdown";
-  const Icon = type === "video" ? Play : FileText;
+  const { label, Icon } = TYPES[type];
   return (
     <span
       title={label}

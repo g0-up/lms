@@ -2,14 +2,25 @@ import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it } from "vitest";
 import { api, apiError, server } from "@/shared/test/msw";
-import { draftWorld, errorResponse, publishedWorld, STORAGE_PUT_URL, storageResponse } from "../api/msw-handlers";
+import {
+  authoringWorld,
+  draftWorld,
+  errorResponse,
+  publishedWorld,
+  STORAGE_PUT_URL,
+  storageResponse,
+  twoUnitWorld,
+} from "../api/msw-handlers";
 import { lessonEditorPath } from "../model/lesson-form";
+import { applyLayout } from "../model/order";
 import { errors, fixtures, ids } from "../test/golden";
 import { gate, recordRequests, renderStages, stageUrl } from "../test/render-stages";
 
-// The route is lazy: load it once up front so the first test's timeouts do not include the import.
+// The routes are lazy: load them once up front so the first test's timeouts do not include the import.
+// The lesson editor is where a markdown lesson, a new quiz or a new homework continues.
 beforeAll(async () => {
   await import("./stage-detail-page");
+  await import("./lesson-editor-page");
 });
 
 function card(name: string): HTMLElement {
@@ -24,9 +35,30 @@ function row(container: HTMLElement, text: string): HTMLElement {
   return el;
 }
 
-const emptyDraftWorld = () => {
+function unitSection(title: string): HTMLElement {
+  const el = screen.getByRole("heading", { level: 3, name: title }).closest<HTMLElement>("section");
+  if (!el) throw new Error(`no section for ${title}`);
+  return el;
+}
+
+const draft = fixtures.stageVersionDraft;
+const [designLesson, readingLesson] = draft.lessons;
+const twoUnits = fixtures.stageVersionDraftTwoUnits;
+const [firstUnit, secondUnit] = twoUnits.units;
+
+const noUnitDraftWorld = () => {
   const world = draftWorld();
-  return { ...world, versions: [fixtures.stageVersion, { ...fixtures.stageVersionDraft, lessons: [] }] };
+  return { ...world, versions: [fixtures.stageVersion, { ...draft, units: [], lessons: [] }] };
+};
+
+/** Both lessons in the first bài học, the second one empty. */
+const emptyUnitWorld = () => {
+  const world = twoUnitWorld();
+  const version = applyLayout(twoUnits, [
+    { unitId: firstUnit.id, lessonIds: twoUnits.lessons.map((l) => l.id) },
+    { unitId: secondUnit.id, lessonIds: [] },
+  ]);
+  return { ...world, versions: [fixtures.stageVersion, version] };
 };
 
 describe("StageDetailPage: published version", () => {
@@ -41,11 +73,17 @@ describe("StageDetailPage: published version", () => {
     expect(within(lessonCard).getByText("Đã phát hành")).toBeInTheDocument();
     expect(within(lessonCard).getByText("Không sửa được")).toBeInTheDocument();
     expect(within(lessonCard).queryByRole("button", { name: /Thêm học liệu/ })).toBeNull();
-    expect(within(lessonCard).queryByRole("button", { name: "Chuyển lên" })).toBeNull();
-    expect(within(lessonCard).getByText("Thiết kế bảng và khóa")).toBeInTheDocument();
+    expect(within(lessonCard).queryByRole("button", { name: /Thêm bài học/ })).toBeNull();
+    expect(within(lessonCard).queryByRole("button", { name: /^Chuyển/ })).toBeNull();
+    expect(within(lessonCard).queryByRole("button", { name: /^Đổi tên bài học/ })).toBeNull();
+    const unit = unitSection("Nội dung chặng");
+    expect(within(unit).getByText("2 học liệu · 1 bắt buộc")).toBeInTheDocument();
+    expect(within(unit).getByText("key noi-dung-chang")).toBeInTheDocument();
+    expect(row(unit, "Thiết kế bảng và khóa")).toHaveTextContent(/^1\.1/);
+    expect(row(unit, "Đọc thêm: chỉ mục")).toHaveTextContent(/^1\.2/);
     expect(within(lessonCard).getByText("Không bắt buộc")).toBeInTheDocument();
     expect(within(lessonCard).getByText("key db-index")).toBeInTheDocument();
-    expect(within(lessonCard).getByText("1 bắt buộc · 1 tùy chọn")).toBeInTheDocument();
+    expect(within(lessonCard).getByText("1 bài học · 1 học liệu bắt buộc · 1 tùy chọn")).toBeInTheDocument();
     expect(within(lessonCard).getByRole("button", { name: "Lưu trữ" })).toBeInTheDocument();
     expect(within(lessonCard).getByRole("button", { name: "Xóa" })).toBeInTheDocument();
     expect(within(lessonCard).getByRole("button", { name: "Nhân bản thành bản nháp" })).toBeInTheDocument();
@@ -57,7 +95,10 @@ describe("StageDetailPage: published version", () => {
     renderStages(stageUrl(ids.stage));
     await screen.findByRole("heading", { name: "Học liệu của v2" });
 
-    expect(screen.getByRole("link", { name: /^v2/, current: true })).toHaveAttribute("href", stageUrl(ids.stage, ids.v2));
+    expect(screen.getByRole("link", { name: /^v2/, current: true })).toHaveAttribute(
+      "href",
+      stageUrl(ids.stage, ids.v2),
+    );
     expect(screen.getByRole("link", { name: /^v1/ })).toHaveAttribute("href", stageUrl(ids.stage, ids.v1));
     expect(screen.getByText(/^Phát hành /)).toBeInTheDocument();
   });
@@ -167,13 +208,20 @@ describe("StageDetailPage: draft version", () => {
 
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
     expect(within(lessonCard).getByText("Nháp")).toBeInTheDocument();
+    expect(within(lessonCard).getByRole("button", { name: "Thêm bài học" })).toBeInTheDocument();
     expect(within(lessonCard).getByRole("button", { name: "Thêm học liệu" })).toBeInTheDocument();
-    expect(within(lessonCard).getAllByRole("button", { name: "Chuyển lên" })[0]).toBeDisabled();
-    expect(within(lessonCard).getAllByRole("button", { name: "Chuyển lên" })[0]).toHaveAttribute(
-      "title",
-      "Đã ở đầu danh sách",
-    );
-    expect(within(lessonCard).getAllByRole("button", { name: "Chuyển xuống" })[1]).toBeDisabled();
+    expect(within(lessonCard).getByRole("button", { name: "Chuyển bài học lên: Nội dung chặng" })).toBeDisabled();
+    expect(within(lessonCard).getByRole("button", { name: "Chuyển bài học xuống: Nội dung chặng" })).toBeDisabled();
+    expect(within(lessonCard).getByRole("button", { name: "Đổi tên bài học: Nội dung chặng" })).toBeEnabled();
+    expect(within(lessonCard).getByRole("button", { name: "Xóa bài học: Nội dung chặng" })).toBeEnabled();
+    const firstUp = within(lessonCard).getByRole("button", { name: "Chuyển lên: Thiết kế bảng và khóa" });
+    expect(firstUp).toBeDisabled();
+    expect(firstUp).toHaveAttribute("title", "Đã ở đầu danh sách");
+    expect(within(lessonCard).getByRole("button", { name: "Chuyển xuống: Thiết kế bảng và khóa" })).toBeEnabled();
+    expect(within(lessonCard).getByRole("button", { name: "Chuyển xuống: Đọc thêm: chỉ mục" })).toBeDisabled();
+    expect(within(lessonCard).getByRole("button", { name: "Sửa: Thiết kế bảng và khóa" })).toBeInTheDocument();
+    expect(within(lessonCard).getByRole("button", { name: "Xóa: Đọc thêm: chỉ mục" })).toBeInTheDocument();
+    expect(screen.queryByText(/^Chưa phát hành được/)).toBeNull();
     expect(within(lessonCard).getByRole("button", { name: "Xóa bản nháp" })).toBeInTheDocument();
     expect(within(lessonCard).getByRole("button", { name: "Phát hành v2" })).not.toHaveAttribute("aria-disabled");
     expect(within(lessonCard).queryByRole("button", { name: "Lưu trữ" })).toBeNull();
@@ -190,19 +238,43 @@ describe("StageDetailPage: draft version", () => {
     expect(screen.queryByRole("button", { name: "Nhân bản thành bản nháp" })).toBeNull();
   });
 
-  it("blocks publishing a draft without lessons", async () => {
+  it("blocks publishing a draft without bài học", async () => {
     const requests = recordRequests();
-    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: emptyDraftWorld() });
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: noUnitDraftWorld() });
+    const reason = "Chặng cần ít nhất một bài học trước khi phát hành.";
 
-    expect(await screen.findByText("Chưa có học liệu")).toBeInTheDocument();
-    expect(screen.getByText("Thêm video hoặc bài markdown để phát hành chặng này.")).toBeInTheDocument();
+    expect(await screen.findByText("Chưa có bài học")).toBeInTheDocument();
+    expect(
+      screen.getByText("Tạo bài học trước, rồi thêm video, bài đọc, quiz hoặc bài tập vào từng bài học."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Chưa phát hành được v2:").closest('[data-slot="alert"]')).toHaveTextContent(reason);
     const publish = screen.getByRole("button", { name: "Phát hành v2" });
     expect(publish).toHaveAttribute("aria-disabled", "true");
-    expect(publish).toHaveAttribute("title", "Cần ít nhất một học liệu");
+    expect(publish).toHaveAttribute("title", reason);
     await user.click(publish);
-    expect(await screen.findByText("Cần ít nhất một học liệu")).toBeInTheDocument();
+    expect(await screen.findAllByText(reason)).toHaveLength(2);
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(requests.of("POST", `/stage-versions/${ids.v2}/publish`)).toHaveLength(0);
+  });
+
+  it("names every empty bài học as a publish blocker", async () => {
+    renderStages(stageUrl(ids.stage, ids.v2), { world: emptyUnitWorld() });
+    const reason = `Bài học "${secondUnit.title}" chưa có học liệu.`;
+
+    const alert = (await screen.findByText("Chưa phát hành được v2:")).closest<HTMLElement>('[data-slot="alert"]');
+    if (!alert) throw new Error("no blockers alert");
+    expect(
+      within(alert)
+        .getAllByRole("listitem")
+        .map((li) => li.textContent),
+    ).toEqual([reason]);
+    expect(screen.getByRole("button", { name: "Phát hành v2" })).toHaveAttribute("title", reason);
+    expect(
+      within(unitSection(secondUnit.title)).getByText(
+        'Bài học chưa có học liệu. Bấm "Thêm học liệu" để thêm video, bài đọc, quiz hoặc bài tập.',
+      ),
+    ).toBeInTheDocument();
+    expect(within(unitSection(secondUnit.title)).getByText("0 học liệu · 0 bắt buộc")).toBeInTheDocument();
   });
 
   it("publishes after confirming", async () => {
@@ -226,7 +298,7 @@ describe("StageDetailPage: draft version", () => {
     const dialog = screen.getByRole("dialog", { name: "Phát hành Database v2?" });
     await user.click(within(dialog).getByRole("button", { name: "Phát hành" }));
 
-    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Cần ít nhất một học liệu.");
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(errors.validation.error.message);
   });
 
   it("returns to the stage list when deleting its last version", async () => {
@@ -271,14 +343,14 @@ describe("StageDetailPage: draft version", () => {
     const requests = recordRequests();
     const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
-    await user.click(within(lessonCard).getAllByRole("button", { name: "Chuyển xuống" })[0]);
+    await user.click(within(lessonCard).getByRole("button", { name: "Chuyển xuống: Thiết kế bảng và khóa" }));
 
     await waitFor(() => {
       expect(within(lessonCard).getAllByRole("listitem")[0]).toHaveTextContent("Đọc thêm: chỉ mục");
     });
     await waitFor(() => {
       expect(requests.of("PUT", `/stage-versions/${ids.v2}/lessons/order`)[0]?.body).toBe(
-        JSON.stringify({ lessonIds: [fixtures.stageVersionDraft.lessons[1].id, fixtures.stageVersionDraft.lessons[0].id] }),
+        JSON.stringify({ units: [{ unitId: draft.units[0].id, lessonIds: [readingLesson.id, designLesson.id] }] }),
       );
     });
   });
@@ -286,10 +358,12 @@ describe("StageDetailPage: draft version", () => {
   it("rolls the order back when the server refuses", async () => {
     const { user } = renderStages(stageUrl(ids.stage, ids.v2), {
       world: draftWorld(),
-      overrides: [http.put(api("/stage-versions/:vid/lessons/order"), () => errorResponse(409, errors.versionImmutable))],
+      overrides: [
+        http.put(api("/stage-versions/:vid/lessons/order"), () => errorResponse(409, errors.versionImmutable)),
+      ],
     });
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
-    await user.click(within(lessonCard).getAllByRole("button", { name: "Chuyển xuống" })[0]);
+    await user.click(within(lessonCard).getByRole("button", { name: "Chuyển xuống: Thiết kế bảng và khóa" }));
 
     expect(await screen.findByText("Không đổi được thứ tự.")).toBeInTheDocument();
     expect(within(lessonCard).getAllByRole("listitem")[0]).toHaveTextContent("Thiết kế bảng và khóa");
@@ -299,13 +373,221 @@ describe("StageDetailPage: draft version", () => {
     const requests = recordRequests();
     const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
-    await user.click(within(row(lessonCard, "Đọc thêm: chỉ mục")).getByRole("button", { name: "Xóa" }));
+    await user.click(within(lessonCard).getByRole("button", { name: "Xóa: Đọc thêm: chỉ mục" }));
 
     const dialog = screen.getByRole("dialog", { name: 'Xóa "Đọc thêm: chỉ mục"?' });
-    expect(dialog).toHaveTextContent("Học liệu bị xóa khỏi bản nháp này. Các phiên bản đã phát hành không bị ảnh hưởng.");
+    expect(dialog).toHaveTextContent(
+      "Học liệu bị xóa khỏi bản nháp này. Các phiên bản đã phát hành không bị ảnh hưởng.",
+    );
     await user.click(within(dialog).getByRole("button", { name: "Xóa học liệu" }));
     expect(await screen.findByText("Đã xóa học liệu.")).toBeInTheDocument();
-    expect(requests.of("DELETE", `/stage-versions/${ids.v2}/lessons/${fixtures.stageVersionDraft.lessons[1].id}`)).toHaveLength(1);
+    expect(requests.of("DELETE", `/stage-versions/${ids.v2}/lessons/${readingLesson.id}`)).toHaveLength(1);
+  });
+});
+
+describe("StageDetailPage: bài học", () => {
+  it("adds a bài học, which blocks publishing until it has a lesson", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
+    await user.click(await screen.findByRole("button", { name: "Thêm bài học" }));
+    const dialog = screen.getByRole("dialog", { name: "Thêm bài học" });
+    const title = within(dialog).getByLabelText(/^Tên bài học/);
+    expect(title).toHaveAttribute("placeholder", "vd: Cài đặt và Hello World");
+    expect(dialog).toHaveTextContent("Học viên hoàn thành bài học khi xong mọi học liệu bắt buộc trong đó.");
+
+    await user.type(title, "  Nâng cao ");
+    await user.click(within(dialog).getByRole("button", { name: "Thêm" }));
+
+    expect(await screen.findByText("Đã thêm bài học. Tiếp theo: thêm học liệu vào bài học.")).toBeInTheDocument();
+    expect(JSON.parse(requests.of("POST", `/stage-versions/${ids.v2}/units`)[0].body)).toEqual({ title: "Nâng cao" });
+    expect(await screen.findByRole("heading", { level: 3, name: "Nâng cao" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Phát hành v2" })).toHaveAttribute(
+      "title",
+      'Bài học "Nâng cao" chưa có học liệu.',
+    );
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
+  });
+
+  it("checks the title before asking the server", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
+    await user.click(await screen.findByRole("button", { name: "Thêm bài học" }));
+    const dialog = screen.getByRole("dialog", { name: "Thêm bài học" });
+    await user.type(within(dialog).getByLabelText(/^Tên bài học/), "   ");
+    await user.click(within(dialog).getByRole("button", { name: "Thêm" }));
+
+    expect(await within(dialog).findByText("Nhập tên bài học.")).toBeInTheDocument();
+    expect(requests.of("POST", `/stage-versions/${ids.v2}/units`)).toHaveLength(0);
+  });
+
+  it("keeps the dialog open with a title the version already has", async () => {
+    const taken = "Tên bài học đã có trong phiên bản này.";
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), {
+      world: draftWorld(),
+      overrides: [http.post(api("/stage-versions/:vid/units"), () => apiError(409, "CONFLICT", taken))],
+    });
+    await user.click(await screen.findByRole("button", { name: "Thêm bài học" }));
+    const dialog = screen.getByRole("dialog", { name: "Thêm bài học" });
+    await user.type(within(dialog).getByLabelText(/^Tên bài học/), "nội dung chặng");
+    await user.click(within(dialog).getByRole("button", { name: "Thêm" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent(taken);
+    expect(screen.getByRole("dialog", { name: "Thêm bài học" })).toBeInTheDocument();
+  });
+
+  it("renames a bài học", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
+    await user.click(await screen.findByRole("button", { name: "Đổi tên bài học: Nội dung chặng" }));
+    const dialog = screen.getByRole("dialog", { name: "Đổi tên bài học" });
+    const title = within(dialog).getByLabelText(/^Tên bài học/);
+    expect(title).toHaveValue("Nội dung chặng");
+
+    await user.clear(title);
+    await user.type(title, "Thiết kế lược đồ");
+    await user.click(within(dialog).getByRole("button", { name: "Lưu" }));
+
+    expect(await screen.findByText("Đã lưu bài học.")).toBeInTheDocument();
+    const [patch] = requests.of("PATCH", `/stage-versions/${ids.v2}/units/${draft.units[0].id}`);
+    expect(JSON.parse(patch.body)).toEqual({ title: "Thiết kế lược đồ" });
+    expect(await screen.findByRole("heading", { level: 3, name: "Thiết kế lược đồ" })).toBeInTheDocument();
+  });
+
+  it("deletes a bài học with its lessons after confirming", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
+    await user.click(await screen.findByRole("button", { name: "Xóa bài học: Nội dung chặng" }));
+    const dialog = screen.getByRole("dialog", { name: 'Xóa bài học "Nội dung chặng"?' });
+    expect(dialog).toHaveTextContent(
+      "Bài học và 2 học liệu trong đó bị xóa khỏi bản nháp này. Muốn giữ học liệu nào, hãy chuyển nó sang bài học khác trước. Các phiên bản đã phát hành không bị ảnh hưởng.",
+    );
+
+    await user.click(within(dialog).getByRole("button", { name: "Xóa bài học" }));
+    expect(await screen.findByText("Đã xóa bài học.")).toBeInTheDocument();
+    expect(requests.of("DELETE", `/stage-versions/${ids.v2}/units/${draft.units[0].id}`)).toHaveLength(1);
+    expect(await screen.findByText("Chưa có bài học")).toBeInTheDocument();
+  });
+
+  it("says an empty bài học goes without lessons", async () => {
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: emptyUnitWorld() });
+    await user.click(await screen.findByRole("button", { name: `Xóa bài học: ${secondUnit.title}` }));
+    const dialog = screen.getByRole("dialog", { name: `Xóa bài học "${secondUnit.title}"?` });
+    expect(dialog).toHaveTextContent("Bài học trống bị xóa khỏi bản nháp này.");
+  });
+
+  it("moves the last lesson of a bài học to the top of the next one", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: twoUnitWorld() });
+    const [first, second] = twoUnits.lessons;
+    await screen.findByRole("heading", { level: 3, name: firstUnit.title });
+    expect(screen.getByRole("button", { name: `Chuyển xuống: ${first.title}` })).toBeEnabled();
+    expect(screen.getByRole("button", { name: `Chuyển lên: ${second.title}` })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: `Chuyển xuống: ${first.title}` }));
+
+    await waitFor(() => {
+      expect(within(unitSection(secondUnit.title)).getAllByRole("listitem")[0]).toHaveTextContent(`2.1${first.title}`);
+    });
+    expect(within(unitSection(secondUnit.title)).getAllByRole("listitem")[1]).toHaveTextContent(`2.2${second.title}`);
+    expect(within(unitSection(firstUnit.title)).getByText(/^Bài học chưa có học liệu/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(requests.of("PUT", `/stage-versions/${ids.v2}/lessons/order`)[0]?.body).toBe(
+        JSON.stringify({
+          units: [
+            { unitId: firstUnit.id, lessonIds: [] },
+            { unitId: secondUnit.id, lessonIds: [first.id, second.id] },
+          ],
+        }),
+      );
+    });
+    expect(await screen.findByRole("button", { name: "Phát hành v2" })).toHaveAttribute(
+      "title",
+      `Bài học "${firstUnit.title}" chưa có học liệu.`,
+    );
+  });
+
+  it("moves the first lesson of a bài học to the end of the previous one", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: twoUnitWorld() });
+    const [first, second] = twoUnits.lessons;
+    await user.click(await screen.findByRole("button", { name: `Chuyển lên: ${second.title}` }));
+
+    await waitFor(() => {
+      expect(within(unitSection(firstUnit.title)).getAllByRole("listitem")[1]).toHaveTextContent(`1.2${second.title}`);
+    });
+    await waitFor(() => {
+      expect(JSON.parse(requests.of("PUT", `/stage-versions/${ids.v2}/lessons/order`)[0]?.body ?? "null")).toEqual({
+        units: [
+          { unitId: firstUnit.id, lessonIds: [first.id, second.id] },
+          { unitId: secondUnit.id, lessonIds: [] },
+        ],
+      });
+    });
+  });
+
+  it("moves the version's last lesson into an empty bài học after it", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: emptyUnitWorld() });
+    const [first, second] = twoUnits.lessons;
+    expect(await screen.findByRole("button", { name: `Chuyển lên: ${first.title}` })).toBeDisabled();
+    const down = screen.getByRole("button", { name: `Chuyển xuống: ${second.title}` });
+    expect(down).toBeEnabled();
+    expect(down).not.toHaveAttribute("title");
+
+    await user.click(down);
+
+    await waitFor(() => {
+      expect(within(unitSection(secondUnit.title)).getAllByRole("listitem")[0]).toHaveTextContent(`2.1${second.title}`);
+    });
+    expect(screen.getByRole("button", { name: `Chuyển xuống: ${second.title}` })).toBeDisabled();
+    await waitFor(() => {
+      expect(JSON.parse(requests.of("PUT", `/stage-versions/${ids.v2}/lessons/order`)[0]?.body ?? "null")).toEqual({
+        units: [
+          { unitId: firstUnit.id, lessonIds: [first.id] },
+          { unitId: secondUnit.id, lessonIds: [second.id] },
+        ],
+      });
+    });
+  });
+
+  it("reorders bài học", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: twoUnitWorld() });
+    expect(await screen.findByRole("button", { name: `Chuyển bài học lên: ${firstUnit.title}` })).toBeDisabled();
+    expect(screen.getByRole("button", { name: `Chuyển bài học xuống: ${secondUnit.title}` })).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: `Chuyển bài học xuống: ${firstUnit.title}` }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+        secondUnit.title,
+        firstUnit.title,
+      ]);
+    });
+    await waitFor(() => {
+      expect(JSON.parse(requests.of("PUT", `/stage-versions/${ids.v2}/units/order`)[0]?.body ?? "null")).toEqual({
+        unitIds: [secondUnit.id, firstUnit.id],
+      });
+    });
+    expect(within(unitSection(firstUnit.title)).getAllByRole("listitem")[0]).toHaveTextContent(
+      `2.1${twoUnits.lessons[0].title}`,
+    );
+  });
+
+  it("rolls the bài học order back when the server refuses", async () => {
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), {
+      world: twoUnitWorld(),
+      overrides: [http.put(api("/stage-versions/:vid/units/order"), () => errorResponse(409, errors.versionImmutable))],
+    });
+    await user.click(await screen.findByRole("button", { name: `Chuyển bài học xuống: ${firstUnit.title}` }));
+
+    expect(await screen.findByText("Không đổi được thứ tự.")).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      firstUnit.title,
+      secondUnit.title,
+    ]);
   });
 });
 
@@ -321,6 +603,42 @@ describe("StageDetailPage: lesson dialog", () => {
     if (!input) throw new Error("no file input");
     return input;
   };
+
+  it("puts a new lesson in the bài học whose button opened it", async () => {
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: twoUnitWorld() });
+    await screen.findByRole("heading", { level: 3, name: secondUnit.title });
+    await user.click(within(unitSection(secondUnit.title)).getByRole("button", { name: "Thêm học liệu" }));
+    const dialog = screen.getByRole("dialog", { name: "Thêm học liệu" });
+
+    expect(within(dialog).getByRole("combobox", { name: /^Bài học/ })).toHaveTextContent(`2. ${secondUnit.title}`);
+    expect(dialog).toHaveTextContent("Học liệu mới nằm cuối bài học đã chọn.");
+    await user.click(within(dialog).getByRole("combobox", { name: /^Bài học/ }));
+    expect((await screen.findAllByRole("option")).map((o) => o.textContent)).toEqual([
+      `1. ${firstUnit.title}`,
+      `2. ${secondUnit.title}`,
+    ]);
+  });
+
+  it("moves an edited lesson to the bài học picked in the dialog", async () => {
+    const requests = recordRequests();
+    const world = twoUnitWorld();
+    const video = { ...fixtures.lessonVideo, unitId: firstUnit.id };
+    const withVideo = { ...twoUnits, lessons: [twoUnits.lessons[0], video, twoUnits.lessons[1]] };
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), {
+      world: { ...world, versions: [fixtures.stageVersion, withVideo] },
+    });
+    await user.click(await screen.findByRole("button", { name: `Sửa: ${video.title}` }));
+    const dialog = screen.getByRole("dialog", { name: "Sửa học liệu" });
+    expect(dialog).toHaveTextContent("Đổi bài học sẽ đưa học liệu xuống cuối bài học mới.");
+
+    await user.click(within(dialog).getByRole("combobox", { name: /^Bài học/ }));
+    await user.click(await screen.findByRole("option", { name: `2. ${secondUnit.title}` }));
+    await user.click(within(dialog).getByRole("button", { name: "Lưu" }));
+
+    expect(await screen.findByText("Đã lưu học liệu.")).toBeInTheDocument();
+    const [patch] = requests.of("PATCH", `/stage-versions/${ids.v2}/lessons/${video.id}`);
+    expect(JSON.parse(patch.body)).toMatchObject({ title: video.title, unitId: secondUnit.id });
+  });
 
   it("validates the title and the video file", async () => {
     const { user, dialog } = await openAdd();
@@ -343,7 +661,12 @@ describe("StageDetailPage: lesson dialog", () => {
     expect(within(dialog).getByRole("button", { name: "Chọn file khác" })).toBeInTheDocument();
 
     const [init] = requests.of("POST", "/media/uploads");
-    expect(JSON.parse(init.body)).toEqual({ kind: "video", fileName: "join-co-ban.mp4", contentType: "video/mp4", sizeBytes: 4096 });
+    expect(JSON.parse(init.body)).toEqual({
+      kind: "video",
+      fileName: "join-co-ban.mp4",
+      contentType: "video/mp4",
+      sizeBytes: 4096,
+    });
     const [put] = requests.seen.filter((r) => r.method === "PUT" && r.path.startsWith("/put/"));
     expect(put.headers.get("content-type")).toBe("video/mp4");
     expect(put.headers.get("x-requested-with")).toBeNull();
@@ -356,6 +679,7 @@ describe("StageDetailPage: lesson dialog", () => {
     const [add] = requests.of("POST", `/stage-versions/${ids.v2}/lessons`);
     expect(JSON.parse(add.body)).toEqual({
       title: "Video: JOIN cơ bản",
+      unitId: draft.units[0].id,
       type: "video",
       required: true,
       videoMediaId: fixtures.media.id,
@@ -425,10 +749,10 @@ describe("StageDetailPage: lesson dialog", () => {
   it("opens the editor page to edit a markdown lesson", async () => {
     const { user, router } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
-    await user.click(within(row(lessonCard, "Thiết kế bảng và khóa")).getByRole("button", { name: "Sửa" }));
+    await user.click(within(lessonCard).getByRole("button", { name: "Sửa: Thiết kế bảng và khóa" }));
 
     await waitFor(() => {
-      expect(router.state.location.pathname).toBe(lessonEditorPath(ids.stage, ids.v2, fixtures.stageVersionDraft.lessons[0].id));
+      expect(router.state.location.pathname).toBe(lessonEditorPath(ids.stage, ids.v2, designLesson.id));
     });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
@@ -438,7 +762,7 @@ describe("StageDetailPage: lesson dialog", () => {
     const { user, dialog, router } = await openAdd();
     await user.type(within(dialog).getByLabelText(/^Tiêu đề/), "Ghi chú");
     await user.click(within(dialog).getByRole("combobox", { name: /Loại/ }));
-    await user.click(await screen.findByRole("option", { name: "Markdown" }));
+    await user.click(await screen.findByRole("option", { name: "Bài đọc (Markdown)" }));
     await user.click(within(dialog).getByRole("checkbox", { name: /Bắt buộc/ }));
     expect(within(dialog).queryByRole("button", { name: "Chọn file" })).toBeNull();
     await user.click(within(dialog).getByRole("button", { name: "Tiếp tục soạn" }));
@@ -446,24 +770,195 @@ describe("StageDetailPage: lesson dialog", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe(lessonEditorPath(ids.stage, ids.v2));
     });
-    expect(router.state.location.state).toEqual({ title: "Ghi chú", required: false });
+    expect(router.state.location.state).toEqual({ title: "Ghi chú", unitId: draft.units[0].id, required: false });
     expect(requests.of("POST", `/stage-versions/${ids.v2}/lessons`)).toHaveLength(0);
   });
 
   it("explains VERSION_IMMUTABLE inside the dialog", async () => {
     const world = draftWorld();
-    const draft = { ...fixtures.stageVersionDraft, lessons: [...fixtures.stageVersionDraft.lessons, fixtures.lessonVideo] };
+    const withVideo = { ...draft, lessons: [...draft.lessons, fixtures.lessonVideo] };
     const { user } = renderStages(stageUrl(ids.stage, ids.v2), {
-      world: { ...world, versions: [fixtures.stageVersion, draft] },
-      overrides: [http.patch(api("/stage-versions/:vid/lessons/:lessonId"), () => errorResponse(409, errors.versionImmutable))],
+      world: { ...world, versions: [fixtures.stageVersion, withVideo] },
+      overrides: [
+        http.patch(api("/stage-versions/:vid/lessons/:lessonId"), () => errorResponse(409, errors.versionImmutable)),
+      ],
     });
     const lessonCard = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
-    await user.click(within(row(lessonCard, fixtures.lessonVideo.title)).getByRole("button", { name: "Sửa" }));
+    await user.click(within(lessonCard).getByRole("button", { name: `Sửa: ${fixtures.lessonVideo.title}` }));
     const dialog = screen.getByRole("dialog", { name: "Sửa học liệu" });
-    expect(within(dialog).getByRole("combobox", { name: /Loại/ })).toBeDisabled();
     await user.click(within(dialog).getByRole("button", { name: "Lưu" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Phiên bản đã phát hành, không sửa được.");
+  });
+});
+
+describe("StageDetailPage: quiz and homework", () => {
+  const authoring = fixtures.stageVersionDraftAuthoring;
+  const quiz = fixtures.lessonQuiz;
+  const homework = fixtures.lessonHomework;
+
+  async function openAdd() {
+    const view = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
+    await view.user.click(await screen.findByRole("button", { name: "Thêm học liệu" }));
+    return { ...view, dialog: screen.getByRole("dialog", { name: "Thêm học liệu" }) };
+  }
+
+  async function pickKind(user: ReturnType<typeof renderStages>["user"], dialog: HTMLElement, name: string) {
+    await user.click(within(dialog).getByRole("combobox", { name: /Loại/ }));
+    await user.click(await screen.findByRole("option", { name }));
+  }
+
+  it("offers the five kinds in the prototype's words", async () => {
+    const { user, dialog } = await openAdd();
+    await user.click(within(dialog).getByRole("combobox", { name: /Loại/ }));
+    const options = (await screen.findAllByRole("option")).map((o) => o.textContent);
+    expect(options).toEqual([
+      "Video",
+      "Bài đọc (Markdown)",
+      "Quiz học liệu (luyện tập, chấm tự động)",
+      "Quiz bài tập (giới hạn lượt và giờ, giảng viên xác nhận)",
+      "Bài tập nộp repo hoặc file (giảng viên chấm)",
+    ]);
+  });
+
+  it("creates an assessment quiz with the server's defaults and opens its editor", async () => {
+    const requests = recordRequests();
+    const { user, dialog, router } = await openAdd();
+    await user.type(within(dialog).getByLabelText(/^Tiêu đề/), "Kiểm tra GROUP BY");
+    await pickKind(user, dialog, "Quiz bài tập (giới hạn lượt và giờ, giảng viên xác nhận)");
+    expect(within(dialog).getByLabelText(/^Ngưỡng đạt \(%\)/)).toHaveValue("70");
+    expect(within(dialog).getByLabelText(/^Số lượt làm bài/)).toHaveValue("2");
+    expect(within(dialog).getByLabelText(/^Thời gian mỗi lượt \(phút\)/)).toHaveValue("20");
+    expect(within(dialog).getByRole("checkbox", { name: "Đảo thứ tự câu hỏi và đáp án mỗi lượt" })).toBeChecked();
+    expect(dialog).toHaveTextContent("Sau khi tạo, bạn được chuyển đến trang soạn câu hỏi.");
+    await user.click(within(dialog).getByRole("button", { name: "Thêm" }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(
+        lessonEditorPath(ids.stage, ids.v2, "0199ffff-0000-7000-8000-0000000000a1"),
+      );
+    });
+    const [post] = requests.of("POST", `/stage-versions/${ids.v2}/lessons`);
+    expect(JSON.parse(post.body)).toMatchObject({
+      title: "Kiểm tra GROUP BY",
+      type: "quiz",
+      quiz: { mode: "assessment", passPercent: 70, maxAttempts: 2, timeLimitMinutes: 20, shuffle: true },
+    });
+  });
+
+  it("asks a practice quiz for no pass mark, attempts or time limit", async () => {
+    const { user, dialog } = await openAdd();
+    await pickKind(user, dialog, "Quiz học liệu (luyện tập, chấm tự động)");
+    expect(within(dialog).queryByLabelText(/^Ngưỡng đạt/)).toBeNull();
+    expect(within(dialog).queryByLabelText(/^Số lượt làm bài/)).toBeNull();
+    expect(within(dialog).queryByLabelText(/^Thời gian mỗi lượt/)).toBeNull();
+  });
+
+  it("creates a homework with a 70% pass mark and opens its editor", async () => {
+    const requests = recordRequests();
+    const { user, dialog, router } = await openAdd();
+    await user.type(within(dialog).getByLabelText(/^Tiêu đề/), "Bài tập GROUP BY");
+    await pickKind(user, dialog, "Bài tập nộp repo hoặc file (giảng viên chấm)");
+    expect(within(dialog).getByLabelText(/^Ngưỡng đạt \(%\)/)).toHaveValue("70");
+    await user.click(within(dialog).getByRole("button", { name: "Thêm" }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(
+        lessonEditorPath(ids.stage, ids.v2, "0199ffff-0000-7000-8000-0000000000a2"),
+      );
+    });
+    const [post] = requests.of("POST", `/stage-versions/${ids.v2}/lessons`);
+    expect(JSON.parse(post.body)).toMatchObject({ type: "homework", homework: { passPercent: 70 } });
+  });
+
+  it("links each quiz and homework to its editor with its meta", async () => {
+    renderStages(stageUrl(ids.stage, ids.v2), { world: authoringWorld() });
+    const lessons = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
+    const quizRow = row(lessons, "Quiz bài tập · 1 câu · 1 điểm · đạt từ 70% · 2 lượt · 10 phút");
+    const editor = lessonEditorPath(ids.stage, ids.v2, quiz.id);
+    expect(within(quizRow).getByRole("link", { name: quiz.title })).toHaveAttribute("href", editor);
+    expect(within(quizRow).getByRole("link", { name: `Soạn câu hỏi: ${quiz.title}` })).toHaveAttribute("href", editor);
+    const homeworkRow = row(lessons, "Bài tập · 1 tiêu chí · 60 điểm · đạt từ 70%");
+    expect(within(homeworkRow).getByRole("link", { name: `Soạn tiêu chí: ${homework.title}` })).toHaveAttribute(
+      "href",
+      lessonEditorPath(ids.stage, ids.v2, homework.id),
+    );
+    expect(screen.queryByText("Chưa đủ để phát hành")).toBeNull();
+  });
+
+  it("flags an empty quiz and homework and says why the version cannot be published", async () => {
+    const empty = {
+      ...authoring,
+      lessons: authoring.lessons.map((l) => {
+        if (l.quiz) return { ...l, quiz: { ...l.quiz, questions: [] } };
+        if (l.homework) return { ...l, homework: { ...l.homework, briefSource: "", criteria: [], maxPoints: 0 } };
+        return l;
+      }),
+    };
+    renderStages(stageUrl(ids.stage, ids.v2), {
+      world: { ...authoringWorld(), versions: [fixtures.stageVersion, empty] },
+    });
+    expect(await screen.findByText("Chưa phát hành được v2:")).toBeInTheDocument();
+    expect(screen.getByText(`"${quiz.title}" chưa có câu hỏi.`)).toBeInTheDocument();
+    expect(screen.getByText(`"${homework.title}" chưa có đề bài.`)).toBeInTheDocument();
+    expect(screen.getByText(`"${homework.title}" chưa có tiêu chí chấm.`)).toBeInTheDocument();
+    const lessons = card("Học liệu của v2");
+    expect(within(row(lessons, quiz.title)).getByText("Chưa đủ để phát hành")).toBeInTheDocument();
+    expect(within(row(lessons, homework.title)).getByText("Chưa đủ để phát hành")).toBeInTheDocument();
+  });
+
+  it("offers a published quiz read-only", async () => {
+    const published = { ...authoring, status: "published" as const };
+    renderStages(stageUrl(ids.stage, ids.v2), {
+      world: { ...authoringWorld(), versions: [fixtures.stageVersion, published] },
+    });
+    const lessons = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
+    expect(within(lessons).getByRole("link", { name: `Xem chi tiết: ${quiz.title}` })).toBeInTheDocument();
+    expect(within(lessons).queryByRole("link", { name: `Soạn câu hỏi: ${quiz.title}` })).toBeNull();
+  });
+
+  it("switches between the two quiz kinds without asking, keeping the questions", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: authoringWorld() });
+    const lessons = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
+    await user.click(within(lessons).getByRole("button", { name: `Sửa: ${quiz.title}` }));
+    const dialog = screen.getByRole("dialog", { name: "Sửa học liệu" });
+    expect(within(dialog).getByRole("combobox", { name: /Loại/ })).toHaveAccessibleDescription(
+      "Đổi giữa hai loại quiz giữ nguyên câu hỏi. Đổi sang loại khác sẽ bỏ nội dung của loại cũ.",
+    );
+    await pickKind(user, dialog, "Quiz học liệu (luyện tập, chấm tự động)");
+    await user.click(within(dialog).getByRole("button", { name: "Lưu" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Sửa học liệu" })).toBeNull();
+    });
+    const [patch] = requests.of("PATCH", `/stage-versions/${ids.v2}/lessons/${quiz.id}`);
+    const body = JSON.parse(patch.body) as Record<string, unknown>;
+    expect(body).not.toHaveProperty("type");
+    expect(body).toMatchObject({ quiz: { mode: "practice" } });
+  });
+
+  it("confirms before turning a quiz into a homework", async () => {
+    const requests = recordRequests();
+    const { user } = renderStages(stageUrl(ids.stage, ids.v2), { world: authoringWorld() });
+    const lessons = card((await screen.findByRole("heading", { name: "Học liệu của v2" })).textContent);
+    await user.click(within(lessons).getByRole("button", { name: `Sửa: ${quiz.title}` }));
+    const dialog = screen.getByRole("dialog", { name: "Sửa học liệu" });
+    await pickKind(user, dialog, "Bài tập nộp repo hoặc file (giảng viên chấm)");
+    await user.click(within(dialog).getByRole("button", { name: "Lưu" }));
+
+    const confirm = await screen.findByRole("dialog", { name: `Đổi loại "${quiz.title}"?` });
+    expect(confirm).toHaveTextContent(
+      "Đổi sang Bài tập nộp repo hoặc file (giảng viên chấm) sẽ bỏ 1 câu hỏi của học liệu này. Không hoàn tác được.",
+    );
+    expect(requests.of("PATCH", `/stage-versions/${ids.v2}/lessons/${quiz.id}`)).toHaveLength(0);
+    await user.click(within(confirm).getByRole("button", { name: "Đổi loại" }));
+
+    await waitFor(() => {
+      expect(requests.of("PATCH", `/stage-versions/${ids.v2}/lessons/${quiz.id}`)).toHaveLength(1);
+    });
+    const [patch] = requests.of("PATCH", `/stage-versions/${ids.v2}/lessons/${quiz.id}`);
+    expect(JSON.parse(patch.body)).toMatchObject({ type: "homework", homework: { passPercent: 70 } });
   });
 });
 
@@ -480,7 +975,9 @@ describe("StageDetailPage: apply", () => {
   it("explains the one-step apply", async () => {
     const { dialog } = await openApply();
     expect(await within(dialog).findByText("Trong một giao dịch, hệ thống sẽ:")).toBeInTheDocument();
-    const steps = within(dialog).getAllByRole("listitem").map((li) => li.textContent);
+    const steps = within(dialog)
+      .getAllByRole("listitem")
+      .map((li) => li.textContent);
     expect(steps).toEqual([
       "Nhân bản Lập trình cơ bản v1 thành v2.",
       "Thay Database v1 bằng v2, giữ nguyên thứ tự và 0 chặng còn lại.",
@@ -498,7 +995,9 @@ describe("StageDetailPage: apply", () => {
     await user.click(await within(dialog).findByRole("button", { name: "Tạo và phát hành Lập trình cơ bản v2" }));
 
     expect(await screen.findByText("Đã phát hành Lập trình cơ bản v2 dùng v2.")).toBeInTheDocument();
-    expect(JSON.parse(requests.of("POST", `/stage-versions/${ids.v2}/apply`)[0].body)).toEqual({ courseIds: [ids.basic] });
+    expect(JSON.parse(requests.of("POST", `/stage-versions/${ids.v2}/apply`)[0].body)).toEqual({
+      courseIds: [ids.basic],
+    });
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).toBeNull();
     });

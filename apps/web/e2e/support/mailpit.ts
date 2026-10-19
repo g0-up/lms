@@ -43,6 +43,31 @@ export async function waitForNewMessage(address: string, seen: MailSummary[], ti
   return fresh;
 }
 
+/**
+ * Chờ thư mới (không có trong `seen`) tới địa chỉ có tiêu đề đúng bằng `subject`. Dùng khi một thao tác gửi nhiều thư
+ * cho cùng người nhận, hoặc thư khác có thể tới xen giữa, nên "thư mới đầu tiên" không đủ để xác định.
+ */
+export async function waitForSubject(
+  address: string,
+  subject: string,
+  seen: MailSummary[],
+  timeout = 15_000,
+): Promise<MailSummary> {
+  const known = new Set(seen.map((m) => m.ID));
+  let found: MailSummary | undefined;
+  await expect
+    .poll(
+      async () => {
+        found = (await messagesTo(address)).find((m) => !known.has(m.ID) && m.Subject === subject);
+        return found !== undefined;
+      },
+      { timeout, intervals: [250, 500, 1000], message: `thư "${subject}" tới ${address}` },
+    )
+    .toBe(true);
+  if (!found) throw new Error(`không có thư "${subject}" tới ${address}`);
+  return found;
+}
+
 export async function messageText(id: string): Promise<string> {
   const ctx = await request.newContext({ baseURL: MAILPIT_URL });
   try {

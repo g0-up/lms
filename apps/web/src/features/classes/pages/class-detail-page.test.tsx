@@ -1,6 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { beforeAll, describe, expect, it } from "vitest";
+import classHomeworkJson from "../../../../../api/internal/features/homework/testdata/class-homework.json";
+import classQuizzesJson from "../../../../../api/internal/features/quizzes/testdata/class-quizzes.json";
+import classSummaryJson from "../../../../../api/internal/features/summary/testdata/class-summary.json";
 import { api } from "@/shared/test/msw";
 import { errorResponse, seedDb } from "../api/msw-handlers";
 import { errors, ids } from "../test/golden";
@@ -60,6 +63,72 @@ describe("class detail page", () => {
     await user.click(tab(/^Cài đặt/));
     expect(router.state.location.search).toBe("?tab=settings");
     expect(await screen.findByRole("form", { name: "Cài đặt lớp" })).toBeInTheDocument();
+  });
+
+  it("opens the summary tab after the report tab and keeps the tab when filtering the matrix", async () => {
+    const { user, router } = renderClasses(classPath(ids.active), {
+      overrides: [http.get(api("/classes/:classId/summary"), () => HttpResponse.json(classSummaryJson))],
+    });
+    await screen.findByRole("table", { name: "Học viên lớp basic01" });
+    const names = within(tabs()).getAllByRole("link").map((l) => l.textContent);
+    expect(names.indexOf("Tổng kết")).toBe(names.findIndex((n) => n.startsWith("Tiến độ")) + 1);
+
+    await user.click(tab(/^Tổng kết/));
+
+    expect(router.state.location.search).toBe("?tab=summary");
+    expect(tab(/^Tổng kết/)).toHaveAttribute("aria-current", "page");
+    expect(await screen.findByRole("table", { name: "Tổng kết theo chặng lớp basic01" })).toBeInTheDocument();
+    expect(screen.getByText(/^7\/7 học viên/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("checkbox", { name: "Có bài quá hạn nộp" }));
+    await user.click(screen.getByRole("button", { name: "Lọc" }));
+    await waitFor(() => {
+      const search = new URLSearchParams(router.state.location.search);
+      expect(search.get("tab")).toBe("summary");
+      expect(search.get("overdue")).toBe("1");
+    });
+    expect(screen.getByText(/^3\/7 học viên/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Xóa bộ lọc" })).toHaveAttribute(
+      "href",
+      `/admin/classes/${ids.active}?tab=summary`,
+    );
+  });
+
+  it("opens the homework tab with grading links in the admin area", async () => {
+    const { user, router } = renderClasses(classPath(ids.active), {
+      overrides: [http.get(api("/classes/:classId/homework"), () => HttpResponse.json(classHomeworkJson))],
+    });
+    await screen.findByRole("table", { name: "Học viên lớp basic01" });
+
+    await user.click(tab(/^Bài tập/));
+
+    expect(router.state.location.search).toBe("?tab=homework");
+    expect(tab(/^Bài tập/)).toHaveAttribute("aria-current", "page");
+    const card = await screen.findByRole("region", { name: "Bài tập: truy vấn SELECT" });
+    expect(within(card).getByRole("link", { name: "Xem bài của Nguyễn Hoàng An: truy vấn SELECT" })).toHaveAttribute(
+      "href",
+      "/admin/grading/0199ffff-0000-7000-8000-000000000001",
+    );
+  });
+
+  it("opens the quiz tab after the homework tab with review links in the admin area", async () => {
+    const { user, router } = renderClasses(classPath(ids.active), {
+      overrides: [http.get(api("/classes/:classId/quizzes"), () => HttpResponse.json(classQuizzesJson))],
+    });
+    await screen.findByRole("table", { name: "Học viên lớp basic01" });
+    const names = within(tabs()).getAllByRole("link").map((l) => l.textContent);
+    expect(names.findIndex((n) => n.startsWith("Quiz"))).toBe(names.findIndex((n) => n.startsWith("Bài tập")) + 1);
+
+    await user.click(tab(/^Quiz/));
+
+    expect(router.state.location.search).toBe("?tab=quiz");
+    expect(tab(/^Quiz/)).toHaveAttribute("aria-current", "page");
+    const card = await screen.findByRole("region", { name: "Kiểm tra cuối chặng Database" });
+    expect(within(card).getByRole("link", { name: "Xác nhận lượt #2 của Hoàng Thu Hà" })).toHaveAttribute(
+      "href",
+      "/admin/grading/quiz/0199ffff-0000-7000-8000-000000000018?from=quiz",
+    );
+    expect(screen.queryByRole("table", { name: "Học viên lớp basic01" })).toBeNull();
   });
 
   it("shows a loading state, then the error with a retry", async () => {

@@ -6,7 +6,12 @@ const versionNo = z.number().int().positive();
 const count = z.number().int().nonnegative();
 
 export const versionStatusSchema = z.enum(["draft", "published", "archived"]);
-export const lessonTypeSchema = z.enum(["video", "markdown"]);
+export const lessonTypeSchema = z.enum(["video", "markdown", "quiz", "homework"]);
+export type LessonType = z.infer<typeof lessonTypeSchema>;
+export const quizModeSchema = z.enum(["practice", "assessment"]);
+export type QuizMode = z.infer<typeof quizModeSchema>;
+export const questionTypeSchema = z.enum(["single", "multi"]);
+export type QuestionType = z.infer<typeof questionTypeSchema>;
 
 /** `VersionSummaryDTO`: one version on the stage list and detail (the API sorts newest first). */
 export const stageVersionSummarySchema = z.object({
@@ -80,9 +85,69 @@ export const stageDetailSchema = z.object({
 });
 export type StageDetail = z.infer<typeof stageDetailSchema>;
 
+/** `UnitDTO`: a bài học groups a version's lessons; `position` starts at 1. */
+export const unitSchema = z.object({
+  id,
+  unitKey: z.string(),
+  title: z.string(),
+  position: z.number().int(),
+  lessonCount: count,
+  requiredCount: count,
+});
+export type Unit = z.infer<typeof unitSchema>;
+
+/** `OptionDTO`: one answer choice. */
+export const optionSchema = z.object({ id, body: z.string(), isCorrect: z.boolean() });
+export type QuestionOption = z.infer<typeof optionSchema>;
+
+/** `QuestionDTO`: `questionKey` is fixed at creation; the HTML fields only once published. */
+export const questionSchema = z.object({
+  id,
+  questionKey: z.string(),
+  type: questionTypeSchema,
+  bodySource: z.string(),
+  bodyHtml: z.string().optional(),
+  explanationSource: z.string(),
+  explanationHtml: z.string().optional(),
+  points: z.number().int().positive(),
+  options: z.array(optionSchema),
+});
+export type Question = z.infer<typeof questionSchema>;
+
+/** `QuizDTO`: a practice quiz has no limits, so the three limits are null there. */
+export const quizSchema = z.object({
+  mode: quizModeSchema,
+  maxAttempts: z.number().int().positive().nullable(),
+  timeLimitMinutes: z.number().int().positive().nullable(),
+  shuffle: z.boolean(),
+  passPercent: z.number().int().positive().nullable(),
+  questions: z.array(questionSchema),
+});
+export type Quiz = z.infer<typeof quizSchema>;
+
+/** `CriterionDTO`: one grading criterion of a homework rubric. */
+export const criterionSchema = z.object({ id, description: z.string(), maxPoints: z.number().int().positive() });
+export type Criterion = z.infer<typeof criterionSchema>;
+
+/** `AttachmentDTO`: a document handed out with the homework brief. */
+export const attachmentSchema = z.object({ mediaId: id, fileName: z.string(), sizeBytes: count });
+export type Attachment = z.infer<typeof attachmentSchema>;
+
+/** `HomeworkDTO`: `maxPoints` is the sum of the criteria; `briefHtml` only once published. */
+export const homeworkSchema = z.object({
+  briefSource: z.string(),
+  briefHtml: z.string().optional(),
+  passPercent: z.number().int().positive(),
+  maxPoints: count,
+  criteria: z.array(criterionSchema),
+  attachments: z.array(attachmentSchema),
+});
+export type Homework = z.infer<typeof homeworkSchema>;
+
 /** `LessonDTO`: type-specific fields are present only on that type; `markdownHtml` only once published. */
 export const lessonSchema = z.object({
   id,
+  unitId: id,
   lessonKey: z.string(),
   title: z.string(),
   type: lessonTypeSchema,
@@ -93,10 +158,15 @@ export const lessonSchema = z.object({
   markdownHtml: z.string().optional(),
   videoMediaId: id.optional(),
   videoFileName: z.string().optional(),
+  quiz: quizSchema.optional(),
+  homework: homeworkSchema.optional(),
 });
 export type Lesson = z.infer<typeof lessonSchema>;
 
-/** `GET /stage-versions/{vid}` and every version action (clone, publish, archive, reorder). */
+/**
+ * `GET /stage-versions/{vid}` and every version action (clone, publish, archive, reorder). `lessons` is
+ * flat in unit order, so `position` counts across units.
+ */
 export const stageVersionSchema = z.object({
   id,
   stageId: id,
@@ -106,6 +176,7 @@ export const stageVersionSchema = z.object({
   status: versionStatusSchema,
   publishedAt: isoDate.optional(),
   clonedFromVersionNo: versionNo.optional(),
+  units: z.array(unitSchema),
   lessons: z.array(lessonSchema),
   usedBy: z.array(usedByRowSchema),
 });
@@ -129,21 +200,6 @@ export type ApplyResults = z.infer<typeof applyResultsSchema>;
 
 /** `details` of a DRAFT_EXISTS error. */
 export const draftExistsDetailsSchema = z.object({ draftVersionId: id, draftVersionNo: versionNo });
-
-/** `POST /media/uploads` (201). The upload URL is presigned: never log or display it. */
-export const uploadTicketSchema = z.object({ mediaId: id, uploadUrl: z.string().min(1), expiresAt: isoDate });
-export type UploadTicket = z.infer<typeof uploadTicketSchema>;
-
-/** `POST /media/uploads/{id}/complete`. */
-export const mediaSchema = z.object({
-  id,
-  kind: z.string(),
-  fileName: z.string(),
-  contentType: z.string(),
-  sizeBytes: count,
-  status: z.string(),
-});
-export type Media = z.infer<typeof mediaSchema>;
 
 /** `POST /stages/markdown-preview`: the HTML learners would see, from the publish-time renderer. */
 export const markdownPreviewSchema = z.object({ html: z.string() });

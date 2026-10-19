@@ -1,13 +1,22 @@
-import type { RoadmapLesson, RoadmapStage } from "./schemas";
+import type { RoadmapLesson, RoadmapStage, RoadmapUnit } from "./schemas";
 
 export interface FlatLesson {
   lesson: RoadmapLesson;
   stage: Pick<RoadmapStage, "id" | "name">;
+  unit: Pick<RoadmapUnit, "id" | "title">;
 }
 
-/** Every lesson of the course version: stage order first, then lesson order within the stage. */
+/** Every lesson of the course version: stage order, then bài học order, then lesson order. */
 export function flattenLessons(stages: readonly RoadmapStage[]): FlatLesson[] {
-  return stages.flatMap((stage) => stage.lessons.map((lesson) => ({ lesson, stage: { id: stage.id, name: stage.name } })));
+  return stages.flatMap((stage) =>
+    stage.units.flatMap((unit) =>
+      unit.lessons.map((lesson) => ({
+        lesson,
+        stage: { id: stage.id, name: stage.name },
+        unit: { id: unit.id, title: unit.title },
+      })),
+    ),
+  );
 }
 
 /** Lessons right before and after `lessonId`; both undefined when it is not in the list. */

@@ -1,15 +1,21 @@
 import { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { api } from "@/shared/test/msw";
 import { errorResponse } from "../api/msw-handlers";
 import { errors, fixtures, ids } from "../test/golden";
 import type { LessonPage } from "../model/schemas";
 import { classPath, lessonPath, renderLearn } from "../test/render-learn";
 
+// The route is lazy: load it once up front so the first test's timeouts do not include the import.
+beforeAll(async () => {
+  await import("./lesson-page");
+});
+
 const completionUrl = api("/me/classes/:classId/lessons/:lessonId/completion");
 const [databaseStage, dataStructureStage] = fixtures.roadmapActive.stages;
+const [coreUnit, advancedUnit] = fixtures.roadmapTwoUnits.stages[0].units;
 
 async function renderLesson(classId: string, lessonId: string, options: Parameters<typeof renderLearn>[1] = {}) {
   const view = renderLearn(lessonPath(classId, lessonId), options);
@@ -23,7 +29,14 @@ function pageFor(lessonIndex: number, over: Partial<LessonPage> = {}): LessonPag
   const lesson = dataStructureStage.lessons[lessonIndex];
   return {
     ...fixtures.lessonMarkdown,
-    lesson: { ...fixtures.lessonMarkdown.lesson, id: lesson.id, title: lesson.title, required: lesson.required, stage: { id: dataStructureStage.id, name: dataStructureStage.name } },
+    lesson: {
+      ...fixtures.lessonMarkdown.lesson,
+      id: lesson.id,
+      title: lesson.title,
+      required: lesson.required,
+      stage: { id: dataStructureStage.id, name: dataStructureStage.name, position: dataStructureStage.position },
+      unit: { id: dataStructureStage.units[0].id, title: dataStructureStage.units[0].title, position: 1 },
+    },
     progress: { firstOpenedAt: new Date().toISOString() },
     ...over,
   };
@@ -43,11 +56,19 @@ describe("LessonPage", () => {
       "href",
       `${classPath(ids.active)}#stage-${databaseStage.id}`,
     );
+    expect(crumbs.getByRole("link", { name: "Nội dung chặng" })).toHaveAttribute(
+      "href",
+      `${classPath(ids.active)}#unit-${databaseStage.units[0].id}`,
+    );
+    expect(crumbs.getByText("Thiết kế bảng và khóa")).toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: "Bài trước" })).toHaveAttribute("href", lessonPath(ids.active, ids.video));
-    expect(screen.getByRole("link", { name: "Bài tiếp" })).toHaveAttribute("href", lessonPath(ids.active, ids.optional));
+    expect(screen.getByRole("link", { name: "Học liệu trước" })).toHaveAttribute("href", lessonPath(ids.active, ids.video));
+    const next = screen.getByRole("link", { name: "Học liệu tiếp" });
+    expect(next).toHaveAttribute("href", lessonPath(ids.active, ids.optional));
+    expect(next).not.toHaveAttribute("title");
 
     const side = within(screen.getByRole("complementary", { name: "Học liệu chặng Database" }));
+    expect(side.getByRole("heading", { level: 3, name: "Nội dung chặng" })).toBeInTheDocument();
     expect(side.getByRole("link", { name: "Thiết kế bảng và khóa" })).toHaveAttribute("aria-current", "page");
     expect(side.getByRole("link", { name: /Giới thiệu SQL/ })).not.toHaveAttribute("aria-current");
     expect(side.getByRole("img", { name: "Đã học xong" })).toBeInTheDocument();
@@ -64,25 +85,79 @@ describe("LessonPage", () => {
     expect(screen.getByRole("button", { name: "Bỏ tích" })).not.toHaveAttribute("aria-disabled");
   });
 
-  it("disables Bài trước on the first lesson, keeping its reason readable", async () => {
+  it("disables Học liệu trước on the first lesson, keeping its reason readable", async () => {
     await renderLesson(ids.active, ids.video);
 
-    const prev = screen.getByRole("button", { name: "Bài trước" });
+    const prev = screen.getByRole("button", { name: "Học liệu trước" });
     expect(prev).toHaveAttribute("aria-disabled", "true");
-    expect(prev).toHaveAttribute("title", "Đây là bài đầu tiên");
-    expect(screen.getByRole("link", { name: "Bài tiếp" })).toBeInTheDocument();
+    expect(prev).toHaveAttribute("title", "Đây là học liệu đầu tiên");
+    expect(screen.getByRole("link", { name: "Học liệu tiếp" })).toBeInTheDocument();
   });
 
-  it("disables Bài tiếp on the last lesson", async () => {
+  it("disables Học liệu tiếp on the last lesson", async () => {
     const last = pageFor(2, { prev: { lessonId: dataStructureStage.lessons[1].id, title: "Stack và Queue" }, next: undefined });
     await renderLesson(ids.active, last.lesson.id, {
       overrides: [http.get(api(`/me/classes/${ids.active}/lessons/${last.lesson.id}`), () => HttpResponse.json(last))],
     });
 
-    const next = screen.getByRole("button", { name: "Bài tiếp" });
+    const next = screen.getByRole("button", { name: "Học liệu tiếp" });
     expect(next).toHaveAttribute("aria-disabled", "true");
-    expect(next).toHaveAttribute("title", "Đây là bài cuối cùng");
-    expect(screen.getByRole("link", { name: "Bài trước" })).toBeInTheDocument();
+    expect(next).toHaveAttribute("title", "Đây là học liệu cuối cùng");
+    expect(screen.getByRole("link", { name: "Học liệu trước" })).toBeInTheDocument();
+  });
+
+  it("groups the side list by bài học and crosses into the next one", async () => {
+    // The optional reading opens "Nâng cao"; the API answers it like any lesson of the active class.
+    const reading: LessonPage = {
+      ...fixtures.lessonEnded,
+      lesson: { ...fixtures.lessonEnded.lesson, unit: { id: advancedUnit.id, title: advancedUnit.title, position: 2 } },
+      progress: { firstOpenedAt: new Date().toISOString() },
+      readOnly: false,
+    };
+    const lessonUrl = (lessonId: string) => api(`/me/classes/${ids.active}/lessons/${lessonId}`);
+    const { user } = await renderLesson(ids.active, ids.markdown, {
+      overrides: [
+        http.get(api(`/me/classes/${ids.active}`), () => HttpResponse.json(fixtures.roadmapTwoUnits)),
+        http.get(lessonUrl(ids.markdown), () => HttpResponse.json(fixtures.lessonMarkdownCrossing)),
+        http.get(lessonUrl(ids.optional), () => HttpResponse.json(reading)),
+      ],
+    });
+
+    const side = within(screen.getByRole("complementary", { name: "Học liệu chặng Database" }));
+    const core = within(side.getByRole("region", { name: "Nội dung chặng" }));
+    expect(core.getAllByRole("link").map((link) => link.textContent)).toEqual(["Giới thiệu SQL", "Thiết kế bảng và khóa"]);
+    expect(core.getByRole("link", { name: "Thiết kế bảng và khóa" })).toHaveAttribute("aria-current", "page");
+    const advanced = within(side.getByRole("region", { name: "Nâng cao" }));
+    expect(advanced.getByRole("link", { name: "Đọc thêm: chỉ mục" })).not.toHaveAttribute("aria-current");
+
+    expect(screen.queryByRole("link", { name: "Học liệu tiếp" })).toBeNull();
+    const cross = screen.getByRole("link", { name: "Sang bài học tiếp" });
+    expect(cross).toHaveAttribute("title", "Nâng cao");
+    await user.click(cross);
+
+    expect(await screen.findByRole("heading", { level: 1, name: "Đọc thêm: chỉ mục" })).toBeInTheDocument();
+    const crumbs = within(screen.getByRole("navigation", { name: "Đường dẫn" }));
+    expect(crumbs.getByRole("link", { name: "Nâng cao" })).toHaveAttribute(
+      "href",
+      `${classPath(ids.active)}#unit-${advancedUnit.id}`,
+    );
+    expect(advanced.getByRole("link", { name: "Đọc thêm: chỉ mục" })).toHaveAttribute("aria-current", "page");
+    expect(core.getByRole("link", { name: "Thiết kế bảng và khóa" })).not.toHaveAttribute("aria-current");
+    // The reading's own next lesson starts the Data structure stage, which is another bài học too.
+    expect(screen.getByRole("link", { name: "Sang bài học tiếp" })).toHaveAttribute("title", coreUnit.title);
+  });
+
+  it("shows the API's status of a homework in the side list", async () => {
+    await renderLesson(ids.active, ids.markdown, {
+      overrides: [http.get(api(`/me/classes/${ids.active}`), () => HttpResponse.json(fixtures.roadmapHomeworkRework))],
+    });
+
+    const side = within(screen.getByRole("complementary", { name: "Học liệu chặng Database" }));
+    expect(side.getByRole("link", { name: "Bài tập: truy vấn SELECT Cần làm lại" })).toHaveAttribute(
+      "href",
+      lessonPath(ids.active, ids.homework),
+    );
+    expect(side.getAllByText("Cần làm lại")).toHaveLength(1);
   });
 
   it("ticks the lesson and marks it in the side list", async () => {

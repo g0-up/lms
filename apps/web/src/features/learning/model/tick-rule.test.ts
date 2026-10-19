@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tickBlocker } from "./tick-rule";
+import { tickBlocker, tickable } from "./tick-rule";
 
 describe("tickBlocker", () => {
   it("allows ticking an opened lesson of an active class", () => {
@@ -15,5 +15,17 @@ describe("tickBlocker", () => {
     expect(tickBlocker({ readOnlyReason: "ended", opened: false })).toBe("Lớp đã kết thúc");
     expect(tickBlocker({ readOnlyReason: "ended", opened: true })).toBe("Lớp đã kết thúc");
     expect(tickBlocker({ readOnlyReason: "draft", opened: false })).toBe("Lớp chưa bắt đầu");
+  });
+});
+
+describe("tickable", () => {
+  it("lets the student tick videos and readings", () => {
+    expect(tickable("video")).toBe(true);
+    expect(tickable("markdown")).toBe(true);
+  });
+
+  it("leaves quizzes and homework to their result", () => {
+    expect(tickable("quiz")).toBe(false);
+    expect(tickable("homework")).toBe(false);
   });
 });

@@ -108,8 +108,8 @@ export function StudentDetailDrawer({ classId, memberId, onClose }: StudentDetai
         <div className="border-b border-line p-6 max-[720px]:px-4">
           <ProgressBar size="lg" value={data.member.percent} />
           <div className="mt-2 text-sm text-ink-3">
-            {data.member.requiredDone}/{data.member.requiredTotal} học liệu bắt buộc · tiến độ do học viên tự xác
-            nhận
+            {data.member.requiredDone}/{data.member.requiredTotal} học liệu bắt buộc · video và bài đọc do học viên
+            tự xác nhận; quiz và bài tập tính theo kết quả
           </div>
         </div>
         {data.stages.map((stage, i) => (

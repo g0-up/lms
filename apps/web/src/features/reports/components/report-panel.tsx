@@ -85,9 +85,10 @@ export function ReportPanel({ classId, basePath }: ReportPanelProps) {
           <span className="text-sm text-ink-3">
             {counted}/{data.summary.activeCount} học viên · Bấm vào một dòng để xem từng học liệu
           </span>
-          <Badge variant="warn">
-            <Info aria-hidden="true" className="size-3.5" />
-            Tiến độ do học viên tự xác nhận
+          {/* A sentence, not a tag: it wraps so the panel fits a 320px screen. */}
+          <Badge variant="warn" className="whitespace-normal">
+            <Info aria-hidden="true" className="size-3.5 shrink-0" />
+            Video và bài đọc do học viên tự xác nhận; quiz và bài tập tính theo kết quả
           </Badge>
         </div>
         <TableWrap>

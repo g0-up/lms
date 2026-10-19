@@ -15,6 +15,20 @@ describe("flattenLessons", () => {
       "Hash table",
     ]);
     expect(flat[3]?.stage).toEqual({ id: fixtures.roadmapActive.stages[1]?.id, name: "Data structure" });
+    expect(flat[3]?.unit).toEqual({ id: fixtures.roadmapActive.stages[1]?.units[0]?.id, title: "Nội dung chặng" });
+  });
+
+  it("walks the bài học of a stage in order, each lesson tagged with its own", () => {
+    const split = flattenLessons(fixtures.roadmapTwoUnits.stages);
+    expect(split.map((f) => [f.lesson.title, f.unit.title])).toEqual([
+      ["Giới thiệu SQL", "Nội dung chặng"],
+      ["Thiết kế bảng và khóa", "Nội dung chặng"],
+      ["Đọc thêm: chỉ mục", "Nâng cao"],
+      ["Mảng và danh sách liên kết", "Nội dung chặng"],
+      ["Stack và Queue", "Nội dung chặng"],
+      ["Hash table", "Nội dung chặng"],
+    ]);
+    expect(neighbors(split, ids.markdown).next?.unit.title).toBe("Nâng cao");
   });
 });
 

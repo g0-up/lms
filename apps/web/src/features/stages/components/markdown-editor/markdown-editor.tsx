@@ -34,6 +34,8 @@ export interface MarkdownEditorProps {
   onBlur?: () => void;
   onParseError?: (message: string) => void;
   readOnly?: boolean;
+  /** Accessible name of the editable area; defaults to the lesson body label. */
+  label?: string;
   /** Set on the editable area so a `<label htmlFor>` (or `Field`) points at it. */
   id?: string;
   "aria-describedby"?: string;
@@ -52,6 +54,7 @@ export function MarkdownEditor({
   onBlur,
   onParseError,
   readOnly,
+  label = translate("contentArea.editableMarkdown", "editable markdown"),
   id,
   "aria-describedby": describedBy,
   "aria-invalid": invalid,
@@ -90,13 +93,19 @@ export function MarkdownEditor({
     },
   }));
 
-  // MDXEditor has no props for these; `Field` passes them to its child, so forward them to the
-  // editable area, which mounts after this component and is rebuilt when the view switches back.
+  // MDXEditor has no props for these (its own name for the editable area is one fixed translation);
+  // `Field` passes them to its child, so forward them to the editable area, which mounts after this
+  // component and is rebuilt when the view switches back.
   // The same pass names the internals MDXEditor leaves unnamed (table cells, code blocks).
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const attrs = { id, "aria-describedby": describedBy, "aria-invalid": invalid ? "true" : undefined };
+    const attrs = {
+      "aria-label": label,
+      id,
+      "aria-describedby": describedBy,
+      "aria-invalid": invalid ? "true" : undefined,
+    };
     const apply = () => {
       labelEditorInternals(container);
       const editable = container.querySelector<HTMLElement>(".mdxeditor-root-contenteditable [contenteditable]");
@@ -112,7 +121,7 @@ export function MarkdownEditor({
     return () => {
       observer.disconnect();
     };
-  }, [id, describedBy, invalid]);
+  }, [label, id, describedBy, invalid]);
 
   return (
     <div ref={containerRef} data-invalid={invalid ? "" : undefined}>

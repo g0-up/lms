@@ -31,7 +31,12 @@ export interface CreatedClass {
 }
 
 /** Tạo lớp nháp (mặc định BASIC v1, giảng viên Hương) qua API admin. */
-export async function createClass(admin: APIRequestContext, code: string, courseVersionId?: string): Promise<CreatedClass> {
+export async function createClass(
+  admin: APIRequestContext,
+  code: string,
+  courseVersionId?: string,
+  teacherEmail = "huong.le@goup.vn",
+): Promise<CreatedClass> {
   const res = await admin.post("/api/v1/classes", {
     data: {
       code,
@@ -39,12 +44,19 @@ export async function createClass(admin: APIRequestContext, code: string, course
       courseVersionId: courseVersionId ?? (await ids.courseVersionId("BASIC", 1)),
       startDate: isoDate(-1),
       endDate: isoDate(30),
-      teacherId: await ids.userId("huong.le@goup.vn"),
+      teacherId: await ids.userId(teacherEmail),
     },
   });
   expect(res.status(), await res.text()).toBe(201);
   const body = (await res.json()) as { id: string };
   return { id: body.id, code };
+}
+
+/** Thêm bài học (cuối danh sách) vào bản nháp chặng qua API admin; trả id bài học. */
+export async function createUnit(admin: APIRequestContext, stageVersionId: string, title: string): Promise<string> {
+  const res = await admin.post(`/api/v1/stage-versions/${stageVersionId}/units`, { data: { title } });
+  expect(res.status(), await res.text()).toBe(201);
+  return ((await res.json()) as { id: string }).id;
 }
 
 export async function invite(admin: APIRequestContext, classId: string, email: string, fullName = ""): Promise<void> {

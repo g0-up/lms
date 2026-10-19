@@ -6,7 +6,9 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { apiAs, storageStatePath } from "./support/auth";
 import { closeDb, count, ids, one } from "./support/db";
-import { seedReset } from "./support/seed";
+import { createUnit, seedReset } from "./support/seed";
+
+const NO_UNIT = "Chặng cần ít nhất một bài học trước khi phát hành.";
 
 interface ApiError {
   error: { code: string; message: string; details?: { usedBy?: { courseName: string; versionNo: number }[] } };
@@ -47,10 +49,10 @@ test.describe("Luật phát hành, xóa và lưu trữ phiên bản", { tag: "@s
 
     const publish = page.getByRole("button", { name: "Phát hành v1" });
     await expect(publish).toHaveAttribute("aria-disabled", "true");
-    await expect(publish).toHaveAttribute("title", "Cần ít nhất một học liệu");
+    await expect(publish).toHaveAttribute("title", NO_UNIT);
     // aria-disabled vẫn nhận click (Playwright coi là không enabled nên cần force): chỉ hiện lý do.
     await publish.click({ force: true });
-    await expect(page.getByText("Cần ít nhất một học liệu", { exact: true }).last()).toBeVisible();
+    await expect(page.getByText(NO_UNIT, { exact: true }).last()).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
 
     // Lỗi dữ liệu nghiệp vụ của API là 422 (cùng quy ước với "Khóa học cần ít nhất một chặng.").
@@ -58,13 +60,19 @@ test.describe("Luật phát hành, xóa và lưu trữ phiên bản", { tag: "@s
     expect(refused.status()).toBe(422);
     expect(((await refused.json()) as ApiError).error).toMatchObject({
       code: "VALIDATION_FAILED",
-      message: "Chặng cần ít nhất một học liệu trước khi phát hành.",
+      message: NO_UNIT,
     });
     expect((await one<{ status: string }>("SELECT status FROM stage_versions WHERE id = $1", [sv1])).status).toBe("draft");
 
+    // Bài học rỗng cũng chặn phát hành, kèm tên bài học.
+    const unitId = await createUnit(admin, sv1, "Bài học E06");
+    const emptyUnit = await admin.post(`/api/v1/stage-versions/${sv1}/publish`);
+    expect(emptyUnit.status()).toBe(422);
+    expect(((await emptyUnit.json()) as ApiError).error.message).toBe('Bài học "Bài học E06" chưa có học liệu.');
+
     // Thêm một học liệu rồi phát hành để có bản published gắn vào khóa học.
     const lesson = await admin.post(`/api/v1/stage-versions/${sv1}/lessons`, {
-      data: { title: "Bài đọc E06", type: "markdown", required: true, markdownSource: "# E06" },
+      data: { unitId, title: "Bài đọc E06", type: "markdown", required: true, markdownSource: "# E06" },
     });
     expect(lesson.status(), await lesson.text()).toBeLessThan(300);
     expect((await admin.post(`/api/v1/stage-versions/${sv1}/publish`)).status()).toBe(200);
@@ -105,11 +113,11 @@ test.describe("Luật phát hành, xóa và lưu trữ phiên bản", { tag: "@s
     const clone = await admin.post(`/api/v1/stage-versions/${svV1}/clone`);
     expect(clone.status()).toBe(201);
     const draft = await ids.stageVersionId("DB", 2);
-    expect(await count("SELECT count(*) AS n FROM lessons WHERE stage_version_id = $1", [draft])).toBe(3);
+    expect(await count("SELECT count(*) AS n FROM lessons WHERE stage_version_id = $1", [draft])).toBe(5);
     await page.goto(`/admin/stages/${dbStage}?v=${draft}`);
     await page.getByRole("button", { name: "Xóa bản nháp" }).click();
     const delDialog = page.getByRole("dialog", { name: "Xóa Database v2?" });
-    await expect(delDialog).toContainText("Bản nháp và 3 học liệu trong đó sẽ bị xóa.");
+    await expect(delDialog).toContainText("Bản nháp và 5 học liệu trong đó sẽ bị xóa.");
     await delDialog.getByRole("button", { name: "Xóa phiên bản" }).click();
     await expect(page.getByText("Đã xóa.")).toBeVisible();
     expect(await count("SELECT count(*) AS n FROM stage_versions WHERE id = $1", [draft])).toBe(0);

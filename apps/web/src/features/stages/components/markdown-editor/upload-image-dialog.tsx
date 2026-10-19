@@ -14,7 +14,7 @@ import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTi
 import { Field } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Progress } from "@/shared/ui/progress";
-import { uploadErrorMessage, uploadMedia } from "../../api/upload-media";
+import { uploadErrorMessage, uploadMedia } from "@/shared/api/upload-media";
 import { altFromFileName, IMAGE_CONTENT_TYPES, imageFileError, mediaContentUrl } from "../../model/image-file";
 
 const IMAGE_ALT_MAX = 200;

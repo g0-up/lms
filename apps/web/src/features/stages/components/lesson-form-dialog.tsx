@@ -4,24 +4,31 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { Alert } from "@/shared/ui/alert";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/ui/dialog";
 import { Field } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Progress } from "@/shared/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui/select";
+import { Textarea } from "@/shared/ui/textarea";
 import { useVideoUpload, type VideoUploadState } from "../hooks/use-video-upload";
 import {
+  dropsContent,
   fmtDuration,
+  LESSON_KIND_HELP_CREATE,
+  LESSON_KIND_HELP_EDIT,
+  LESSON_KINDS,
   lessonFormDefaults,
   lessonFormSchema,
   lessonErrorMessage,
   type LessonFormOutput,
   type LessonFormValues,
   type MarkdownLessonDraft,
-  type VideoLessonOutput,
 } from "../model/lesson-form";
-import type { Lesson } from "../model/schemas";
+import { markdownSourceError } from "../model/markdown-rules";
+import type { Lesson, Unit } from "../model/schemas";
 import { fmtBytes, VIDEO_CONTENT_TYPE } from "../model/video-file";
+import { UnitSelect } from "./unit-select";
 
 /**
  * Duration of a local video file from its metadata, or `undefined` when the browser cannot read
@@ -53,19 +60,31 @@ function readVideoDuration(file: File): Promise<number | undefined> {
 export interface LessonFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The video lesson being edited; absent when adding. Markdown lessons are edited on their own page. */
+  /** The lesson being edited; absent when adding. Markdown lessons are edited on their own page. */
   lesson?: Lesson;
+  /** The version's units, in order, for the "Bài học" select. */
+  units: readonly Pick<Unit, "id" | "title">[];
+  /** Unit preselected for a new lesson. */
+  unitId?: string;
   /** Throw (an ApiError) to keep the dialog open with the message; resolve to close it. */
-  onSave: (values: VideoLessonOutput) => Promise<unknown>;
-  /** A new markdown lesson goes on to the editor page with what was typed here. */
-  onContinueMarkdown: (draft: MarkdownLessonDraft) => void;
+  onSave: (values: LessonFormOutput) => Promise<unknown>;
+  /** A new markdown lesson goes on to the editor page with what was typed here; needed only when adding. */
+  onContinueMarkdown?: (draft: MarkdownLessonDraft) => void;
 }
 
 /**
- * "Thêm học liệu"/"Sửa học liệu" for video lessons, and the first step of a markdown one. The form
- * mounts on open, so closing drops it and aborts any upload.
+ * "Thêm học liệu"/"Sửa học liệu" for every type, and the first step of a new markdown lesson. The
+ * form mounts on open, so closing drops it and aborts any upload.
  */
-export function LessonFormDialog({ open, onOpenChange, lesson, onSave, onContinueMarkdown }: LessonFormDialogProps) {
+export function LessonFormDialog({
+  open,
+  onOpenChange,
+  lesson,
+  units,
+  unitId,
+  onSave,
+  onContinueMarkdown,
+}: LessonFormDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [submitting, setSubmitting] = useState(false);
   return (
@@ -88,6 +107,8 @@ export function LessonFormDialog({ open, onOpenChange, lesson, onSave, onContinu
       >
         <LessonForm
           lesson={lesson}
+          units={units}
+          unitId={unitId}
           onSave={onSave}
           onContinueMarkdown={onContinueMarkdown}
           onSubmittingChange={setSubmitting}
@@ -100,35 +121,58 @@ export function LessonFormDialog({ open, onOpenChange, lesson, onSave, onContinu
   );
 }
 
+/** What a lesson of `lesson.type` loses when its type changes, for the confirmation. */
+function lostContent(lesson: Lesson): string {
+  switch (lesson.type) {
+    case "video":
+      return "file video";
+    case "markdown":
+      return "nội dung bài đọc";
+    case "quiz":
+      return `${String(lesson.quiz?.questions.length ?? 0)} câu hỏi`;
+    case "homework":
+      return `đề bài, ${String(lesson.homework?.criteria.length ?? 0)} tiêu chí chấm và file kèm`;
+  }
+}
+
 interface LessonFormProps {
   lesson?: Lesson;
-  onSave: (values: VideoLessonOutput) => Promise<unknown>;
-  onContinueMarkdown: (draft: MarkdownLessonDraft) => void;
+  units: readonly Pick<Unit, "id" | "title">[];
+  unitId?: string;
+  onSave: (values: LessonFormOutput) => Promise<unknown>;
+  onContinueMarkdown?: (draft: MarkdownLessonDraft) => void;
   /** Lets the dialog refuse to close while a save is in flight. */
   onSubmittingChange: (submitting: boolean) => void;
   onClose: () => void;
 }
 
-function LessonForm({ lesson, onSave, onContinueMarkdown, onSubmittingChange, onClose }: LessonFormProps) {
+function LessonForm({
+  lesson,
+  units,
+  unitId,
+  onSave,
+  onContinueMarkdown,
+  onSubmittingChange,
+  onClose,
+}: LessonFormProps) {
   const editing = Boolean(lesson);
   const form = useForm<LessonFormValues, unknown, LessonFormOutput>({
     resolver: zodResolver(lessonFormSchema),
-    defaultValues: lessonFormDefaults(lesson),
+    defaultValues: lessonFormDefaults(lesson, unitId),
   });
-  const { control, register, setValue, formState } = form;
-  const type = useWatch({ control, name: "type" });
+  const { control, register, setValue, setError, formState } = form;
+  const kind = useWatch({ control, name: "kind" });
   const videoMediaId = useWatch({ control, name: "videoMediaId" });
   const upload = useVideoUpload();
   const [formError, setFormError] = useState<string | null>(null);
+  // Values held back until the type change is confirmed.
+  const [pending, setPending] = useState<LessonFormOutput | null>(null);
   const uploadingPct = upload.state.status === "uploading" ? upload.state.pct : null;
   const uploading = uploadingPct !== null;
   const submitting = formState.isSubmitting;
+  const continuesToEditor = !editing && kind === "markdown";
 
-  const submit = form.handleSubmit(async (values) => {
-    if (values.type === "markdown") {
-      onContinueMarkdown({ title: values.title, required: values.required });
-      return;
-    }
+  async function save(values: LessonFormOutput) {
     setFormError(null);
     onSubmittingChange(true);
     try {
@@ -139,6 +183,29 @@ function LessonForm({ lesson, onSave, onContinueMarkdown, onSubmittingChange, on
     } finally {
       onSubmittingChange(false);
     }
+  }
+
+  const submit = form.handleSubmit(async (values) => {
+    if (values.kind === "markdown") {
+      if (!editing) {
+        onContinueMarkdown?.({
+          title: values.title,
+          unitId: values.unitId,
+          required: values.required,
+        });
+        return;
+      }
+      const sourceError = markdownSourceError(values.markdownSource);
+      if (sourceError) {
+        setError("markdownSource", { message: sourceError });
+        return;
+      }
+    }
+    if (lesson && dropsContent(lesson.type, values.kind)) {
+      setPending(values);
+      return;
+    }
+    await save(values);
   });
 
   async function pickFile(event: ChangeEvent<HTMLInputElement>) {
@@ -151,85 +218,194 @@ function LessonForm({ lesson, onSave, onContinueMarkdown, onSubmittingChange, on
       if (seconds !== undefined) setValue("duration", fmtDuration(seconds));
     });
     const mediaId = await upload.start(file);
-    if (mediaId) setValue("videoMediaId", mediaId, { shouldValidate: formState.isSubmitted });
+    if (mediaId)
+      setValue("videoMediaId", mediaId, {
+        shouldValidate: formState.isSubmitted,
+      });
   }
 
   let submitLabel = editing ? "Lưu" : "Thêm";
-  if (type === "markdown") submitLabel = "Tiếp tục soạn";
+  if (continuesToEditor) submitLabel = "Tiếp tục soạn";
   if (uploading) submitLabel = `Đang tải lên ${String(uploadingPct)}%`;
+  const busy = submitting || pending !== null;
+  const kindLabel = LESSON_KINDS.find((k) => k.value === pending?.kind)?.label ?? "";
 
   return (
-    <form noValidate onSubmit={(e) => void submit(e)}>
-      <DialogHeader showClose={!submitting}>
-        <DialogTitle>{editing ? "Sửa học liệu" : "Thêm học liệu"}</DialogTitle>
-      </DialogHeader>
-      <DialogBody>
-        <Field label="Tiêu đề" required error={formState.errors.title?.message}>
-          <Input required {...register("title")} />
-        </Field>
-        <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
+    <>
+      <form noValidate onSubmit={(e) => void submit(e)}>
+        <DialogHeader showClose={!busy}>
+          <DialogTitle>{editing ? "Sửa học liệu" : "Thêm học liệu"}</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Field label="Tiêu đề" required error={formState.errors.title?.message}>
+            <Input required {...register("title")} />
+          </Field>
           <Controller
             control={control}
-            name="type"
+            name="unitId"
             render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange} disabled={editing}>
-                <Field label="Loại">
-                  <SelectTrigger onBlur={field.onBlur}>
-                    <SelectValue />
-                  </SelectTrigger>
-                </Field>
-                <SelectContent>
-                  <SelectItem value="video">Video</SelectItem>
-                  <SelectItem value="markdown">Markdown</SelectItem>
-                </SelectContent>
-              </Select>
+              <UnitSelect
+                units={units}
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                editing={editing}
+                error={formState.errors.unitId?.message}
+              />
             )}
           />
-          <Controller
-            control={control}
-            name="required"
-            render={({ field }) => (
-              <label className="flex min-h-11 cursor-pointer items-center gap-2 self-end text-sm text-ink">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked === true);
-                  }}
-                  onBlur={field.onBlur}
-                />
-                Bắt buộc (tính vào %)
-              </label>
-            )}
-          />
-        </div>
-        {type === "video" ? (
-          <>
-            <VideoFileField
-              state={upload.state}
-              savedFileName={lesson?.videoMediaId && lesson.videoMediaId === videoMediaId ? lesson.videoFileName : undefined}
-              error={formState.errors.videoMediaId?.message}
-              onPick={(event) => void pickFile(event)}
+          <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
+            <Controller
+              control={control}
+              name="kind"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <Field label="Loại" help={editing ? LESSON_KIND_HELP_EDIT : LESSON_KIND_HELP_CREATE}>
+                    <SelectTrigger onBlur={field.onBlur}>
+                      <SelectValue />
+                    </SelectTrigger>
+                  </Field>
+                  <SelectContent>
+                    {LESSON_KINDS.map((k) => (
+                      <SelectItem key={k.value} value={k.value}>
+                        {k.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
-            <Field label="Thời lượng" error={formState.errors.duration?.message}>
-              <Input placeholder="mm:ss" autoComplete="off" {...register("duration")} />
+            <Controller
+              control={control}
+              name="required"
+              render={({ field }) => (
+                <label className="flex min-h-11 cursor-pointer items-center gap-2 self-end text-sm text-ink">
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      field.onChange(checked === true);
+                    }}
+                    onBlur={field.onBlur}
+                  />
+                  Bắt buộc (tính vào %)
+                </label>
+              )}
+            />
+          </div>
+          {kind === "video" ? (
+            <>
+              <VideoFileField
+                state={upload.state}
+                savedFileName={
+                  lesson?.videoMediaId && lesson.videoMediaId === videoMediaId ? lesson.videoFileName : undefined
+                }
+                error={formState.errors.videoMediaId?.message}
+                onPick={(event) => void pickFile(event)}
+              />
+              <Field label="Thời lượng" error={formState.errors.duration?.message}>
+                <Input placeholder="mm:ss" autoComplete="off" {...register("duration")} />
+              </Field>
+            </>
+          ) : null}
+          {kind === "markdown" && editing ? (
+            <Field
+              label="Nội dung Markdown"
+              required
+              help="Hỗ trợ tiêu đề, danh sách, khối mã, trích dẫn, **đậm** và `mã`. HTML được lọc khi hiển thị."
+              error={formState.errors.markdownSource?.message}
+            >
+              <Textarea rows={10} {...register("markdownSource")} />
             </Field>
-          </>
-        ) : null}
-        {formError ? (
-          <Alert variant="danger" role="alert">
-            {formError}
-          </Alert>
-        ) : null}
-      </DialogBody>
-      <DialogFooter>
-        <Button variant="outline" disabled={submitting} onClick={onClose}>
-          Hủy
-        </Button>
-        <Button type="submit" disabled={submitting || uploading} aria-busy={submitting || uploading}>
-          {submitLabel}
-        </Button>
-      </DialogFooter>
-    </form>
+          ) : null}
+          {kind === "quiz:assessment" ? (
+            <div className="grid grid-cols-3 gap-4 max-[720px]:grid-cols-1">
+              <Field label="Ngưỡng đạt (%)" required error={formState.errors.quizPassPercent?.message}>
+                <Input inputMode="numeric" autoComplete="off" {...register("quizPassPercent")} />
+              </Field>
+              <Field
+                label="Số lượt làm bài"
+                required
+                help="Tính lượt tốt nhất"
+                error={formState.errors.maxAttempts?.message}
+              >
+                <Input inputMode="numeric" autoComplete="off" {...register("maxAttempts")} />
+              </Field>
+              <Field label="Thời gian mỗi lượt (phút)" required error={formState.errors.timeLimitMinutes?.message}>
+                <Input inputMode="numeric" autoComplete="off" {...register("timeLimitMinutes")} />
+              </Field>
+            </div>
+          ) : null}
+          {kind === "quiz:practice" || kind === "quiz:assessment" ? (
+            <>
+              <Controller
+                control={control}
+                name="shuffle"
+                render={({ field }) => (
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-ink">
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked === true);
+                      }}
+                      onBlur={field.onBlur}
+                    />
+                    Đảo thứ tự câu hỏi và đáp án mỗi lượt
+                  </label>
+                )}
+              />
+              <p className="text-sm text-ink-3">
+                {editing
+                  ? "Soạn câu hỏi ở trang chi tiết học liệu."
+                  : "Sau khi tạo, bạn được chuyển đến trang soạn câu hỏi."}
+              </p>
+            </>
+          ) : null}
+          {kind === "homework" ? (
+            <>
+              <Field label="Ngưỡng đạt (%)" required error={formState.errors.homeworkPassPercent?.message}>
+                <Input inputMode="numeric" autoComplete="off" {...register("homeworkPassPercent")} />
+              </Field>
+              <p className="text-sm text-ink-3">
+                {editing
+                  ? "Soạn đề bài và tiêu chí chấm ở trang chi tiết học liệu."
+                  : "Sau khi tạo, bạn được chuyển đến trang soạn tiêu chí chấm."}
+              </p>
+            </>
+          ) : null}
+          {formError ? (
+            <Alert variant="danger" role="alert">
+              {formError}
+            </Alert>
+          ) : null}
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="outline" disabled={busy} onClick={onClose}>
+            Hủy
+          </Button>
+          <Button type="submit" disabled={busy || uploading} aria-busy={submitting || uploading}>
+            {submitLabel}
+          </Button>
+        </DialogFooter>
+      </form>
+      {lesson ? (
+        <ConfirmDialog
+          open={pending !== null}
+          onOpenChange={(open) => {
+            if (!open) setPending(null);
+          }}
+          danger
+          title={`Đổi loại "${lesson.title}"?`}
+          text={`Đổi sang ${kindLabel} sẽ bỏ ${lostContent(lesson)} của học liệu này. Không hoàn tác được.`}
+          confirm="Đổi loại"
+          loading={submitting}
+          onConfirm={() => {
+            const values = pending;
+            setPending(null);
+            if (values) void save(values);
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 

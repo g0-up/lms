@@ -13,7 +13,7 @@ import { expect, request, test, type APIRequestContext, type Page } from "@playw
 import { apiAs, storageStatePath } from "./support/auth";
 import { closeDb, ids, one, query } from "./support/db";
 import { PIXEL_PNG } from "./support/media";
-import { activateClass, createClass, endClass, invite, seedReset } from "./support/seed";
+import { activateClass, createClass, createUnit, endClass, invite, seedReset } from "./support/seed";
 
 const AN = "an.nguyen@gmail.com";
 const NOT_OPENED = "Mở học liệu trước khi tích hoàn thành.";
@@ -112,7 +112,8 @@ test.describe("Học viên học bài", { tag: "@serial" }, () => {
     expect(early.status()).toBe(409);
     expect(((await early.json()) as ApiError).error.message).toBe(NOT_OPENED);
 
-    await page.getByRole("link", { name: /HTML ngữ nghĩa/ }).click();
+    // Tên link mở đầu bằng loại học liệu; quiz "Luyện tập: HTML ngữ nghĩa" cũng chứa cụm này.
+    await page.getByRole("link", { name: /^Markdown HTML ngữ nghĩa/ }).click();
     // Bài markdown mở đầu bằng chính tiêu đề của nó: chờ đủ cả tiêu đề trang lẫn nội dung.
     await expect(page.getByRole("heading", { level: 1, name: "HTML ngữ nghĩa" })).toHaveCount(2);
     await expect.poll(async () => (await progressRow("basic01", lessonId)).length).toBe(1);
@@ -336,8 +337,9 @@ test.describe("Học viên học bài", { tag: "@serial" }, () => {
       "",
       `![Sơ đồ E22](${imageSrc})`,
     ].join("\n");
+    const unitId = await createUnit(admin, sv, "Bài học E22");
     const lessonRes = await admin.post(`/api/v1/stage-versions/${sv}/lessons`, {
-      data: { title: "Bài đọc E22", type: "markdown", required: true, markdownSource },
+      data: { unitId, title: "Bài đọc E22", type: "markdown", required: true, markdownSource },
     });
     expect(lessonRes.status(), await lessonRes.text()).toBe(201);
     expect((await admin.post(`/api/v1/stage-versions/${sv}/publish`)).status()).toBe(200);

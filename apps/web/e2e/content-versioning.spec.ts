@@ -3,7 +3,7 @@
  * Ánh xạ check(...) của prototype/check-flows.mjs:
  *   'stage page shows v1 published'                          → E01 (heading "Học liệu của v1" trước khi nhân bản)
  *   'clone creates draft and navigates'                      → E01
- *   'draft v2 copies 3 lessons with same keys'               → E01
+ *   'draft v2 copies 5 lessons with same keys'               → E01
  *   'second clone is blocked (one draft max)'                → E01
  *   'lesson added to draft' / 'published v1 untouched'       → E02
  *   'v2 published' / 'FR-18 warning lists … v1 on stage page'→ E03
@@ -86,10 +86,19 @@ test.describe("Kịch bản 7.3: nhân bản, sửa, phát hành, áp dụng, đ
         [vid],
       );
     const [v1Lessons, v2Lessons] = await Promise.all([lessons(svV1), lessons(svV2)]);
-    expect(v2Lessons).toHaveLength(3);
+    expect(v2Lessons).toHaveLength(5);
     // Cùng lesson_key và cùng media_files (không sao chép file video).
     expect(v2Lessons).toEqual(v1Lessons);
     expect(v2Lessons[0]?.video_media_id).toBeTruthy();
+    // Bài học được sao chép cùng unit_key, giữ thứ tự.
+    const units = (vid: string) =>
+      query<{ unit_key: string; title: string }>(
+        "SELECT unit_key, title FROM stage_units WHERE stage_version_id = $1 ORDER BY position",
+        [vid],
+      );
+    const [v1Units, v2Units] = await Promise.all([units(svV1), units(svV2)]);
+    expect(v2Units).toEqual(v1Units);
+    expect(v2Units.length).toBeGreaterThan(0);
 
     // Chỉ một bản nháp: bản nháp không có nút nhân bản, v1 chuyển sang liên kết mở bản nháp.
     await expect(page.getByRole("button", { name: /Nhân bản/ })).toHaveCount(0);
@@ -100,8 +109,12 @@ test.describe("Kịch bản 7.3: nhân bản, sửa, phát hành, áp dụng, đ
 
   test("E02 thêm học liệu video vào bản nháp; bản phát hành bất biến", async ({ page }) => {
     await openStage(page, svV2);
-    await page.getByRole("button", { name: "Thêm học liệu" }).click();
+    // Thêm vào bài học cuối để học liệu mới đứng cuối thứ tự phẳng của phiên bản.
+    const lastUnit = page.getByRole("region").filter({ has: page.getByRole("heading", { level: 3 }) }).last();
+    const lastUnitTitle = (await lastUnit.getByRole("heading", { level: 3 }).textContent()) ?? "";
+    await lastUnit.getByRole("button", { name: "Thêm học liệu" }).click();
     const dialog = page.getByRole("dialog", { name: "Thêm học liệu" });
+    await expect(dialog.getByRole("combobox", { name: /^Bài học/ })).toContainText(lastUnitTitle);
     await dialog.getByLabel("Tiêu đề").fill("JOIN và subquery");
     await expect(dialog.getByRole("combobox", { name: "Loại" })).toHaveText("Video");
     await dialog.locator('input[type="file"]').setInputFiles(SAMPLE_MP4);
@@ -120,8 +133,8 @@ test.describe("Kịch bản 7.3: nhân bản, sửa, phát hành, áp dụng, đ
          FROM lessons WHERE stage_version_id = $1 ORDER BY position DESC LIMIT 1`,
       [svV2],
     );
-    expect(added).toMatchObject({ n: "4", title: "JOIN và subquery", type: "video", required: true, duration_seconds: 760 });
-    expect(await count("SELECT count(*) AS n FROM lessons WHERE stage_version_id = $1", [svV1])).toBe(3);
+    expect(added).toMatchObject({ n: "6", title: "JOIN và subquery", type: "video", required: true, duration_seconds: 760 });
+    expect(await count("SELECT count(*) AS n FROM lessons WHERE stage_version_id = $1", [svV1])).toBe(5);
 
     const v1Lesson = await one<{ id: string }>(
       "SELECT id FROM lessons WHERE stage_version_id = $1 AND lesson_key = 'db-table'",
@@ -256,14 +269,14 @@ test.describe("Kịch bản 7.3: nhân bản, sửa, phát hành, áp dụng, đ
     const lp = await learner.newPage();
     await lp.goto(`/learn/classes/${basic01}`);
     const dbSection01 = lp.locator('[data-slot="card"]').filter({ has: lp.getByRole("heading", { name: "Database" }) });
-    await expect(dbSection01).toContainText("3 học liệu");
+    await expect(dbSection01).toContainText("5 học liệu");
     const roadmap01 = (await (await student.get(`/api/v1/me/classes/${basic01}`)).json()) as { percent: number };
     expect(roadmap01.percent).toBe(anPercentBefore);
     await expect(lp.getByText(`${String(anPercentBefore)}%`).first()).toBeVisible();
 
     await lp.goto(`/learn/classes/${basic03}`);
     const dbSection03 = lp.locator('[data-slot="card"]').filter({ has: lp.getByRole("heading", { name: "Database" }) });
-    await expect(dbSection03).toContainText("4 học liệu");
+    await expect(dbSection03).toContainText("6 học liệu");
     await expect(dbSection03.getByText("JOIN và subquery")).toBeVisible();
     await learner.close();
 

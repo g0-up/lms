@@ -1,21 +1,30 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { IconButton } from "@/shared/ui/icon-button";
 
-export interface OrderButtonsProps {
-  index: number;
-  count: number;
+interface OrderButtonsBase {
   onMove: (delta: -1 | 1) => void;
   disabled?: boolean;
+  /** Accessible names when the row needs its own, e.g. "Chuyển lên: {title}". */
+  labels?: { up: string; down: string };
 }
 
-/** "Chuyển lên"/"Chuyển xuống" pair, disabled at either end of the list. */
-export function OrderButtons({ index, count, onMove, disabled = false }: OrderButtonsProps) {
-  const first = index === 0;
-  const last = index === count - 1;
+/**
+ * Where the row sits: its place in one flat list, or the ends given directly for a row that can
+ * move past its own list's edge (a lesson goes on into the next bài học).
+ */
+export type OrderButtonsProps = OrderButtonsBase &
+  ({ index: number; count: number } | { first: boolean; last: boolean });
+
+const DEFAULT_LABELS = { up: "Chuyển lên", down: "Chuyển xuống" };
+
+/** Up/down pair ("Chuyển lên"/"Chuyển xuống" by default), disabled at either end of the list. */
+export function OrderButtons({ onMove, disabled = false, labels = DEFAULT_LABELS, ...place }: OrderButtonsProps) {
+  const first = "first" in place ? place.first : place.index === 0;
+  const last = "last" in place ? place.last : place.index === place.count - 1;
   return (
     <>
       <IconButton
-        aria-label="Chuyển lên"
+        aria-label={labels.up}
         title={first ? "Đã ở đầu danh sách" : undefined}
         disabled={disabled || first}
         onClick={() => {
@@ -25,7 +34,7 @@ export function OrderButtons({ index, count, onMove, disabled = false }: OrderBu
         <ChevronUp aria-hidden="true" />
       </IconButton>
       <IconButton
-        aria-label="Chuyển xuống"
+        aria-label={labels.down}
         title={last ? "Đã ở cuối danh sách" : undefined}
         disabled={disabled || last}
         onClick={() => {

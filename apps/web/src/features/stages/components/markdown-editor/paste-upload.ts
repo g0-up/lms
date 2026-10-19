@@ -1,7 +1,6 @@
 import { toast } from "sonner";
-import { uploadMedia } from "../../api/upload-media";
+import { UPLOAD_FAILED_MESSAGE, uploadMedia } from "@/shared/api/upload-media";
 import { altFromFileName, imageFileError, mediaContentUrl } from "../../model/image-file";
-import { UPLOAD_FAILED_MESSAGE } from "../../model/video-file";
 
 /** Most pasted or dropped images one editor queues at once. */
 export const MAX_PENDING_PASTES = 5;

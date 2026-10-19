@@ -4,6 +4,7 @@ import { Card } from "@/shared/ui/card";
 import { PageHead } from "@/shared/ui/page-head";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { AuditList } from "../components/audit-list";
+import { BacklogCard } from "../components/backlog-card";
 import { ClassList } from "../components/class-list";
 import { kpiGridClass, KpiGrid } from "../components/kpi-grid";
 import { OutdatedAlerts } from "../components/outdated-alerts";
@@ -58,11 +59,16 @@ export function Component() {
   } else {
     body = (
       <div className="grid gap-6">
-        <OutdatedAlerts outdated={data.outdated} failedInvites={data.hints.failedInvites} />
+        <OutdatedAlerts
+          outdated={data.outdated}
+          failedInvites={data.hints.failedInvites}
+          overdueCount={data.overdueCount}
+        />
         <KpiGrid kpis={data.kpis} hints={data.hints} />
         <div className={cardsClass}>
           <ClassList classes={data.classes} />
           <AuditList activity={data.recentActivity} />
+          <BacklogCard backlog={data.gradingBacklog} />
         </div>
       </div>
     );

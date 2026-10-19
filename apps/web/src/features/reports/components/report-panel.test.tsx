@@ -43,17 +43,37 @@ const searchOf = (router: ReturnType<typeof renderPanel>["router"]) =>
 
 describe("ReportPanel", () => {
   it("shows one row per active member, the stage columns and the self-reported notice", async () => {
-    renderPanel();
+    // No seeded learner has finished a stage, so Cường's Database is marked done to show the highlight.
+    const golden = fixtures.classReport;
+    const finished: ClassReport = {
+      ...golden,
+      rows: golden.rows.map((row) =>
+        row.name === "Lê Văn Cường"
+          ? {
+              ...row,
+              stagePercents: row.stagePercents.map((stage, i) =>
+                i === 0 ? { ...stage, percent: 100, requiredDone: stage.requiredTotal } : stage,
+              ),
+            }
+          : row,
+      ),
+    };
+    renderPanel(BASE, [recordReports(() => finished).handler]);
 
     expect(await screen.findByText("7/7 học viên · Bấm vào một dòng để xem từng học liệu")).toBeInTheDocument();
-    expect(screen.getByText("Tiến độ do học viên tự xác nhận")).toBeInTheDocument();
+    expect(
+      screen.getByText("Video và bài đọc do học viên tự xác nhận; quiz và bài tập tính theo kết quả"),
+    ).toBeInTheDocument();
     expect(screen.getByRole("columnheader", { name: "DB" })).toHaveAttribute("title", "Database v1");
     expect(screen.getByRole("columnheader", { name: "WEB" })).toHaveAttribute("title", "HTML CSS JS v1");
 
     const cuong = rowOf("Lê Văn Cường");
-    expect(within(cuong).getByRole("img", { name: "93% hoàn thành" })).toBeInTheDocument();
+    const cuongRow = finished.rows.find((row) => row.name === "Lê Văn Cường");
+    const partial = cuongRow?.stagePercents.find((stage) => stage.percent < 100 && stage.percent !== cuongRow.percent);
+    if (!cuongRow || !partial) throw new Error("the golden report has Cường with an unfinished stage");
+    expect(within(cuong).getByRole("img", { name: `${String(cuongRow.percent)}% hoàn thành` })).toBeInTheDocument();
     expect(within(cuong).getAllByText("100%")[0]).toHaveClass("text-ok");
-    expect(within(cuong).getByText("67%")).not.toHaveClass("text-ok");
+    expect(within(cuong).getAllByText(`${String(partial.percent)}%`)[0]).not.toHaveClass("text-ok");
     expect(within(cuong).getByText("Đã gửi")).toBeInTheDocument();
 
     // Never active: no last activity, the invited dot instead.
@@ -230,12 +250,22 @@ describe("ReportPanel", () => {
     const drawer = await screen.findByRole("dialog", { name: "Chi tiết học viên" });
     expect(await within(drawer).findByRole("heading", { name: "Nguyễn Hoàng An" })).toBeInTheDocument();
     expect(within(drawer).getByText(/^an\.nguyen@gmail\.com · basic01 · hoạt động cuối/)).toBeInTheDocument();
-    expect(within(drawer).getByText("10/14 học liệu bắt buộc · tiến độ do học viên tự xác nhận")).toBeInTheDocument();
+    const { member, stages: memberStages } = fixtures.memberReport;
+    expect(
+      within(drawer).getByText(
+        `${String(member.requiredDone)}/${String(member.requiredTotal)} học liệu bắt buộc · video và bài đọc do học viên tự xác nhận; quiz và bài tập tính theo kết quả`,
+      ),
+    ).toBeInTheDocument();
     const stages = within(drawer).getByRole("region", { name: "Tiến độ theo chặng" });
     expect(stages).toHaveAttribute("tabindex", "0");
     expect(within(stages).getByRole("heading", { name: "1. Database v1" })).toBeInTheDocument();
     expect(within(stages).getByRole("heading", { name: "5. HTML CSS JS v1" })).toBeInTheDocument();
-    expect(within(drawer).getAllByText("Không bắt buộc")).toHaveLength(2);
+    expect(within(drawer).getAllByText("Không bắt buộc")).toHaveLength(
+      memberStages.flatMap((stage) => stage.lessons).filter((lesson) => !lesson.required).length,
+    );
+    // Quizzes and homework are listed with their own type icon, like videos and readings.
+    expect(within(stages).getAllByRole("img", { name: "Quiz" }).length).toBeGreaterThan(0);
+    expect(within(stages).getAllByRole("img", { name: "Bài tập" }).length).toBeGreaterThan(0);
     expect(within(drawer).getAllByText("Chưa mở").length).toBeGreaterThan(0);
     expect(within(drawer).getAllByText(/^Tích \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/).length).toBeGreaterThan(0);
     expect(within(drawer).getAllByText(/^Mở lần đầu /).length).toBeGreaterThan(0);

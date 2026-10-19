@@ -43,6 +43,15 @@ describe("MarkdownEditor", () => {
     expect(screen.getByRole("textbox", { name: "Nội dung bài học" })).toHaveAttribute("aria-invalid", "true");
   });
 
+  it("takes the editable area's name from the label it is given", async () => {
+    const { update } = await renderEditor({ label: "Đề bài (Markdown)" });
+    expect(screen.getByRole("textbox", { name: "Đề bài (Markdown)" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Nội dung bài học" })).toBeNull();
+
+    await update({ label: undefined });
+    expect(screen.getByRole("textbox", { name: "Nội dung bài học" })).toBeInTheDocument();
+  });
+
   it("names the table cells, table buttons and code area the editor renders unnamed", async () => {
     await renderEditor({ value: "| a | b |\n| - | - |\n| 1 | 2 |\n\n```go\nx := 1\n```" });
     await waitFor(() => {

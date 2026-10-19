@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 // E2E trên stack container thật (compose profile "full": web nginx :8081 → api); không dùng webServer.
 // Mọi spec dùng chung một DB seed: chạy tuần tự một worker, không retry (trừ job webkit trên CI).
 const CI = !!process.env.CI;
-const E2E_SPECS = /(content-versioning|content-rules|invitations|auth|learning|reports|lesson-editor)\.spec\.ts$/;
+const E2E_SPECS = /(content-versioning|content-rules|invitations|auth|learning|reports|lesson-editor|units|quiz-homework-authoring|homework|quiz|summary|learning-cycle)\.spec\.ts$/;
 
 export default defineConfig({
   testDir: ".",

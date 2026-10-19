@@ -2,12 +2,12 @@
  * Route tree of the web app.
  *
  * Contract for feature folders (`src/features/<feature>/routes.tsx`):
- * - Export `routes: RouteObject[]` (reports also exports `teachRoutes`) with paths RELATIVE to the
+ * - Export `routes: RouteObject[]` (reports and grading also export `teachRoutes`) with paths RELATIVE to the
  *   area below; never repeat the `/admin`, `/teach` or `/learn` prefix.
- *     /admin  ← dashboard.routes, stages.routes, courses.routes, classes.routes, reports.routes
- *              (authMiddleware + requireRole('admin'), rendered in AppShell)
- *     /teach  ← reports.teachRoutes  (requireRole('teacher'), AppShell)
- *     /learn  ← learning.routes      (requireRole('student'), AppShell)
+ *     /admin  ← dashboard.routes, stages.routes, courses.routes, classes.routes, reports.routes,
+ *              grading.routes (authMiddleware + requireRole('admin'), rendered in AppShell)
+ *     /teach  ← reports.teachRoutes, grading.teachRoutes  (requireRole('teacher'), AppShell)
+ *     /learn  ← learning.routes, summary.routes  (requireRole('student'), AppShell)
  *   The area root page is `{ index: true, ... }`.
  * - Load pages lazily. `lazy: () => import('./pages/x-page')` needs the module to export
  *   `Component`; for a `default` export use `lazy: lazyPage(() => import('./pages/x-page'))`
@@ -28,9 +28,11 @@ import * as auth from "@/features/auth";
 import * as classes from "@/features/classes";
 import * as courses from "@/features/courses";
 import * as dashboard from "@/features/dashboard";
+import * as grading from "@/features/grading";
 import * as learning from "@/features/learning";
 import * as reports from "@/features/reports";
 import * as stages from "@/features/stages";
+import * as summary from "@/features/summary";
 import type { RouteHandle } from "@/shared/lib/route";
 import { AppShell } from "./layouts/AppShell";
 import { AuthLayout } from "./layouts/AuthLayout";
@@ -75,6 +77,7 @@ export function buildRoutes(queryClient: QueryClient): RouteObject[] {
             ...courses.routes,
             ...classes.routes,
             ...reports.routes,
+            ...grading.routes,
             notFoundRoute,
           ],
         },
@@ -82,13 +85,13 @@ export function buildRoutes(queryClient: QueryClient): RouteObject[] {
           path: "teach",
           middleware: [authMiddleware, requireRole("teacher")],
           Component: AppShell,
-          children: [...reports.teachRoutes, notFoundRoute],
+          children: [...reports.teachRoutes, ...grading.teachRoutes, notFoundRoute],
         },
         {
           path: "learn",
           middleware: [authMiddleware, requireRole("student")],
           Component: AppShell,
-          children: [...learning.routes, notFoundRoute],
+          children: [...learning.routes, ...summary.routes, notFoundRoute],
         },
         { Component: AuthLayout, children: [notFoundRoute] },
       ],

@@ -108,7 +108,7 @@ export const memberReportSchema = z.object({
         z.object({
           id: z.string().min(1),
           title: z.string(),
-          type: z.enum(["markdown", "video"]),
+          type: z.enum(["video", "markdown", "quiz", "homework"]),
           required: z.boolean(),
           position: z.number().int(),
           state: lessonStateSchema,

@@ -1,5 +1,6 @@
+import { ChartColumn } from "lucide-react";
 import { useEffect } from "react";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { isApiError } from "@/shared/api/errors";
 import { useDocumentTitle } from "@/shared/hooks/use-document-title";
@@ -86,6 +87,13 @@ export function Component() {
         crumbs={[myClassesCrumb, { label: cls.code }]}
         title={cls.name}
         badges={<StatusBadge status={cls.status} />}
+        actions={
+          <Button asChild variant="outline" size="sm">
+            <Link to={`/learn/classes/${cls.id}/summary`}>
+              <ChartColumn aria-hidden="true" /> Tổng kết khóa học
+            </Link>
+          </Button>
+        }
         lede={`${cls.courseName} v${String(cls.courseVersionNo)} · Giảng viên ${cls.teacherName}`}
       />
       <div className="grid gap-6">

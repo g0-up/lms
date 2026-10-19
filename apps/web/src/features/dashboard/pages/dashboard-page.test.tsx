@@ -72,10 +72,53 @@ describe("DashboardPage", () => {
     );
   });
 
+  it("raises grading past three days with a link to the overdue queue", async () => {
+    renderDashboard();
+    const alert = (
+      await screen.findByText("3 bài chờ chấm hoặc xác nhận quá 3 ngày.", { selector: "strong" })
+    ).closest<HTMLElement>('[data-slot="alert"]');
+    if (!alert) throw new Error("no overdue alert");
+    expect(alert).toHaveTextContent("3 bài chờ chấm hoặc xác nhận quá 3 ngày. Học viên đang chờ phản hồi để làm tiếp.");
+    expect(within(alert).getByRole("link", { name: "Xem bài quá hạn chấm" })).toHaveAttribute(
+      "href",
+      "/admin/grading?overdue=1",
+    );
+  });
+
+  it("shows no grading alert without overdue items", async () => {
+    renderDashboard({ dashboard: { ...fixtures.dashboard, overdueCount: 0 } });
+    await screen.findByRole("heading", { name: "Tồn đọng chấm bài" });
+    expect(screen.queryByText(/bài chờ chấm hoặc xác nhận quá 3 ngày/)).toBeNull();
+    // The other alerts stay: only the grading one depends on overdueCount.
+    expect(screen.getByText("1 lời mời gửi thất bại.")).toBeInTheDocument();
+  });
+
+  it("lists the grading backlog per teacher with the average handling time", async () => {
+    const { dashboard } = fixtures;
+    const newcomer = { teacherId: "t-new", teacherName: "Mai Văn Mới", pending: 0, overdue: 0, avgHours: null };
+    renderDashboard({ dashboard: { ...dashboard, gradingBacklog: [...dashboard.gradingBacklog, newcomer] } });
+    const backlog = card((await screen.findByRole("heading", { name: "Tồn đọng chấm bài" })).textContent);
+
+    expect(within(backlog).getByRole("link", { name: "Hàng chờ chấm" })).toHaveAttribute("href", "/admin/grading");
+    const [head, huong, bao, moi] = within(backlog).getAllByRole("row");
+    expect(head).toHaveTextContent("Giảng viênChờ chấm, xác nhậnQuá 3 ngàyTG chấm TB");
+    // Golden: Hương 19.09 hours, Bảo 23.87 hours (rounds up to a day).
+    expect(huong).toHaveTextContent("Lê Thu Hương7219 giờ");
+    expect(bao).toHaveTextContent("Phạm Quốc Bảo411,0 ngày");
+    expect(moi).toHaveTextContent("Mai Văn Mới00—");
+    expect(within(huong).getByText("2")).toHaveAttribute("data-slot", "badge");
+    expect(within(moi).queryByText("0", { selector: '[data-slot="badge"]' })).toBeNull();
+  });
+
   it("renders no alert block when nothing needs attention", async () => {
     const { dashboard } = fixtures;
     renderDashboard({
-      dashboard: { ...dashboard, outdated: [], hints: { ...dashboard.hints, failedInvites: 0, outdatedCourses: 0 } },
+      dashboard: {
+        ...dashboard,
+        outdated: [],
+        hints: { ...dashboard.hints, failedInvites: 0, outdatedCourses: 0 },
+        overdueCount: 0,
+      },
     });
     await screen.findByRole("heading", { name: "Lớp học" });
 
@@ -97,7 +140,7 @@ describe("DashboardPage", () => {
     expect(first).toHaveTextContent("Lập trình cơ bản v1");
     expect(first).toHaveTextContent("7 học viên");
     expect(within(first).getByText("Đang chạy")).toBeInTheDocument();
-    expect(within(first).getByRole("img", { name: "41% hoàn thành" })).toBeInTheDocument();
+    expect(within(first).getByRole("img", { name: `${String(basic01.avgPercent)}% hoàn thành` })).toBeInTheDocument();
     expect(within(draft).getByText("Nháp")).toBeInTheDocument();
     expect(within(draft).queryByRole("img")).toBeNull();
   });

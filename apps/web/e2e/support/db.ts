@@ -1,6 +1,7 @@
 import pg from "pg";
 
-// Truy vấn DB chỉ để đọc kết quả (SELECT/WITH). Ngoại lệ duy nhất: expireResetToken cho kịch bản liên kết hết hạn.
+// Truy vấn DB chỉ để đọc kết quả (SELECT/WITH). Ngoại lệ ghi có tên riêng: expireResetToken cho kịch bản liên kết hết hạn,
+// clearMultiCorrectAnswers cho câu chưa có đáp án đúng (API không cho lưu trạng thái đó).
 const url =
   process.env.E2E_DATABASE_URL ?? `postgres://lms:lms@localhost:${process.env.POSTGRES_HOST_PORT ?? "5432"}/lms`;
 
@@ -37,6 +38,19 @@ export async function expireResetToken(email: string): Promise<number> {
     `UPDATE password_reset_tokens SET expires_at = now() - interval '1 minute'
       WHERE used_at IS NULL AND user_id = (SELECT id FROM users WHERE email_normalized = lower($1))`,
     [email],
+  );
+  return res.rowCount ?? 0;
+}
+
+/**
+ * Bỏ mọi đáp án đúng của các câu nhiều đáp án trong quiz (ngoại lệ ghi): dựng dữ liệu cũ mà API không còn cho lưu,
+ * để kiểm lớp chặn phát hành.
+ */
+export async function clearMultiCorrectAnswers(quizLessonId: string): Promise<number> {
+  const res = await getPool().query(
+    `UPDATE question_options o SET is_correct = false FROM questions q
+      WHERE o.question_id = q.id AND q.lesson_id = $1 AND q.type = 'multi' AND o.is_correct`,
+    [quizLessonId],
   );
   return res.rowCount ?? 0;
 }

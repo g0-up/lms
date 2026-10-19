@@ -28,15 +28,63 @@ describe("LearnClassPage", () => {
     expect(screen.getByRole("img", { name: "20% hoàn thành" })).toBeInTheDocument();
 
     expect(screen.getByRole("heading", { level: 2, name: "Database" })).toBeInTheDocument();
-    expect(screen.getByText("3 học liệu · 1/2 bắt buộc đã xong")).toBeInTheDocument();
+    expect(screen.getByText("1 bài học · 3 học liệu · 1/2 bắt buộc đã xong")).toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 2, name: "Data structure" })).toBeInTheDocument();
-    expect(screen.getByText("3 học liệu · 0/3 bắt buộc đã xong")).toBeInTheDocument();
+    expect(screen.getByText("1 bài học · 3 học liệu · 0/3 bắt buộc đã xong")).toBeInTheDocument();
+
+    // An MVP stage holds a single bài học, "Nội dung chặng", with every lesson of the stage.
+    const database = within(screen.getByRole("region", { name: "Bài 1.1 · Nội dung chặng" }));
+    expect(database.getByText("1/2 bắt buộc")).toBeInTheDocument();
+    expect(database.getAllByRole("checkbox")).toHaveLength(3);
+    expect(screen.getByRole("region", { name: "Bài 2.1 · Nội dung chặng" })).toHaveAttribute(
+      "id",
+      `unit-${fixtures.roadmapActive.stages[1].units[0].id}`,
+    );
+    expect(screen.queryByText("Hoàn thành")).toBeNull();
 
     expect(screen.getByRole("link", { name: /Giới thiệu SQL/ })).toHaveAttribute("href", lessonPath(ids.active, ids.video));
     expect(screen.getByText("Video · 18:24")).toBeInTheDocument();
     expect(screen.getByText("Bài đọc · đã mở")).toBeInTheDocument();
     expect(screen.getByText("Bài đọc · không bắt buộc")).toBeInTheDocument();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("lists a homework without a tick: it completes by its result", async () => {
+    await renderRoadmap(ids.active, {
+      overrides: [http.get(api("/me/classes/:classId"), () => HttpResponse.json(fixtures.roadmapWithHomework))],
+    });
+
+    const database = within(screen.getByRole("region", { name: "Bài 1.1 · Nội dung chặng" }));
+    expect(database.getByRole("link", { name: /Bài tập: truy vấn SELECT/ })).toHaveAttribute(
+      "href",
+      lessonPath(ids.active, ids.homework),
+    );
+    expect(database.getByText("Bài tập")).toBeInTheDocument();
+    expect(database.getAllByRole("checkbox")).toHaveLength(3);
+    expect(screen.queryByRole("checkbox", { name: "Đã học xong: Bài tập: truy vấn SELECT" })).toBeNull();
+  });
+
+  it("shows the API's status of a homework next to it, still without a tick", async () => {
+    await renderRoadmap(ids.active, {
+      overrides: [http.get(api("/me/classes/:classId"), () => HttpResponse.json(fixtures.roadmapHomeworkRework))],
+    });
+
+    const database = within(screen.getByRole("region", { name: "Bài 1.1 · Nội dung chặng" }));
+    const row = database.getByRole("link", { name: /Bài tập: truy vấn SELECT/ }).parentElement as HTMLElement;
+    expect(within(row).getByText("Cần làm lại")).toBeInTheDocument();
+    expect(within(row).queryByRole("checkbox")).toBeNull();
+    // Lessons the API gives no status keep the tick as their only state.
+    expect(database.getAllByText("Cần làm lại")).toHaveLength(1);
+    expect(database.getAllByRole("checkbox")).toHaveLength(3);
+  });
+
+  it("links the course summary from the class head", async () => {
+    await renderRoadmap();
+
+    expect(screen.getByRole("link", { name: "Tổng kết khóa học" })).toHaveAttribute(
+      "href",
+      `${classPath(ids.active)}/summary`,
+    );
   });
 
   it("disables the tick of a lesson never opened, and explains why", async () => {
@@ -66,7 +114,29 @@ describe("LearnClassPage", () => {
     expect(tick("Thiết kế bảng và khóa")).toBeChecked();
     expect(screen.getByRole("img", { name: "40% hoàn thành" })).toBeInTheDocument();
     expect(screen.getByText(/^2\/5 học liệu bắt buộc\./)).toBeInTheDocument();
-    expect(screen.getByText("3 học liệu · 2/2 bắt buộc đã xong")).toBeInTheDocument();
+    expect(screen.getByText("1 bài học · 3 học liệu · 2/2 bắt buộc đã xong")).toBeInTheDocument();
+    const database = within(screen.getByRole("region", { name: "Bài 1.1 · Nội dung chặng" }));
+    expect(database.getByText("2/2 bắt buộc")).toBeInTheDocument();
+    expect(database.getByText("Hoàn thành")).toBeInTheDocument();
+  });
+
+  it("groups a stage's lessons by bài học, an optional one never complete", async () => {
+    await renderRoadmap(ids.active, {
+      overrides: [http.get(api(`/me/classes/${ids.active}`), () => HttpResponse.json(fixtures.roadmapTwoUnits))],
+    });
+
+    expect(screen.getByText("2 bài học · 3 học liệu · 1/2 bắt buộc đã xong")).toBeInTheDocument();
+    const core = within(screen.getByRole("region", { name: "Bài 1.1 · Nội dung chặng" }));
+    expect(core.getByText("1/2 bắt buộc")).toBeInTheDocument();
+    expect(core.getAllByRole("checkbox").map((box) => box.getAttribute("aria-label"))).toEqual([
+      "Đã học xong: Giới thiệu SQL",
+      "Đã học xong: Thiết kế bảng và khóa",
+    ]);
+    const advanced = within(screen.getByRole("region", { name: "Bài 1.2 · Nâng cao" }));
+    expect(advanced.getByText("Không bắt buộc")).toBeInTheDocument();
+    expect(advanced.getByRole("link", { name: /Đọc thêm: chỉ mục/ })).toBeInTheDocument();
+    expect(advanced.queryByText("Hoàn thành")).toBeNull();
+    expect(screen.getByRole("region", { name: "Bài 2.1 · Nội dung chặng" })).toBeInTheDocument();
   });
 
   it("unticks a completed lesson", async () => {
@@ -147,7 +217,8 @@ describe("LearnClassPage", () => {
     expect(screen.getByText("Giới thiệu SQL")).toBeInTheDocument();
     expect(screen.getByText("Video · 18:24")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Giới thiệu SQL/ })).toBeNull();
-    expect(screen.getAllByRole("link").map((a) => a.textContent)).toEqual(["Lớp của tôi"]);
+    // Only the crumb and the course summary (which lists a draft class's lessons without links either).
+    expect(screen.getAllByRole("link").map((a) => a.textContent.trim())).toEqual(["Lớp của tôi", "Tổng kết khóa học"]);
     for (const box of screen.getAllByRole("checkbox")) {
       expect(box).toBeDisabled();
       expect(box.closest("label")).toHaveAttribute("title", "Lớp chưa bắt đầu");

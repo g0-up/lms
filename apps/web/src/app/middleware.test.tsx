@@ -1,9 +1,15 @@
 import { screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { setSession, users } from "@/shared/test/msw";
 import { renderApp } from "./render-app";
 
 describe("route guards", () => {
+  // The lesson editor chunk pulls in the Markdown editor; load it once so a route's lazy import
+  // fits inside waitFor's default timeout.
+  beforeAll(async () => {
+    await import("@/features/stages/pages/lesson-editor-page");
+  });
+
   it("sends a guest to /login with the requested page as next", async () => {
     const { location } = renderApp("/admin/stages");
 
@@ -19,6 +25,19 @@ describe("route guards", () => {
       expect(location()).toBe("/teach");
     });
     expect(await screen.findByRole("navigation", { name: "Chính" })).toHaveTextContent("Lớp của tôi");
+  });
+
+  it("sends a teacher who opens a quiz or homework editor link to /teach", async () => {
+    setSession(users.teacher);
+    const { location } = renderApp(
+      "/admin/stages/01990000-0000-7000-8000-000000000101/versions/01990000-0000-7000-8000-000000000112/lessons/0199ffff-0000-7000-8000-000000000001/edit",
+    );
+
+    await waitFor(() => {
+      expect(location()).toBe("/teach");
+    });
+    expect(await screen.findByRole("navigation", { name: "Chính" })).toHaveTextContent("Lớp của tôi");
+    expect(screen.queryByRole("button", { name: "Thêm câu hỏi" })).toBeNull();
   });
 
   it("confines a user with a temporary password to /first-login", async () => {

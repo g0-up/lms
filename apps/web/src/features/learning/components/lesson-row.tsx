@@ -1,9 +1,10 @@
 import { Link } from "react-router";
 import { cn } from "@/shared/lib/cn";
+import { ToneBadge } from "@/shared/ui/badge";
 import { TypeIcon } from "@/shared/ui/type-icon";
 import { lessonSub } from "../model/progress";
 import type { ReadOnlyReason, RoadmapLesson } from "../model/schemas";
-import { tickBlocker } from "../model/tick-rule";
+import { tickBlocker, tickable } from "../model/tick-rule";
 import { TickCheckbox } from "./tick-checkbox";
 
 export interface LessonRowProps {
@@ -38,14 +39,22 @@ export function LessonRow({ classId, lesson, readOnlyReason, onToggle }: LessonR
           {body}
         </Link>
       )}
-      <TickCheckbox
-        lessonTitle={lesson.title}
-        checked={done}
-        blocker={tickBlocker({ readOnlyReason, opened: Boolean(lesson.firstOpenedAt) })}
-        onCheckedChange={(completed) => {
-          onToggle(lesson.id, completed);
-        }}
-      />
+      {lesson.status ? (
+        <ToneBadge tone={lesson.status.tone} className="shrink-0">
+          {lesson.status.label}
+        </ToneBadge>
+      ) : null}
+      {/* Quizzes and homework complete by their result, never by a tick. */}
+      {tickable(lesson.type) ? (
+        <TickCheckbox
+          lessonTitle={lesson.title}
+          checked={done}
+          blocker={tickBlocker({ readOnlyReason, opened: Boolean(lesson.firstOpenedAt) })}
+          onCheckedChange={(completed) => {
+            onToggle(lesson.id, completed);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

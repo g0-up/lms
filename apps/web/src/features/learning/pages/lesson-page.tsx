@@ -11,14 +11,16 @@ import { Crumbs, type Crumb } from "@/shared/ui/crumbs";
 import { PageHead } from "@/shared/ui/page-head";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { CompleteBar } from "../components/complete-bar";
+import { HomeworkSubmissions } from "../components/homework-submissions";
 import { LessonSideList } from "../components/lesson-side-list";
 import { LessonViewer } from "../components/lesson-viewer";
 import { useLesson } from "../hooks/use-lesson";
 import { useMyClass } from "../hooks/use-my-class";
+import { useQuizFocus } from "../hooks/use-quiz-attempt";
 import { useToggleCompletion } from "../hooks/use-toggle-completion";
 import { LESSON_NOT_IN_COURSE_MESSAGE, NOT_MEMBER_MESSAGE } from "../model/messages";
 import { flattenLessons } from "../model/neighbors";
-import { tickBlocker } from "../model/tick-rule";
+import { tickBlocker, tickable } from "../model/tick-rule";
 
 const is404 = (error: Error | null) => isApiError(error) && error.status === 404;
 
@@ -58,10 +60,12 @@ export function Component() {
   const roadmap = roadmapQuery.data;
   const page = lessonQuery.data;
   // The roadmap is usually cached already: head and side list show while the lesson loads, so
-  // focus lands on the new h1 right after "Bài tiếp".
+  // focus lands on the new h1 right after "Học liệu tiếp".
   const entry = roadmap ? flattenLessons(roadmap.stages).find((f) => f.lesson.id === lessonId) : undefined;
   const title = page?.lesson.title ?? entry?.lesson.title;
   useDocumentTitle(title ?? "Học liệu");
+  // Focus mode while a quiz attempt is open: the question takes the full width, without the side list.
+  const focus = useQuizFocus(classId, lessonId, (page?.lesson.type ?? entry?.lesson.type) === "quiz");
 
   const classGone = is404(roadmapQuery.error);
   const lessonGone = !classGone && roadmapQuery.isSuccess && is404(lessonQuery.error);
@@ -95,10 +99,12 @@ export function Component() {
 
   const classHref = `/learn/classes/${classId}`;
   const stage = page?.lesson.stage ?? entry?.stage;
+  const unit = page?.lesson.unit ?? entry?.unit;
   const crumbs: Crumb[] = [
     { label: "Lớp của tôi", to: "/learn" },
     { label: roadmapQuery.data.class.code, to: classHref },
     ...(stage ? [{ label: stage.name, to: `${classHref}#stage-${stage.id}` }] : []),
+    ...(unit ? [{ label: unit.title, to: `${classHref}#unit-${unit.id}` }] : []),
     { label: title ?? "Học liệu" },
   ];
   const required = page?.lesson.required ?? entry?.lesson.required ?? true;
@@ -133,31 +139,49 @@ export function Component() {
     // Only active and ended classes reach this point (a draft answers 409 above), so a read-only
     // lesson the cached roadmap does not explain yet means the class has just ended.
     const readOnlyReason = roadmapQuery.data.readOnlyReason ?? (lesson.readOnly ? "ended" : undefined);
-    viewer = (
+    const card = (
       <Card className="min-w-0">
-        <LessonViewer key={lesson.lesson.id} page={lesson} />
-        <CompleteBar
-          classId={classId}
-          prev={lesson.prev}
-          next={lesson.next}
-          completedAt={lesson.progress.completedAt}
-          // Opening this page recorded the first open, so only the class state can block here.
-          blocker={tickBlocker({ readOnlyReason, opened: true })}
-          onToggle={(completed) => {
-            toggle.mutate({ lessonId, completed });
-          }}
-        />
+        <LessonViewer key={lesson.lesson.id} classId={classId} page={lesson} />
+        {lesson.content.type === "quiz" ? null : (
+          <CompleteBar
+            classId={classId}
+            prev={lesson.prev}
+            next={lesson.next}
+            crossesUnit={lesson.crossesUnit}
+            nextUnitTitle={lesson.nextUnitTitle}
+            completedAt={lesson.progress.completedAt}
+            tickable={tickable(lesson.lesson.type)}
+            // Opening this page recorded the first open, so only the class state can block here.
+            blocker={tickBlocker({ readOnlyReason, opened: true })}
+            onToggle={(completed) => {
+              toggle.mutate({ lessonId, completed });
+            }}
+          />
+        )}
       </Card>
     );
+    viewer =
+      lesson.content.type === "homework" ? (
+        <div className="grid min-w-0 gap-6">
+          {card}
+          <HomeworkSubmissions key={lesson.lesson.id} classId={classId} lessonId={lesson.lesson.id} />
+        </div>
+      ) : (
+        card
+      );
   }
 
   const sideStage = stage && roadmapQuery.data.stages.find((s) => s.id === stage.id);
   return (
     <>
       {head}
-      <div className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6 max-[960px]:grid-cols-1">
+      <div
+        className={
+          focus ? "grid gap-6" : "grid grid-cols-[minmax(0,1fr)_320px] items-start gap-6 max-[960px]:grid-cols-1"
+        }
+      >
         {viewer}
-        {sideStage && !lessonQuery.isError ? (
+        {sideStage && !lessonQuery.isError && !focus ? (
           <LessonSideList classId={classId} stage={sideStage} currentLessonId={lessonId} />
         ) : null}
       </div>

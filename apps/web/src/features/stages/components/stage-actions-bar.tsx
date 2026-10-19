@@ -5,7 +5,7 @@ import { PendingLabel } from "@/shared/ui/pending-label";
 import { requiredSplitLabel } from "../model/lesson-form";
 import type { StageVersion } from "../model/schemas";
 import type { VersionLike } from "../model/select-version";
-import { stageDeleteBlocker, stagePublishBlocker } from "../model/stage-rules";
+import { stageDeleteBlocker, stagePublishBlockers } from "../model/stage-rules";
 import { GuardedButton } from "./guarded-button";
 
 export interface VersionActionsProps {
@@ -71,15 +71,18 @@ export function VersionActions({
   );
 }
 
-/** Bottom bar of the lesson card: required/optional split on the left, version actions on the right. */
+/**
+ * Bottom bar of the lesson card: unit count and required/optional split on the left, version actions
+ * on the right. Publishing is blocked by the first reason; the page lists them all.
+ */
 export function StageActionsBar({ version, ...actions }: VersionActionsProps & { version: StageVersion }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-6 py-4 max-[720px]:px-4">
-      <span className="text-sm text-ink-3">{requiredSplitLabel(version.lessons)}</span>
+      <span className="text-sm text-ink-3">{requiredSplitLabel(version.units.length, version.lessons)}</span>
       <VersionActions
         status={version.status}
         versionNo={version.versionNo}
-        publishBlocker={stagePublishBlocker(version)}
+        publishBlocker={stagePublishBlockers(version)[0] ?? null}
         deleteBlocker={stageDeleteBlocker(version)}
         {...actions}
       />

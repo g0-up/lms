@@ -1,9 +1,9 @@
 import { Plus } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
-import { hasCode, isApiError, NETWORK_ERROR_MESSAGE } from "@/shared/api/errors";
+import { isApiError, NETWORK_ERROR_MESSAGE } from "@/shared/api/errors";
 import { useDocumentTitle } from "@/shared/hooks/use-document-title";
-import { Alert, AlertActions } from "@/shared/ui/alert";
+import { Alert, AlertActions, AlertTitle } from "@/shared/ui/alert";
 import { Badge, StatusBadge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card, CardHeader, CardTitle } from "@/shared/ui/card";
@@ -17,17 +17,19 @@ import { LessonList } from "../components/lesson-list";
 import { LockNote } from "../components/lock-note";
 import { OutdatedCoursesCard } from "../components/outdated-courses-card";
 import { StageActionsBar } from "../components/stage-actions-bar";
+import { UnitFormDialog } from "../components/unit-form-dialog";
 import { UsedByCard } from "../components/used-by-card";
 import { VersionCard } from "../components/version-card";
 import { useLessonMutations } from "../hooks/use-lesson-mutations";
 import { useStage } from "../hooks/use-stage";
 import { stagePath, useStageVersionActions } from "../hooks/use-stage-mutations";
 import { useStageVersion } from "../hooks/use-stage-version";
+import { useUnitMutations } from "../hooks/use-unit-mutations";
 import { lessonEditorPath } from "../model/lesson-form";
-import { moveItem } from "../model/order";
-import type { Lesson, OutdatedCourse, StageDetail, StageVersion } from "../model/schemas";
+import { layoutOf, moveLessonAcross, moveUnit } from "../model/order";
+import type { Lesson, OutdatedCourse, StageDetail, StageVersion, Unit } from "../model/schemas";
 import { draftOf, latestPublished, selectVersion } from "../model/select-version";
-import { PUBLISH_NEEDS_LESSON } from "../model/stage-rules";
+import { stagePublishBlockers } from "../model/stage-rules";
 
 const LEDE =
   "Phiên bản đã phát hành là bất biến; mọi thay đổi đi qua một bản nháp mới rồi được áp dụng cho khóa học bằng một thao tác.";
@@ -61,13 +63,18 @@ function RetryAlert({ children, onRetry }: { children: ReactNode; onRetry: () =>
 /** Message for a failed publish or archive, shown inside its confirm dialog. */
 function actionError(error: Error | null): ReactNode {
   if (!error) return null;
-  let message = isApiError(error) ? error.message : NETWORK_ERROR_MESSAGE;
-  if (hasCode(error, "VALIDATION_FAILED")) message = `${PUBLISH_NEEDS_LESSON}.`;
+  const message = isApiError(error) ? error.message : NETWORK_ERROR_MESSAGE;
   return (
     <Alert variant="danger" role="alert" className="mt-3">
       {message}
     </Alert>
   );
+}
+
+function deleteUnitText(unit: Unit): string {
+  return unit.lessonCount > 0
+    ? `Bài học và ${String(unit.lessonCount)} học liệu trong đó bị xóa khỏi bản nháp này. Muốn giữ học liệu nào, hãy chuyển nó sang bài học khác trước. Các phiên bản đã phát hành không bị ảnh hưởng.`
+    : "Bài học trống bị xóa khỏi bản nháp này.";
 }
 
 export function Component() {
@@ -99,7 +106,11 @@ export function Component() {
       />
       {current ? (
         <div className="grid gap-6">
-          <VersionCard versions={detail.versions} current={current} hrefFor={(vid) => `${stagePath(detail.id)}?v=${vid}`} />
+          <VersionCard
+            versions={detail.versions}
+            current={current}
+            hrefFor={(vid) => `${stagePath(detail.id)}?v=${vid}`}
+          />
           {version.isPending ? (
             <Skeleton className="h-64 w-full" aria-busy="true" />
           ) : version.isError ? (
@@ -117,20 +128,24 @@ export function Component() {
 
 type Dialog =
   | { kind: "publish" | "archive" | "delete" }
-  | { kind: "lesson"; lesson?: Lesson }
+  | { kind: "lesson"; lesson?: Lesson; unitId?: string }
   | { kind: "delete-lesson"; lesson: Lesson }
+  | { kind: "unit"; unit?: Unit }
+  | { kind: "delete-unit"; unit: Unit }
   | null;
 
-/** Lessons, actions and references of the version being viewed; remounts when the version changes. */
+/** Units, lessons, actions and references of the version being viewed; remounts when the version changes. */
 function VersionSection({ detail, version }: { detail: StageDetail; version: StageVersion }) {
   const actions = useStageVersionActions(detail.id);
   const lessonActions = useLessonMutations(detail.id, version.id);
+  const unitActions = useUnitMutations(detail.id, version.id);
   const navigate = useNavigate();
   const [dialog, setDialog] = useState<Dialog>(null);
   const [applying, setApplying] = useState<OutdatedCourse | null>(null);
   const editable = version.status === "draft";
   const n = version.versionNo;
   const k = version.lessons.length;
+  const blockers = stagePublishBlockers(version);
   const draft = draftOf(detail.versions);
   const isLatestPublished = latestPublished(detail.versions)?.id === version.id;
   const anyPublishedUse = detail.usedBy.some((u) => u.status === "published");
@@ -145,6 +160,16 @@ function VersionSection({ detail, version }: { detail: StageDetail; version: Sta
 
   return (
     <>
+      {blockers.length > 0 ? (
+        <Alert variant="warn">
+          <AlertTitle>Chưa phát hành được v{n}:</AlertTitle>
+          <ul className="mt-1 list-disc pl-5">
+            {blockers.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        </Alert>
+      ) : null}
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-3">
@@ -156,26 +181,39 @@ function VersionSection({ detail, version }: { detail: StageDetail; version: Sta
               variant="outline"
               size="sm"
               onClick={() => {
-                setDialog({ kind: "lesson" });
+                setDialog({ kind: "unit" });
               }}
             >
-              <Plus aria-hidden="true" /> Thêm học liệu
+              <Plus aria-hidden="true" /> Thêm bài học
             </Button>
           ) : (
             <LockNote />
           )}
         </CardHeader>
         <LessonList
-          lessons={version.lessons}
+          version={version}
           editable={editable}
-          onMove={(index, delta) => {
-            lessonActions.reorder.mutate(moveItem(version.lessons, index, delta).map((l) => l.id));
+          editorPath={(lesson) => lessonEditorPath(detail.id, version.id, lesson.id)}
+          onAddLesson={(unit) => {
+            setDialog({ kind: "lesson", unitId: unit.id });
           }}
-          onEdit={(lesson) => {
+          onMoveUnit={(unit, delta) => {
+            unitActions.reorder.mutate(moveUnit(layoutOf(version), unit.id, delta).map((u) => u.unitId));
+          }}
+          onRenameUnit={(unit) => {
+            setDialog({ kind: "unit", unit });
+          }}
+          onDeleteUnit={(unit) => {
+            setDialog({ kind: "delete-unit", unit });
+          }}
+          onMoveLesson={(lesson, delta) => {
+            lessonActions.reorder.mutate(moveLessonAcross(layoutOf(version), lesson.id, delta));
+          }}
+          onEditLesson={(lesson) => {
             if (lesson.type === "markdown") void navigate(lessonEditorPath(detail.id, version.id, lesson.id));
             else setDialog({ kind: "lesson", lesson });
           }}
-          onDelete={(lesson) => {
+          onDeleteLesson={(lesson) => {
             setDialog({ kind: "delete-lesson", lesson });
           }}
         />
@@ -213,8 +251,8 @@ function VersionSection({ detail, version }: { detail: StageDetail; version: Sta
         title={`Phát hành ${detail.name} v${String(n)}?`}
         text={
           <>
-            Sau khi phát hành, phiên bản này và {k} học liệu của nó không sửa được nữa. Khóa học đang dùng phiên bản cũ sẽ
-            không tự cập nhật; bạn áp dụng ở bước tiếp theo.
+            Sau khi phát hành, phiên bản này và {k} học liệu của nó không sửa được nữa. Khóa học đang dùng phiên bản cũ
+            sẽ không tự cập nhật; bạn áp dụng ở bước tiếp theo.
             {actionError(actions.publish.error)}
           </>
         }
@@ -261,9 +299,16 @@ function VersionSection({ detail, version }: { detail: StageDetail; version: Sta
         open={dialog?.kind === "lesson"}
         onOpenChange={close}
         lesson={dialog?.kind === "lesson" ? dialog.lesson : undefined}
-        onSave={(values) =>
-          lessonActions.save.mutateAsync({ lessonId: dialog?.kind === "lesson" ? dialog.lesson?.id : undefined, values })
-        }
+        units={version.units}
+        unitId={dialog?.kind === "lesson" ? dialog.unitId : undefined}
+        onSave={async (values) => {
+          const editing = dialog?.kind === "lesson" ? dialog.lesson : undefined;
+          const saved = await lessonActions.save.mutateAsync({ lessonId: editing?.id, values, from: editing?.type });
+          // A new quiz or homework is empty until its questions or criteria are written on its own page.
+          if (!editing && (saved.type === "quiz" || saved.type === "homework")) {
+            void navigate(lessonEditorPath(detail.id, version.id, saved.id));
+          }
+        }}
         onContinueMarkdown={(draft) => {
           close();
           void navigate(lessonEditorPath(detail.id, version.id), { state: draft });
@@ -279,6 +324,26 @@ function VersionSection({ detail, version }: { detail: StageDetail; version: Sta
         loading={lessonActions.remove.isPending}
         onConfirm={() => {
           if (dialog?.kind === "delete-lesson") lessonActions.remove.mutate(dialog.lesson, { onSettled: close });
+        }}
+      />
+      <UnitFormDialog
+        open={dialog?.kind === "unit"}
+        onOpenChange={close}
+        unit={dialog?.kind === "unit" ? dialog.unit : undefined}
+        onSave={(title) =>
+          unitActions.save.mutateAsync({ unitId: dialog?.kind === "unit" ? dialog.unit?.id : undefined, title })
+        }
+      />
+      <ConfirmDialog
+        open={dialog?.kind === "delete-unit"}
+        onOpenChange={close}
+        danger
+        title={dialog?.kind === "delete-unit" ? `Xóa bài học "${dialog.unit.title}"?` : ""}
+        text={dialog?.kind === "delete-unit" ? deleteUnitText(dialog.unit) : ""}
+        confirm="Xóa bài học"
+        loading={unitActions.remove.isPending}
+        onConfirm={() => {
+          if (dialog?.kind === "delete-unit") unitActions.remove.mutate(dialog.unit, { onSettled: close });
         }}
       />
       <ApplyDialog

@@ -11,22 +11,131 @@
  *   'close button removes the toast'                        → E31
  *   (skip link, button-name, axe serious/critical trên 10 route: review.md) → E32
  *   (hit area ≥ 44px ở 375px, ≤ 1 nút gradient mỗi route: phase-14 mục token audit) → E26
+ *   (axe serious/critical trên các route của vòng học: hàng chờ chấm, trang chấm, trang xác nhận quiz, tab "Bài tập",
+ *    "Quiz", "Tổng kết" của lớp phía Admin và giảng viên, trang bài tập, màn làm quiz, kết quả quiz, tổng kết của
+ *    học viên, trình soạn bài học, quiz, homework trên bản nháp GO v2 của seed) → E32
  */
 import { expect, test, type Browser, type Page, type ViewportSize } from "@playwright/test";
 import { checkFlowRoutes, runAxe, smallHitAreas, waitForPage, type AppRoute } from "./support/a11y";
-import { storageStatePath } from "./support/auth";
-import { closeDb, ids } from "./support/db";
+import { loginContext, seedPassword, storageStatePath } from "./support/auth";
+import { closeDb, ids, one } from "./support/db";
 import { seedReset } from "./support/seed";
 
 const TOAST_DURATION_MS = 4000;
 const VISIBLE_TOASTS = 3;
 
 let routes: AppRoute[];
+/** Route của vòng học (chấm bài, quiz, tổng kết, trình soạn); không có trong check-flows của prototype. */
+let cycleRoutes: AppRoute[];
+/** Màn làm quiz: lượt luyện tập Go đang làm dở của Bích ở basic01 (seed), mở bằng phiên đăng nhập qua API. */
+let quizRunnerPath: string;
 let stagePath: string;
+
+const BICH = "bich.tran@gmail.com";
+
+/** Id của một bản ghi seed theo truy vấn đọc trả đúng một dòng. */
+async function seedId(sql: string, params: unknown[]): Promise<string> {
+  return (await one<{ id: string }>(sql, params)).id;
+}
 
 test.beforeAll(async () => {
   routes = await checkFlowRoutes();
   stagePath = `/admin/stages/${await ids.stageId("DB")}`;
+  const [basic01, goHomework, dsHomework, goPractice, goQuiz, goStage, goDraft] = await Promise.all([
+    ids.classId("basic01"),
+    ids.lessonInClass("basic01", "go-hw"),
+    ids.lessonInClass("basic01", "ds-hw"),
+    ids.lessonInClass("basic01", "go-practice"),
+    ids.lessonInClass("basic01", "go-quiz"),
+    ids.stageId("GO"),
+    ids.stageVersionId("GO", 2),
+  ]);
+  const [pendingSubmission, pendingAttempt, draftMarkdown, draftQuiz, draftHomework] = await Promise.all([
+    // Bài nộp ds-hw lần #1 của Bích, đang chờ chấm.
+    seedId(
+      `SELECT s.id FROM submissions s JOIN class_members m ON m.id = s.class_member_id JOIN users u ON u.id = m.user_id
+        WHERE m.class_id = $1 AND s.lesson_id = $2 AND u.email_normalized = $3 AND s.status = 'pending'`,
+      [basic01, dsHomework, BICH],
+    ),
+    // Lượt quiz bài tập Go của An, chờ xác nhận.
+    seedId(
+      `SELECT a.id FROM quiz_attempts a JOIN class_members m ON m.id = a.class_member_id JOIN users u ON u.id = m.user_id
+        WHERE m.class_id = $1 AND a.lesson_id = $2 AND u.email_normalized = $3 AND a.review_status = 'pending'`,
+      [basic01, goQuiz, "an.nguyen@gmail.com"],
+    ),
+    ...["go-types", "go-quiz", "go-hw"].map((key) =>
+      seedId("SELECT id FROM lessons WHERE stage_version_id = $1 AND lesson_key = $2", [goDraft, key]),
+    ),
+  ]);
+  const editor = (lessonId: string) => `/admin/stages/${goStage}/versions/${goDraft}/lessons/${lessonId}/edit`;
+  quizRunnerPath = `/learn/classes/${basic01}/lessons/${goPractice}`;
+  cycleRoutes = [
+    { name: "admin-grading", path: "/admin/grading", role: "admin", prototype: "#/admin/grading?as=u-admin" },
+    { name: "teach-grading", path: "/teach/grading", role: "teacher", prototype: "#/teach/grading?as=u-gv" },
+    {
+      name: "teach-grade-submission",
+      path: `/teach/grading/${pendingSubmission}`,
+      role: "teacher",
+      prototype: "#/teach/grading/sub3?as=u-gv",
+    },
+    {
+      name: "teach-review-attempt",
+      path: `/teach/grading/quiz/${pendingAttempt}`,
+      role: "teacher",
+      prototype: "#/teach/grading/quiz/qa7?as=u-gv",
+    },
+    ...(["homework", "quiz", "summary"] as const).flatMap((tab): AppRoute[] => [
+      {
+        name: `admin-class-${tab}`,
+        path: `/admin/classes/${basic01}?tab=${tab}`,
+        role: "admin",
+        prototype: `#/admin/classes/cl-basic01?tab=${tab}&as=u-admin`,
+      },
+      {
+        name: `teach-class-${tab}`,
+        path: `/teach/classes/${basic01}?tab=${tab}`,
+        role: "teacher",
+        prototype: `#/teach/classes/cl-basic01?tab=${tab}&as=u-gv`,
+      },
+    ]),
+    {
+      name: "homework",
+      path: `/learn/classes/${basic01}/lessons/${goHomework}`,
+      role: "student",
+      prototype: "#/learn/classes/cl-basic01/lessons/go-hw?as=u-an",
+    },
+    {
+      name: "homework-graded",
+      path: `/learn/classes/${basic01}/lessons/${dsHomework}`,
+      role: "student",
+      prototype: "#/learn/classes/cl-basic01/lessons/ds-hw?as=u-an",
+    },
+    {
+      name: "quiz-result",
+      path: `/learn/classes/${basic01}/lessons/${goQuiz}?result=${pendingAttempt}`,
+      role: "student",
+      prototype: "#/learn/classes/cl-basic01/lessons/go-quiz?result=qa7&as=u-an",
+    },
+    {
+      name: "learn-summary",
+      path: `/learn/classes/${basic01}/summary`,
+      role: "student",
+      prototype: "#/learn/classes/cl-basic01/summary?as=u-an",
+    },
+    {
+      name: "editor-markdown",
+      path: editor(draftMarkdown),
+      role: "admin",
+      prototype: "#/admin/stages/st-go/lessons/go-types?as=u-admin",
+    },
+    { name: "editor-quiz", path: editor(draftQuiz), role: "admin", prototype: "#/admin/stages/st-go/lessons/go-quiz?as=u-admin" },
+    {
+      name: "editor-homework",
+      path: editor(draftHomework),
+      role: "admin",
+      prototype: "#/admin/stages/st-go/lessons/go-hw?as=u-admin",
+    },
+  ];
 });
 
 test.afterAll(async () => {
@@ -43,6 +152,21 @@ async function openRoute(browser: Browser, route: AppRoute, viewport?: ViewportS
   await page.goto(route.path);
   await waitForPage(page);
   return { page, close: () => context.close() };
+}
+
+/** Không có vi phạm axe serious/critical trên route (soft, để một lần chạy liệt kê đủ mọi route). */
+async function expectNoAxeViolations(browser: Browser, route: AppRoute) {
+  const { page, close } = await openRoute(browser, route);
+  const { violations, inputBorder } = await runAxe(page);
+  expect.soft(violations, `${route.name}: ${JSON.stringify(violations)}`).toEqual([]);
+  // Ngoại lệ đã ghi nhận (plan.md §11): viền input gray-300 dưới 3:1, liệt kê riêng chứ không ẩn.
+  for (const finding of inputBorder) {
+    test.info().annotations.push({
+      type: "axe-input-border",
+      description: `${route.name}: ${finding.id} × ${String(finding.targets.length)} (${finding.targets.slice(0, 3).join(", ")})`,
+    });
+  }
+  await close();
 }
 
 /** Phần tử đang focus nằm trong dialog đang mở. */
@@ -90,19 +214,28 @@ test.describe("Reflow và axe trên 10 route", () => {
   });
 
   test("E32 axe không có vi phạm serious/critical (kể cả button-name)", async ({ browser }) => {
-    for (const route of routes) {
-      const { page, close } = await openRoute(browser, route);
-      const { violations, inputBorder } = await runAxe(page);
-      expect.soft(violations, `${route.name}: ${JSON.stringify(violations)}`).toEqual([]);
-      // Ngoại lệ đã ghi nhận (plan.md §11): viền input gray-300 dưới 3:1, liệt kê riêng chứ không ẩn.
-      for (const finding of inputBorder) {
-        test.info().annotations.push({
-          type: "axe-input-border",
-          description: `${route.name}: ${finding.id} × ${String(finding.targets.length)} (${finding.targets.slice(0, 3).join(", ")})`,
-        });
-      }
-      await close();
-    }
+    for (const route of routes) await expectNoAxeViolations(browser, route);
+  });
+
+  test("E32 axe trên các route chấm bài, quiz, tổng kết và trình soạn", async ({ browser }) => {
+    // 17 route, mỗi route một context mới và một lượt axe: vượt hạn 60 s mặc định.
+    test.slow();
+    for (const route of cycleRoutes) await expectNoAxeViolations(browser, route);
+  });
+
+  test("E32 axe trên màn làm quiz", async ({ browser }) => {
+    // Bích không có storageState riêng: đăng nhập qua API rồi mở trình duyệt với phiên đó.
+    const api = await loginContext(BICH, seedPassword());
+    const context = await browser.newContext({ storageState: await api.storageState() });
+    await api.dispose();
+    const page = await context.newPage();
+    await page.goto(quizRunnerPath);
+    await waitForPage(page);
+    // Lượt đang mở: trang hiện thẳng màn làm bài, không phải màn bắt đầu.
+    await expect(page.getByRole("navigation", { name: "Chuyển nhanh đến câu hỏi" })).toBeVisible();
+    const { violations } = await runAxe(page);
+    expect(violations, JSON.stringify(violations)).toEqual([]);
+    await context.close();
   });
 });
 

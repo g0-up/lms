@@ -1,74 +1,47 @@
-import { Pencil, Trash2 } from "lucide-react";
-import { Badge } from "@/shared/ui/badge";
 import { EmptyState } from "@/shared/ui/empty-state";
-import { IconButton } from "@/shared/ui/icon-button";
-import { TypeIcon } from "@/shared/ui/type-icon";
-import { lessonMeta } from "../model/lesson-form";
-import type { Lesson } from "../model/schemas";
-import { ItemBody, ItemMeta, ItemTitle, List, ListItem, Ord } from "./list";
-import { OrderButtons } from "./order-buttons";
+import type { Lesson, StageVersion } from "../model/schemas";
+import { UnitSection, type UnitActions } from "./unit-section";
 
-export interface LessonListProps {
-  lessons: readonly Lesson[];
-  /** Only a draft shows the reorder, edit and delete controls. */
+export interface LessonListProps extends UnitActions {
+  version: Pick<StageVersion, "units" | "lessons">;
+  /** Page of a quiz or homework, where its questions or criteria are written or read. */
+  editorPath: (lesson: Lesson) => string;
+  /** Only a draft shows the add, reorder, edit and delete controls. */
   editable: boolean;
-  onMove: (index: number, delta: -1 | 1) => void;
-  onEdit: (lesson: Lesson) => void;
-  onDelete: (lesson: Lesson) => void;
 }
 
-export function LessonList({ lessons, editable, onMove, onEdit, onDelete }: LessonListProps) {
-  if (lessons.length === 0) {
+/** A version's lessons grouped by bài học, in order; lessons are flat in unit order, so each unit's slice is contiguous. */
+export function LessonList({ version, editable, editorPath, ...actions }: LessonListProps) {
+  const { units, lessons } = version;
+  if (units.length === 0) {
     return (
       <EmptyState
-        title="Chưa có học liệu"
-        text={editable ? "Thêm video hoặc bài markdown để phát hành chặng này." : "Phiên bản này không có học liệu."}
+        title="Chưa có bài học"
+        text={
+          editable
+            ? "Tạo bài học trước, rồi thêm video, bài đọc, quiz hoặc bài tập vào từng bài học."
+            : "Phiên bản này không có học liệu."
+        }
       />
     );
   }
   return (
-    <List>
-      {lessons.map((lesson, i) => (
-        <ListItem key={lesson.id}>
-          <Ord n={i + 1} />
-          <TypeIcon type={lesson.type} />
-          <ItemBody>
-            <ItemTitle>{lesson.title}</ItemTitle>
-            <ItemMeta>
-              <span>{lessonMeta(lesson)}</span>
-              {lesson.required ? null : <Badge variant="subtle">Không bắt buộc</Badge>}
-              <span>key {lesson.lessonKey}</span>
-            </ItemMeta>
-          </ItemBody>
-          {editable ? (
-            <div className="flex shrink-0 gap-0.5">
-              <OrderButtons
-                index={i}
-                count={lessons.length}
-                onMove={(delta) => {
-                  onMove(i, delta);
-                }}
-              />
-              <IconButton
-                aria-label="Sửa"
-                onClick={() => {
-                  onEdit(lesson);
-                }}
-              >
-                <Pencil aria-hidden="true" />
-              </IconButton>
-              <IconButton
-                aria-label="Xóa"
-                onClick={() => {
-                  onDelete(lesson);
-                }}
-              >
-                <Trash2 aria-hidden="true" />
-              </IconButton>
-            </div>
-          ) : null}
-        </ListItem>
-      ))}
-    </List>
+    <div>
+      {units.map((unit, i) => {
+        const own = lessons.filter((l) => l.unitId === unit.id);
+        return (
+          <UnitSection
+            key={unit.id}
+            unit={unit}
+            index={i}
+            unitCount={units.length}
+            lessons={own}
+            editable={editable}
+            editorPath={editorPath}
+            {...actions}
+          />
+        );
+      })}
+    </div>
   );
 }

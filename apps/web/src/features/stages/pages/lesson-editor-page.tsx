@@ -22,17 +22,20 @@ import { PendingLabel } from "@/shared/ui/pending-label";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { stagesApi } from "../api/stages-api";
+import { GradedLessonEditor } from "../components/graded-lesson-editor";
 import { MarkdownEditor, type MarkdownEditorHandle } from "../components/markdown-editor/markdown-editor";
+import { UnitSelect } from "../components/unit-select";
+import { ViolationList } from "../components/violation-list";
 import { useLessonMutations } from "../hooks/use-lesson-mutations";
 import { stagePath } from "../hooks/use-stage-mutations";
 import { useStageVersion } from "../hooks/use-stage-version";
 import {
   checkMarkdownSave,
+  isGraded,
   lessonErrorMessage,
   markdownLessonDefaults,
   markdownLessonSchema,
   readMarkdownLessonDraft,
-  summarizeViolations,
   toLessonBody,
   type MarkdownLessonDraft,
   type MarkdownLessonOutput,
@@ -58,7 +61,10 @@ function bodyBytes(values: MarkdownLessonValues): number {
   return jsonBodyBytes(toLessonBody({ ...values, title: values.title.trim() }));
 }
 
-/** Editor page of a markdown lesson: `lessons/new` (title and flag from the dialog) or `lessons/:lessonId/edit`. */
+/**
+ * Editor page of a lesson: `lessons/new` (a markdown lesson, with title, unit and flag from the dialog) or
+ * `lessons/:lessonId/edit` (a markdown lesson, a quiz or a homework).
+ */
 export function Component() {
   const { versionId = "", lessonId } = useParams();
   return <EditorLoader key={`${versionId}:${lessonId ?? "new"}`} />;
@@ -73,8 +79,15 @@ function EditorLoader() {
   const [version, setVersion] = useState<StageVersion>();
   if (query.data && !version) setVersion(query.data);
   const [draft] = useState(() => readMarkdownLessonDraft(location.state));
-  const lesson = lessonId ? version?.lessons.find((l) => l.id === lessonId && l.type === "markdown") : undefined;
-  useDocumentTitle(lesson ? `Sửa: ${lesson.title}` : "Soạn học liệu");
+  const found = lessonId ? version?.lessons.find((l) => l.id === lessonId) : undefined;
+  // Decided on the first load: a quiz or homework page follows every refetch, the markdown editor never does.
+  const graded = found !== undefined && isGraded(found);
+  const lesson = found?.type === "markdown" ? found : undefined;
+  const liveTitle = graded ? query.data?.lessons.find((l) => l.id === lessonId)?.title : undefined;
+  let documentTitle = "Soạn học liệu";
+  if (graded) documentTitle = liveTitle ?? found.title;
+  else if (lesson) documentTitle = `Sửa: ${lesson.title}`;
+  useDocumentTitle(documentTitle);
 
   const backPath = `${stagePath(stageId)}?v=${versionId}`;
   if (!version) {
@@ -105,12 +118,26 @@ function EditorLoader() {
   }
   if (version.stageId !== stageId) return <VersionNotFound />;
 
-  const crumbs: Crumb[] = [STAGES_CRUMB, { label: `${version.stageCode} v${String(version.versionNo)}`, to: backPath }, EDITOR_CRUMB];
+  const crumbs: Crumb[] = [
+    STAGES_CRUMB,
+    { label: `${version.stageCode} v${String(version.versionNo)}`, to: backPath },
+    EDITOR_CRUMB,
+  ];
   const backLink = (
     <Button asChild variant="outline" size="sm">
       <Link to={backPath}>Về chặng</Link>
     </Button>
   );
+  if (graded && lessonId) {
+    return (
+      <GradedLessonEditor
+        version={query.data ?? version}
+        lessonId={lessonId}
+        crumbs={crumbs.slice(0, 2)}
+        backPath={backPath}
+      />
+    );
+  }
   if (lessonId && !lesson) {
     return (
       <>
@@ -155,7 +182,7 @@ interface LessonEditorProps {
   version: StageVersion;
   /** Absent when adding. */
   lesson?: Lesson;
-  /** Title and flag typed in the lesson dialog before coming here. */
+  /** Title, unit and flag picked in the lesson dialog before coming here. */
   draft?: MarkdownLessonDraft;
   crumbs: Crumb[];
   backPath: string;
@@ -350,6 +377,21 @@ function LessonEditor({ version, lesson, draft, crumbs, backPath }: LessonEditor
             )}
           />
         </div>
+        <Controller
+          control={control}
+          name="unitId"
+          render={({ field }) => (
+            <UnitSelect
+              units={version.units}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              editing={Boolean(lesson)}
+              disabled={immutable}
+              error={formState.errors.unitId?.message}
+            />
+          )}
+        />
         <Tabs
           value={tab}
           onValueChange={(next) => {
@@ -410,23 +452,6 @@ function LessonEditor({ version, lesson, draft, crumbs, backPath }: LessonEditor
         cancel="Ở lại"
         onConfirm={() => blocker.proceed?.()}
       />
-    </>
-  );
-}
-
-function ViolationList({ violations }: { violations: string[] }) {
-  const { shown, more } = summarizeViolations(violations);
-  return (
-    <>
-      Gỡ các ảnh/liên kết không hợp lệ trước khi lưu:
-      <ul className="mt-1 list-disc pl-5">
-        {shown.map((url, i) => (
-          <li key={`${String(i)}:${url}`} className="break-all">
-            {url}
-          </li>
-        ))}
-      </ul>
-      {more > 0 ? <p>và {more} mục khác</p> : null}
     </>
   );
 }

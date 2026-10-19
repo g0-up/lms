@@ -17,10 +17,10 @@ export function ListItem({ className, ...props }: ComponentProps<"li">) {
   );
 }
 
-/** Position number of an ordered row (28px square). */
-export function Ord({ n }: { n: number }) {
+/** Position number of an ordered row (28px square, wider for a nested "i.j"). */
+export function Ord({ n }: { n: number | string }) {
   return (
-    <span className="inline-grid size-7 shrink-0 place-items-center bg-surface-blue-50 text-xs font-semibold text-navy-700 tabular-nums">
+    <span className="inline-grid h-7 min-w-7 shrink-0 place-items-center bg-surface-blue-50 px-1 text-xs font-semibold text-navy-700 tabular-nums">
       {n}
     </span>
   );

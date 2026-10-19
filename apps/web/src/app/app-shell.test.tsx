@@ -39,7 +39,7 @@ describe("AppShell", () => {
     const nav = await screen.findByRole("navigation", { name: "Chính" });
 
     const links = within(nav).getAllByRole("link");
-    expect(links.map((l) => l.textContent)).toEqual(["Tổng quan", "Chặng", "Khóa học", "Lớp học"]);
+    expect(links.map((l) => l.textContent)).toEqual(["Tổng quan", "Chặng", "Khóa học", "Lớp học", "Chấm bài"]);
     expect(within(nav).getByRole("link", { name: "Chặng" })).toHaveAttribute("aria-current", "page");
     expect(within(nav).getByRole("link", { name: "Tổng quan" })).not.toHaveAttribute("aria-current");
     expect(screen.getByText("Trần Minh Quân")).toHaveTextContent("Admin");

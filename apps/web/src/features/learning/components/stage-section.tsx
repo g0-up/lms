@@ -2,7 +2,7 @@ import { Card } from "@/shared/ui/card";
 import { ProgressBar } from "@/shared/ui/progress-bar";
 import { stageProgress } from "../model/progress";
 import type { ReadOnlyReason, RoadmapStage } from "../model/schemas";
-import { LessonRow } from "./lesson-row";
+import { UnitGroup } from "./unit-group";
 
 export interface StageSectionProps {
   classId: string;
@@ -25,13 +25,20 @@ export function StageSection({ classId, stage, ord, readOnlyReason, onToggle }: 
         <div className="min-w-0 flex-1">
           <h2 className="text-md">{stage.name}</h2>
           <div className="text-sm text-ink-3">
-            {stage.lessons.length} học liệu · {progress.done}/{progress.total} bắt buộc đã xong
+            {stage.units.length} bài học · {stage.lessons.length} học liệu · {progress.done}/{progress.total} bắt buộc đã xong
           </div>
         </div>
         <ProgressBar value={progress.percent} className="w-[180px] max-[720px]:w-full" />
       </div>
-      {stage.lessons.map((lesson) => (
-        <LessonRow key={lesson.id} classId={classId} lesson={lesson} readOnlyReason={readOnlyReason} onToggle={onToggle} />
+      {stage.units.map((unit, j) => (
+        <UnitGroup
+          key={unit.id}
+          classId={classId}
+          unit={unit}
+          ord={`${String(ord)}.${String(j + 1)}`}
+          readOnlyReason={readOnlyReason}
+          onToggle={onToggle}
+        />
       ))}
     </Card>
   );

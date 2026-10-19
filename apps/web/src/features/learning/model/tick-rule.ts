@@ -1,4 +1,4 @@
-import type { ReadOnlyReason } from "./schemas";
+import type { LessonType, ReadOnlyReason } from "./schemas";
 
 export interface TickState {
   readOnlyReason?: ReadOnlyReason | null;
@@ -15,4 +15,9 @@ export function tickBlocker({ readOnlyReason, opened }: TickState): string | nul
   if (readOnlyReason === "draft") return "Lớp chưa bắt đầu";
   if (!opened) return "Mở học liệu trước khi tích";
   return null;
+}
+
+/** Only videos and readings are ticked by the student; quizzes and homework complete by their result. */
+export function tickable(type: LessonType): boolean {
+  return type === "video" || type === "markdown";
 }

@@ -1,9 +1,12 @@
-export const CLASS_TABS = ["students", "report", "settings"] as const;
+export const CLASS_TABS = ["students", "report", "summary", "homework", "quiz", "settings"] as const;
 export type ClassTab = (typeof CLASS_TABS)[number];
 
 export const CLASS_TAB_LABEL: Record<ClassTab, string> = {
   students: "Học viên",
   report: "Tiến độ",
+  summary: "Tổng kết",
+  homework: "Bài tập",
+  quiz: "Quiz",
   settings: "Cài đặt",
 };
 

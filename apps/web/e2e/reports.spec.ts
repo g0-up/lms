@@ -14,13 +14,14 @@ import { apiAs, storageStatePath } from "./support/auth";
 import { closeDb, ids } from "./support/db";
 
 const AN = "Nguyễn Hoàng An";
+const BICH = "Trần Thị Bích";
 const CUONG = "Lê Văn Cường";
 const DUNG = "Phạm Minh Dũng";
 const HA = "Hoàng Thu Hà";
 const KHANG = "Vũ Đức Khang";
 const PHONG = "Đặng Hải Phong";
 const THAO = "Võ Phương Thảo";
-const ACTIVE_BASIC01 = [AN, "Trần Thị Bích", CUONG, DUNG, HA, KHANG, PHONG];
+const ACTIVE_BASIC01 = [AN, BICH, CUONG, DUNG, HA, KHANG, PHONG];
 
 /** Mỗi hàng báo cáo là một nút "Xem chi tiết {tên}"; trả tên theo thứ tự hiển thị. */
 function rows(page: Page) {
@@ -51,7 +52,9 @@ test.describe("Báo cáo lớp của admin", () => {
   });
 
   test("E23 lọc, sắp xếp, học viên đã rời lớp, form ghi search params", async ({ page }) => {
-    const selfReported = page.getByText("Tiến độ do học viên tự xác nhận", { exact: true });
+    const selfReported = page.getByText("Video và bài đọc do học viên tự xác nhận; quiz và bài tập tính theo kết quả", {
+      exact: true,
+    });
 
     await page.goto(reportPath);
     await expectRows(page, ACTIVE_BASIC01);
@@ -70,7 +73,7 @@ test.describe("Báo cáo lớp của admin", () => {
     await expect(rows(page)).toHaveCount(ACTIVE_BASIC01.length);
     const asc = await rowNames(page);
     expect(asc[0]).toBe(DUNG);
-    // Hai chiều đảo nhau; học viên bằng % (Hà, Phong cùng 29%) giữ thứ tự tên ở cả hai chiều.
+    // Hai chiều đảo nhau.
     expect(asc.at(-1)).toBe(CUONG);
     expect(desc.at(-1)).toBe(DUNG);
 
@@ -101,7 +104,7 @@ test.describe("Báo cáo lớp của admin", () => {
     await page.getByRole("button", { name: "Lọc", exact: true }).click();
     await expect(page).toHaveURL(/[?&]tab=report/);
     await expect(page).toHaveURL(/[?&]below=50/);
-    await expectRows(page, [DUNG, HA, KHANG, PHONG]);
+    await expectRows(page, [BICH, DUNG, HA, KHANG, PHONG]);
     await page.getByRole("link", { name: "Xóa bộ lọc" }).first().click();
     await expect(page).not.toHaveURL(/below=/);
     await expectRows(page, ACTIVE_BASIC01);
@@ -117,7 +120,7 @@ test.describe("Báo cáo lớp của admin", () => {
     await expect(sheet).toBeVisible();
     await expect(sheet.getByRole("heading", { name: AN })).toBeVisible();
     await expect(sheet).toContainText("an.nguyen@gmail.com · basic01 · hoạt động cuối");
-    await expect(sheet.getByRole("img", { name: "71% hoàn thành" }).first()).toBeVisible();
+    await expect(sheet.getByRole("img", { name: "64% hoàn thành" }).first()).toBeVisible();
     await expect(sheet.getByRole("heading", { level: 2, name: /^1\. Database/ })).toBeVisible();
     await expect(sheet.getByRole("heading", { level: 2, name: /^5\. / })).toBeVisible();
     await expect(sheet.getByText(/^Mở lần đầu /).first()).toBeVisible();

@@ -26,7 +26,12 @@ export function updateRoadmapLesson(
     const lesson = stage.lessons[li];
     const next = update(lesson);
     if (next === lesson) return roadmap;
-    const stages = roadmap.stages.with(si, { ...stage, lessons: stage.lessons.with(li, next) });
+    // The lesson sits twice in a stage: in the flat list and in its bài học.
+    const units = stage.units.map((unit) => {
+      const ui = unit.lessons.findIndex((l) => l.id === lessonId);
+      return ui === -1 ? unit : { ...unit, lessons: unit.lessons.with(ui, next) };
+    });
+    const stages = roadmap.stages.with(si, { ...stage, units, lessons: stage.lessons.with(li, next) });
     return { ...roadmap, stages };
   }
   return roadmap;

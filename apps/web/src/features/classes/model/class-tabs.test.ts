@@ -1,11 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { parseTab } from "./class-tabs";
+import { CLASS_TABS, parseTab } from "./class-tabs";
 
 describe("parseTab", () => {
-  it("reads the three tabs of the class page", () => {
+  it("reads the six tabs of the class page", () => {
     expect(parseTab("students")).toBe("students");
     expect(parseTab("report")).toBe("report");
+    expect(parseTab("summary")).toBe("summary");
+    expect(parseTab("homework")).toBe("homework");
+    expect(parseTab("quiz")).toBe("quiz");
     expect(parseTab("settings")).toBe("settings");
+    expect(CLASS_TABS).toEqual(["students", "report", "summary", "homework", "quiz", "settings"]);
   });
 
   it("falls back to the students for a missing or unknown tab", () => {

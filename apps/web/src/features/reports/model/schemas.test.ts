@@ -23,6 +23,18 @@ describe("report schemas against the API golden files", () => {
     expect(basic02?.avgPercent).toBeNull();
   });
 
+  it("reads every lesson type of a member's stages", () => {
+    const types = memberReportSchema.parse(golden.memberReport).stages.flatMap((s) => s.lessons.map((l) => l.type));
+    expect(new Set(types)).toEqual(new Set(["video", "markdown", "quiz", "homework"]));
+  });
+
+  it("rejects a lesson type the app does not know", () => {
+    const [stage] = golden.memberReport.stages;
+    const lessons = stage.lessons.map((l, i) => (i === 0 ? { ...l, type: "survey" } : l));
+    const payload = { ...golden.memberReport, stages: [{ ...stage, lessons }] };
+    expect(memberReportSchema.safeParse(payload).success).toBe(false);
+  });
+
   it("rejects a report whose sort is not in the allowlist", () => {
     const payload = { ...golden.classReport, filter: { ...golden.classReport.filter, sort: "email" } };
     expect(classReportSchema.safeParse(payload).success).toBe(false);

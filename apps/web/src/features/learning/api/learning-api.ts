@@ -10,8 +10,8 @@ import {
   type Roadmap,
 } from "../model/schemas";
 
-const classPath = (classId: string) => `/me/classes/${encodeURIComponent(classId)}`;
-const lessonPath = (classId: string, lessonId: string) =>
+export const classPath = (classId: string) => `/me/classes/${encodeURIComponent(classId)}`;
+export const lessonPath = (classId: string, lessonId: string) =>
   `${classPath(classId)}/lessons/${encodeURIComponent(lessonId)}`;
 
 export const learningApi = {
@@ -34,4 +34,7 @@ export const learningKeys = {
   myClass: (classId: string) => ["my-class", classId] as const,
   lesson: (classId: string, lessonId: string) => ["lesson", classId, lessonId] as const,
   lessonVideo: (lessonId: string) => ["lesson-video", lessonId] as const,
+  submissions: (classId: string, lessonId: string) => ["my-submissions", classId, lessonId] as const,
+  quizOverview: (classId: string, lessonId: string) => ["quiz-overview", classId, lessonId] as const,
+  quizAttempt: (attemptId: string) => ["quiz-attempt", attemptId] as const,
 };

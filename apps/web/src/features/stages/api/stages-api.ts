@@ -1,5 +1,8 @@
 import { http } from "@/shared/api/http";
+import type { CriterionBody } from "../model/criterion-form";
 import type { LessonBody, LessonPatch } from "../model/lesson-form";
+import type { QuestionBody } from "../model/question-form";
+import type { UnitLessons } from "../model/order";
 import {
   applyResultsSchema,
   courseVersionSummarySchema,
@@ -9,6 +12,7 @@ import {
   stageDetailSchema,
   stageListSchema,
   stageVersionSchema,
+  unitSchema,
   type ApplyResults,
   type CourseVersionSummary,
   type Lesson,
@@ -16,10 +20,12 @@ import {
   type StageDetail,
   type StageList,
   type StageVersion,
+  type Unit,
 } from "../model/schemas";
 
 const enc = encodeURIComponent;
 const versionPath = (vid: string) => `/stage-versions/${enc(vid)}`;
+const lessonPath = (vid: string, lessonId: string) => `${versionPath(vid)}/lessons/${enc(lessonId)}`;
 
 export interface NewStage {
   code: string;
@@ -46,17 +52,61 @@ export const stagesApi = {
   addLesson: (vid: string, body: LessonBody): Promise<Lesson> =>
     http(`${versionPath(vid)}/lessons`, { method: "POST", body, schema: lessonSchema }),
   updateLesson: (vid: string, lessonId: string, body: LessonPatch): Promise<Lesson> =>
-    http(`${versionPath(vid)}/lessons/${enc(lessonId)}`, { method: "PATCH", body, schema: lessonSchema }),
+    http(lessonPath(vid, lessonId), { method: "PATCH", body, schema: lessonSchema }),
   removeLesson: (vid: string, lessonId: string): Promise<undefined> =>
-    http(`${versionPath(vid)}/lessons/${enc(lessonId)}`, { method: "DELETE" }),
-  reorderLessons: (vid: string, lessonIds: string[]): Promise<StageVersion> =>
-    http(`${versionPath(vid)}/lessons/order`, { method: "PUT", body: { lessonIds }, schema: stageVersionSchema }),
+    http(lessonPath(vid, lessonId), { method: "DELETE" }),
+  /** The full layout: every unit of the version in its current order, each with every one of its lessons. */
+  reorderLessons: (vid: string, units: UnitLessons[]): Promise<StageVersion> =>
+    http(`${versionPath(vid)}/lessons/order`, { method: "PUT", body: { units }, schema: stageVersionSchema }),
+  /** Question and criterion changes answer with the whole lesson. */
+  addQuestion: (vid: string, lessonId: string, body: QuestionBody): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/questions`, { method: "POST", body, schema: lessonSchema }),
+  /** A full replace: options left out are deleted, options sent with their id keep it. */
+  updateQuestion: (vid: string, lessonId: string, questionId: string, body: QuestionBody): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/questions/${enc(questionId)}`, { method: "PATCH", body, schema: lessonSchema }),
+  removeQuestion: (vid: string, lessonId: string, questionId: string): Promise<undefined> =>
+    http(`${lessonPath(vid, lessonId)}/questions/${enc(questionId)}`, { method: "DELETE" }),
+  /** Every question id of the quiz, in the new order. */
+  reorderQuestions: (vid: string, lessonId: string, questionIds: string[]): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/questions/order`, {
+      method: "PUT",
+      body: { questionIds },
+      schema: lessonSchema,
+    }),
+  addCriterion: (vid: string, lessonId: string, body: CriterionBody): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/criteria`, { method: "POST", body, schema: lessonSchema }),
+  updateCriterion: (vid: string, lessonId: string, criterionId: string, body: CriterionBody): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/criteria/${enc(criterionId)}`, { method: "PATCH", body, schema: lessonSchema }),
+  removeCriterion: (vid: string, lessonId: string, criterionId: string): Promise<undefined> =>
+    http(`${lessonPath(vid, lessonId)}/criteria/${enc(criterionId)}`, { method: "DELETE" }),
+  /** Every criterion id of the homework, in the new order. */
+  reorderCriteria: (vid: string, lessonId: string, criterionIds: string[]): Promise<Lesson> =>
+    http(`${lessonPath(vid, lessonId)}/criteria/order`, {
+      method: "PUT",
+      body: { criterionIds },
+      schema: lessonSchema,
+    }),
+  createUnit: (vid: string, title: string): Promise<Unit> =>
+    http(`${versionPath(vid)}/units`, { method: "POST", body: { title }, schema: unitSchema }),
+  renameUnit: (vid: string, unitId: string, title: string): Promise<Unit> =>
+    http(`${versionPath(vid)}/units/${enc(unitId)}`, { method: "PATCH", body: { title }, schema: unitSchema }),
+  /** Deletes the unit together with its lessons. */
+  removeUnit: (vid: string, unitId: string): Promise<undefined> =>
+    http(`${versionPath(vid)}/units/${enc(unitId)}`, { method: "DELETE" }),
+  /** Every unit id of the version, in the new order. */
+  reorderUnits: (vid: string, unitIds: string[]): Promise<StageVersion> =>
+    http(`${versionPath(vid)}/units/order`, { method: "PUT", body: { unitIds }, schema: stageVersionSchema }),
   /** Clones, swaps and publishes each course in one transaction per course. */
   apply: (vid: string, courseIds: string[]): Promise<ApplyResults> =>
     http(`${versionPath(vid)}/apply`, { method: "POST", body: { courseIds }, schema: applyResultsSchema }),
   /** Server-rendered HTML of a markdown source; 422 when it holds an image that was not uploaded. */
   previewMarkdown: (markdownSource: string, signal?: AbortSignal): Promise<MarkdownPreview> =>
-    http("/stages/markdown-preview", { method: "POST", body: { markdownSource }, schema: markdownPreviewSchema, signal }),
+    http("/stages/markdown-preview", {
+      method: "POST",
+      body: { markdownSource },
+      schema: markdownPreviewSchema,
+      signal,
+    }),
   /** Course version read for the apply preview (owned by the courses feature; only the needed fields are kept). */
   courseVersionSummary: (courseVersionId: string, signal?: AbortSignal): Promise<CourseVersionSummary> =>
     http(`/course-versions/${enc(courseVersionId)}`, { schema: courseVersionSummarySchema, signal }),

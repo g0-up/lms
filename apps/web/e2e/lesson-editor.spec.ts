@@ -8,7 +8,7 @@ import { runAxe, smallHitAreas } from "./support/a11y";
 import { apiAs, storageStatePath } from "./support/auth";
 import { closeDb, count, ids, one, query } from "./support/db";
 import { PIXEL_PNG } from "./support/media";
-import { seedReset } from "./support/seed";
+import { createUnit, seedReset } from "./support/seed";
 
 const EXTERNAL_IMAGE = "Ảnh trong markdown phải tải lên qua hệ thống.";
 /** Ảnh markdown trỏ tới media đã tải lên, với alt cho trước; nhóm 1 là id media. */
@@ -92,6 +92,8 @@ test.describe("Trang soạn học liệu markdown", { tag: "@serial" }, () => {
     expect(res.status(), await res.text()).toBe(201);
     stageId = await ids.stageId("E2EMD");
     draftId = await ids.stageVersionId("E2EMD", 1);
+    // Chặng mới chưa có bài học; học liệu luôn nằm trong một bài học.
+    await createUnit(admin, draftId, "Bài học soạn markdown");
   });
 
   test.afterAll(async () => {
@@ -117,6 +119,8 @@ test.describe("Trang soạn học liệu markdown", { tag: "@serial" }, () => {
     await page.getByRole("button", { name: "Thêm học liệu" }).click();
     const dialog = page.getByRole("dialog", { name: "Thêm học liệu" });
     await dialog.getByLabel("Tiêu đề").fill("Bài đọc E33");
+    // "Thêm học liệu" của một bài học chọn sẵn bài học đó.
+    await expect(dialog.getByRole("combobox", { name: /^Bài học/ })).toHaveText("1. Bài học soạn markdown");
     await dialog.getByRole("combobox", { name: "Loại" }).click();
     await page.getByRole("option", { name: "Markdown" }).click();
     await dialog.getByRole("button", { name: "Tiếp tục soạn" }).click();
@@ -124,6 +128,7 @@ test.describe("Trang soạn học liệu markdown", { tag: "@serial" }, () => {
     await expect(page).toHaveURL(new RegExp(`/versions/${draftId}/lessons/new$`));
     await expect(page.getByRole("heading", { level: 1, name: "Thêm học liệu markdown" })).toBeVisible();
     await expect(page.getByLabel(/^Tiêu đề/)).toHaveValue("Bài đọc E33");
+    await expect(page.getByRole("combobox", { name: /^Bài học/ })).toHaveText("1. Bài học soạn markdown");
 
     await content(page).click();
     await page.keyboard.type("# Tiêu đề");
@@ -375,6 +380,16 @@ test.describe("Trang soạn học liệu markdown", { tag: "@serial" }, () => {
       );
     const drafts: { stageId: string; v1: string; v2: string }[] = [];
     for (const stage of seeded) {
+      // Seed đã có bản nháp GO v2 nhân bản từ GO v1; mỗi chặng chỉ một bản nháp nên dùng lại bản đó.
+      const existing = await query<{ id: string; cloned_from_id: string }>(
+        "SELECT id, cloned_from_id FROM stage_versions WHERE stage_id = $1 AND status = 'draft'",
+        [stage.stage_id],
+      );
+      if (existing.length > 0) {
+        expect(existing).toEqual([{ id: existing[0].id, cloned_from_id: stage.v1 }]);
+        drafts.push({ stageId: stage.stage_id, v1: stage.v1, v2: existing[0].id });
+        continue;
+      }
       const res = await admin.post(`/api/v1/stage-versions/${stage.v1}/clone`);
       expect(res.status(), await res.text()).toBe(201);
       drafts.push({ stageId: stage.stage_id, v1: stage.v1, v2: ((await res.json()) as { id: string }).id });
@@ -393,7 +408,7 @@ test.describe("Trang soạn học liệu markdown", { tag: "@serial" }, () => {
         opened += 1;
       }
     }
-    expect(opened).toBe(7);
+    expect(opened).toBe(8);
     for (const { v1, v2 } of drafts) {
       const [before, after] = await Promise.all([lessonsOf(v1), lessonsOf(v2)]);
       expect(after.map((l) => [l.lesson_key, l.markdown_source])).toEqual(before.map((l) => [l.lesson_key, l.markdown_source]));

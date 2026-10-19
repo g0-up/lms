@@ -11,8 +11,12 @@ export const NAV: Record<Role, readonly NavItem[]> = {
     { to: "/admin/stages", label: "Chặng" },
     { to: "/admin/courses", label: "Khóa học" },
     { to: "/admin/classes", label: "Lớp học" },
+    { to: "/admin/grading", label: "Chấm bài" },
   ],
-  teacher: [{ to: "/teach", label: "Lớp của tôi" }],
+  teacher: [
+    { to: "/teach", label: "Lớp của tôi" },
+    { to: "/teach/grading", label: "Chấm bài" },
+  ],
   student: [{ to: "/learn", label: "Lớp của tôi" }],
 };
 

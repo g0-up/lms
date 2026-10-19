@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { uploadErrorMessage, uploadMedia } from "../api/upload-media";
+import { uploadErrorMessage, uploadMedia } from "@/shared/api/upload-media";
 import { videoFileError } from "../model/video-file";
 
 export type VideoUploadState =

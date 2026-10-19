@@ -1,68 +1,16 @@
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
-import { useImperativeHandle, useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { api, server } from "@/shared/test/msw";
-import { draftWorld, errorResponse, type StageWorld } from "../api/msw-handlers";
+import { draftWorld, errorResponse, twoUnitWorld, type StageWorld } from "../api/msw-handlers";
 import { stageKeys } from "../api/stages-api";
-import type { MarkdownEditorProps } from "../components/markdown-editor/markdown-editor";
-import { lessonEditorPath } from "../model/lesson-form";
-import { LESSON_MARKDOWN_REQUIRED, MEDIA_SRC, SAFE_URL } from "../model/markdown-rules";
+import { LESSON_UNIT_REQUIRED, lessonEditorPath } from "../model/lesson-form";
+import { LESSON_MARKDOWN_REQUIRED } from "../model/markdown-rules";
 import { errors, fixtures, ids } from "../test/golden";
 import { gate, recordRequests, renderStages, stageUrl } from "../test/render-stages";
 
 // The page is tested against a textarea standing in for the editor, with the same props and handle.
-// The real editor (GFM guards, paste uploads, source view) is covered by its own tests and by E2E.
-vi.mock("../components/markdown-editor/markdown-editor", () => {
-  const LINK = /(!?)\[[^\]]*\]\(([^)\s]+)\)/g;
-  function MarkdownEditorDouble({
-    value,
-    onChange,
-    onPendingUploadsChange,
-    onBlur,
-    onParseError,
-    readOnly,
-    id,
-    "aria-describedby": describedBy,
-    "aria-invalid": invalid,
-    ref,
-  }: MarkdownEditorProps) {
-    const [text, setText] = useState(value);
-    useImperativeHandle(ref, () => ({
-      getMarkdown: () => text,
-      violations: () =>
-        [...text.matchAll(LINK)]
-          .filter(([, image, url]) => (image ? !MEDIA_SRC.test(url) : !SAFE_URL.test(url)))
-          .map(([, , url]) => url),
-      showSource: () => undefined,
-      focus: () => undefined,
-    }));
-    return (
-      <>
-        <textarea
-          id={id}
-          aria-label="Nội dung bài học"
-          aria-describedby={describedBy}
-          aria-invalid={invalid ? true : undefined}
-          readOnly={readOnly}
-          value={text}
-          onChange={(event) => {
-            setText(event.target.value);
-            onChange(event.target.value);
-          }}
-          onBlur={onBlur}
-        />
-        <button type="button" onClick={() => onPendingUploadsChange?.(1)}>
-          Dán ảnh (đang tải)
-        </button>
-        <button type="button" onClick={() => onParseError?.("unknown node")}>
-          Nạp nội dung lỗi
-        </button>
-      </>
-    );
-  }
-  return { MarkdownEditor: MarkdownEditorDouble, default: MarkdownEditorDouble };
-});
+vi.mock("../components/markdown-editor/markdown-editor", () => import("../test/markdown-editor-double"));
 
 beforeAll(async () => {
   await import("./lesson-editor-page");
@@ -95,6 +43,8 @@ describe("LessonEditorPage: editing", () => {
     expect(screen.getByRole("navigation", { name: "Đường dẫn" })).toHaveTextContent("Chặng/DB v2/Soạn học liệu");
     expect(screen.getByLabelText(/^Tiêu đề/)).toHaveValue(lesson.title);
     expect(screen.getByRole("checkbox", { name: /Bắt buộc/ })).toBeChecked();
+    expect(screen.getByRole("combobox", { name: /^Bài học/ })).toHaveTextContent("1. Nội dung chặng");
+    expect(screen.getByText("Đổi bài học sẽ đưa học liệu xuống cuối bài học mới.")).toBeInTheDocument();
     expect(content()).toHaveValue(lesson.markdownSource);
     expect(screen.getByText(/ \/ 64 KB$/)).toBeInTheDocument();
     expect(saveButton()).toBeEnabled();
@@ -111,7 +61,23 @@ describe("LessonEditorPage: editing", () => {
 
     expect(await screen.findByText("Đã lưu học liệu.")).toBeInTheDocument();
     const [patch] = requests.of("PATCH", patchPath);
-    expect(JSON.parse(patch.body)).toEqual({ title: "Khóa chính", required: true });
+    expect(JSON.parse(patch.body)).toEqual({ title: "Khóa chính", unitId: lesson.unitId, required: true });
+  });
+
+  it("moves the lesson to the bài học picked", async () => {
+    const requests = recordRequests();
+    const twoUnits = fixtures.stageVersionDraftTwoUnits;
+    const { user } = await openEditor(editUrl, { world: twoUnitWorld() });
+    await user.click(screen.getByRole("combobox", { name: /^Bài học/ }));
+    await user.click(await screen.findByRole("option", { name: `2. ${twoUnits.units[1].title}` }));
+    await user.click(saveButton());
+
+    expect(await screen.findByText("Đã lưu học liệu.")).toBeInTheDocument();
+    expect(JSON.parse(requests.of("PATCH", patchPath)[0].body)).toEqual({
+      title: lesson.title,
+      unitId: twoUnits.units[1].id,
+      required: true,
+    });
   });
 
   it("sends edited content, then returns to the version without asking", async () => {
@@ -123,6 +89,7 @@ describe("LessonEditorPage: editing", () => {
     expect(await screen.findByText("Đã lưu học liệu.")).toBeInTheDocument();
     expect(JSON.parse(requests.of("PATCH", patchPath)[0].body)).toEqual({
       title: lesson.title,
+      unitId: lesson.unitId,
       required: true,
       markdownSource: `${String(lesson.markdownSource)} Thêm ví dụ.`,
     });
@@ -146,7 +113,11 @@ describe("LessonEditorPage: editing", () => {
     await user.click(screen.getByRole("checkbox", { name: /Bắt buộc/ }));
     await user.click(saveButton());
     expect(await screen.findByText("Đã lưu học liệu.")).toBeInTheDocument();
-    expect(JSON.parse(requests.of("PATCH", patchPath)[0].body)).toEqual({ title: lesson.title, required: false });
+    expect(JSON.parse(requests.of("PATCH", patchPath)[0].body)).toEqual({
+      title: lesson.title,
+      unitId: lesson.unitId,
+      required: false,
+    });
   });
 
   it("shows the server's refusal and stays on the page", async () => {
@@ -205,7 +176,9 @@ describe("LessonEditorPage: editing", () => {
 
   it("keeps the work readable and copyable when the version was published meanwhile", async () => {
     const { user } = await openEditor(editUrl, {
-      overrides: [http.patch(api("/stage-versions/:vid/lessons/:lessonId"), () => errorResponse(409, errors.versionImmutable))],
+      overrides: [
+        http.patch(api("/stage-versions/:vid/lessons/:lessonId"), () => errorResponse(409, errors.versionImmutable)),
+      ],
     });
     await user.type(content(), " bản nháp");
     await user.click(saveButton());
@@ -246,7 +219,9 @@ describe("LessonEditorPage: preview", () => {
     const message = "Ảnh trong markdown phải tải lên qua hệ thống.";
     const { user } = await openEditor(editUrl, {
       overrides: [
-        http.post(api("/stages/markdown-preview"), () => errorResponse(422, { error: { code: "VALIDATION_FAILED", message } })),
+        http.post(api("/stages/markdown-preview"), () =>
+          errorResponse(422, { error: { code: "VALIDATION_FAILED", message } }),
+        ),
       ],
     });
     await user.click(screen.getByRole("tab", { name: "Xem trước" }));
@@ -255,28 +230,31 @@ describe("LessonEditorPage: preview", () => {
 });
 
 describe("LessonEditorPage: adding", () => {
-  it("starts from the dialog's title and flag and posts a markdown lesson", async () => {
+  it("starts from the dialog's title, bài học and flag and posts a markdown lesson", async () => {
     const requests = recordRequests();
     const { user, router } = renderStages(stageUrl(ids.stage, ids.v2), { world: draftWorld() });
     await screen.findByRole("heading", { name: "Học liệu của v2" });
-    await act(() => router.navigate(newUrl, { state: { title: "Ghi chú", required: false } }));
+    await act(() => router.navigate(newUrl, { state: { title: "Ghi chú", unitId: lesson.unitId, required: false } }));
 
     expect(await screen.findByRole("heading", { level: 1, name: "Thêm học liệu markdown" })).toBeInTheDocument();
     expect(screen.getByLabelText(/^Tiêu đề/)).toHaveValue("Ghi chú");
     expect(screen.getByRole("checkbox", { name: /Bắt buộc/ })).not.toBeChecked();
+    expect(screen.getByRole("combobox", { name: /^Bài học/ })).toHaveTextContent("1. Nội dung chặng");
+    expect(screen.getByText("Học liệu mới nằm cuối bài học đã chọn.")).toBeInTheDocument();
     await user.type(content(), "# Ghi chú");
     await user.click(saveButton());
 
     expect(await screen.findByText("Đã thêm học liệu.")).toBeInTheDocument();
     expect(JSON.parse(requests.of("POST", `/stage-versions/${ids.v2}/lessons`)[0].body)).toEqual({
       title: "Ghi chú",
+      unitId: lesson.unitId,
       type: "markdown",
       required: false,
       markdownSource: "# Ghi chú",
     });
   });
 
-  it("starts blank and required without the dialog's state, and asks for content", async () => {
+  it("starts blank and required without the dialog's state, and asks for a bài học and content", async () => {
     const requests = recordRequests();
     const { user } = await openEditor(newUrl);
     expect(screen.getByLabelText(/^Tiêu đề/)).toHaveValue("");
@@ -284,6 +262,12 @@ describe("LessonEditorPage: adding", () => {
     await user.type(screen.getByLabelText(/^Tiêu đề/), "Ghi chú");
     await user.click(saveButton());
 
+    expect(await screen.findByText(LESSON_UNIT_REQUIRED)).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: /^Bài học/ })).toHaveAttribute("aria-invalid", "true");
+
+    await user.click(screen.getByRole("combobox", { name: /^Bài học/ }));
+    await user.click(await screen.findByRole("option", { name: "1. Nội dung chặng" }));
+    await user.click(saveButton());
     expect(await screen.findByText(LESSON_MARKDOWN_REQUIRED)).toBeInTheDocument();
     expect(content()).toHaveAttribute("aria-invalid", "true");
     expect(requests.of("POST", `/stage-versions/${ids.v2}/lessons`)).toHaveLength(0);
@@ -328,7 +312,9 @@ describe("LessonEditorPage: leaving", () => {
     act(() => {
       void router.navigate("/admin/courses");
     });
-    await user.click(within(await screen.findByRole("dialog", { name: "Rời trang?" })).getByRole("button", { name: "Rời trang" }));
+    await user.click(
+      within(await screen.findByRole("dialog", { name: "Rời trang?" })).getByRole("button", { name: "Rời trang" }),
+    );
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/admin/courses");
     });
@@ -365,7 +351,9 @@ describe("LessonEditorPage: unavailable", () => {
   });
 
   it("reports a missing version, or one of another stage", async () => {
-    const view = renderStages(lessonEditorPath(ids.stage, "01990000-0000-7000-8000-00000000ffff"), { world: draftWorld() });
+    const view = renderStages(lessonEditorPath(ids.stage, "01990000-0000-7000-8000-00000000ffff"), {
+      world: draftWorld(),
+    });
     expect(await screen.findByText("Không tìm thấy phiên bản.")).toBeInTheDocument();
     view.unmount();
 

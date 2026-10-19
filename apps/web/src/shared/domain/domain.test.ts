@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canTransition, canTransitionClass, homeOf, percentOf, ROLES, toPercent } from "./index";
+import { canTransition, canTransitionClass, homeOf, percentOf, quizReviewBadge, ROLES, toPercent } from "./index";
 
 describe("percentOf", () => {
   it("rounds the share to a whole percent", () => {
@@ -41,5 +41,17 @@ describe("canTransition", () => {
 describe("homeOf", () => {
   it("maps each role to its area", () => {
     expect(ROLES.map(homeOf)).toEqual(["/admin", "/teach", "/learn"]);
+  });
+});
+
+describe("quizReviewBadge", () => {
+  it("labels each review state as the prototype does", () => {
+    expect(quizReviewBadge("assessment", "pending")).toEqual({ tone: "info", label: "Chờ xác nhận" });
+    expect(quizReviewBadge("assessment", "confirmed")).toEqual({ tone: "ok", label: "Đã xác nhận" });
+    expect(quizReviewBadge("assessment", "superseded")).toEqual({ tone: "muted", label: "Đã có lượt mới hơn" });
+  });
+
+  it("calls a confirmed practice attempt commented", () => {
+    expect(quizReviewBadge("practice", "confirmed")).toEqual({ tone: "ok", label: "Đã nhận xét" });
   });
 });

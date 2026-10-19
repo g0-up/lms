@@ -14,7 +14,9 @@ import draftExistsJson from "../../../../../api/internal/features/stages/testdat
 import inUseJson from "../../../../../api/internal/features/stages/testdata/error_in_use.json";
 import validationJson from "../../../../../api/internal/features/stages/testdata/error_validation.json";
 import versionImmutableJson from "../../../../../api/internal/features/stages/testdata/error_version_immutable.json";
+import lessonHomeworkJson from "../../../../../api/internal/features/stages/testdata/lesson_homework.json";
 import lessonMarkdownJson from "../../../../../api/internal/features/stages/testdata/lesson_markdown.json";
+import lessonQuizJson from "../../../../../api/internal/features/stages/testdata/lesson_quiz.json";
 import lessonVideoJson from "../../../../../api/internal/features/stages/testdata/lesson_video.json";
 import markdownPreviewJson from "../../../../../api/internal/features/stages/testdata/markdown_preview.json";
 import stageDetailJson from "../../../../../api/internal/features/stages/testdata/stage_detail.json";
@@ -24,17 +26,17 @@ import stageVersionJson from "../../../../../api/internal/features/stages/testda
 import seedMarkdownJson from "../../../../../api/internal/seed/testdata/seed_markdown.json";
 import { z } from "zod";
 import { errorEnvelopeSchema } from "@/shared/api/schemas";
+import { mediaSchema, uploadTicketSchema } from "@/shared/api/upload-media";
+import { applyLayout } from "../model/order";
 import {
   applyResultsSchema,
   courseVersionSummarySchema,
   deleteStageVersionSchema,
   lessonSchema,
   markdownPreviewSchema,
-  mediaSchema,
   stageDetailSchema,
   stageListSchema,
   stageVersionSchema,
-  uploadTicketSchema,
   type StageDetail,
   type StageVersion,
 } from "../model/schemas";
@@ -47,6 +49,8 @@ export const golden = {
   stageVersionDraft: stageVersionDraftJson,
   lessonVideo: lessonVideoJson,
   lessonMarkdown: lessonMarkdownJson,
+  lessonQuiz: lessonQuizJson,
+  lessonHomework: lessonHomeworkJson,
   deleteVersion: deleteVersionJson,
   applyResults: applyResultsJson,
   courseVersion: courseVersionJson,
@@ -92,6 +96,37 @@ const stageDetailWithDraft: StageDetail = {
   outdatedCourses: [],
 };
 
+/**
+ * The draft split into two bài học, one lesson each: what the editor looks like once an admin added a
+ * second unit and moved a lesson into it. The API has no golden file for this layout.
+ */
+const [draftUnit] = stageVersionDraft.units;
+const advancedUnit = {
+  id: "01990000-0000-7000-8000-000000000143",
+  unitKey: "nang-cao",
+  title: "Nâng cao",
+  position: 2,
+  lessonCount: 0,
+  requiredCount: 0,
+};
+const stageVersionDraftTwoUnits = applyLayout({ ...stageVersionDraft, units: [draftUnit, advancedUnit] }, [
+  { unitId: draftUnit.id, lessonIds: [stageVersionDraft.lessons[0].id] },
+  { unitId: advancedUnit.id, lessonIds: [stageVersionDraft.lessons[1].id] },
+]);
+
+const lessonQuiz = lessonSchema.parse(lessonQuizJson);
+const lessonHomework = lessonSchema.parse(lessonHomeworkJson);
+
+/**
+ * The draft once an admin added the golden assessment quiz and homework to its only bài học, after
+ * the two markdown lessons (the goldens already sit at positions 3 and 4 of that unit).
+ */
+const stageVersionDraftAuthoring: StageVersion = {
+  ...stageVersionDraft,
+  units: [{ ...draftUnit, lessonCount: 4, requiredCount: draftUnit.requiredCount + 2 }],
+  lessons: [...stageVersionDraft.lessons, lessonQuiz, lessonHomework],
+};
+
 export const fixtures = {
   stageList,
   stageDetail,
@@ -99,8 +134,12 @@ export const fixtures = {
   stageVersion,
   stageVersionV2,
   stageVersionDraft,
+  stageVersionDraftTwoUnits,
+  stageVersionDraftAuthoring,
   lessonVideo: lessonSchema.parse(lessonVideoJson),
   lessonMarkdown: lessonSchema.parse(lessonMarkdownJson),
+  lessonQuiz,
+  lessonHomework,
   deleteVersion: deleteStageVersionSchema.parse(deleteVersionJson),
   applyResults: applyResultsSchema.parse(applyResultsJson),
   courseVersion: courseVersionSummarySchema.parse(courseVersionJson),

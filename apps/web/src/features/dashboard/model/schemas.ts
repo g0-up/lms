@@ -47,13 +47,28 @@ export const activitySchema = z.object({
 });
 export type Activity = z.infer<typeof activitySchema>;
 
-/** `GET /dashboard`. */
+/**
+ * Grading backlog of one active teacher, over the queue of the classes they teach. `avgHours` is from submission
+ * to the first grade or first quiz confirmation they made; null when they have handled nothing.
+ */
+export const teacherBacklogSchema = z.object({
+  teacherId: id,
+  teacherName: z.string(),
+  pending: count,
+  overdue: count,
+  avgHours: z.number().nonnegative().nullable(),
+});
+export type TeacherBacklog = z.infer<typeof teacherBacklogSchema>;
+
+/** `GET /dashboard`. `overdueCount` is the whole queue's items waiting past the grading deadline. */
 export const dashboardSchema = z.object({
   kpis: z.object({ stages: count, courses: count, classes: count, students: count }),
   hints: z.object({ draftClasses: count, notLoggedIn: count, outdatedCourses: count, failedInvites: count }),
   outdated: z.array(outdatedRowSchema),
   classes: z.array(dashboardClassSchema),
   recentActivity: z.array(activitySchema),
+  gradingBacklog: z.array(teacherBacklogSchema),
+  overdueCount: count,
 });
 export type Dashboard = z.infer<typeof dashboardSchema>;
 

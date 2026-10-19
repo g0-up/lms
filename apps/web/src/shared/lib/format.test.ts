@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fmtDate, fmtDateTime, initials, rel, versionLabel } from "./format";
+import { dueIn, fmtDate, fmtDateTime, fmtSize, initials, rel, versionLabel } from "./format";
 
 describe("fmtDate / fmtDateTime", () => {
   it("formats in Vietnamese day-first order in the local time zone", () => {
@@ -39,6 +39,35 @@ describe("rel", () => {
 
   it("says Chưa có when there is no timestamp", () => {
     expect(rel(null, now)).toBe("Chưa có");
+  });
+});
+
+describe("fmtSize", () => {
+  it("shows whole KB below 1 MiB, never less than 1 KB", () => {
+    expect(fmtSize(5)).toBe("1 KB");
+    expect(fmtSize(1536)).toBe("2 KB");
+    expect(fmtSize(1_048_575)).toBe("1024 KB");
+  });
+
+  it("shows MB with one decimal (comma) from 1 MiB", () => {
+    expect(fmtSize(1_048_576)).toBe("1,0 MB");
+    expect(fmtSize(1.5 * 1_048_576)).toBe("1,5 MB");
+    expect(fmtSize(20 * 1_048_576)).toBe("20,0 MB");
+  });
+});
+
+describe("dueIn", () => {
+  const now = new Date("2026-10-19T08:00:00Z");
+  it("counts minutes under an hour, hours under two days, then days", () => {
+    expect(dueIn("2026-10-19T08:20:00Z", now)).toBe("còn 20 phút");
+    expect(dueIn("2026-10-19T08:00:10Z", now)).toBe("còn 1 phút");
+    expect(dueIn("2026-10-20T07:00:00Z", now)).toBe("còn 23 giờ");
+    expect(dueIn("2026-10-22T08:00:00Z", now)).toBe("còn 3 ngày");
+  });
+
+  it("says how long ago a passed deadline was", () => {
+    expect(dueIn("2026-10-19T05:00:00Z", now)).toBe("quá hạn 3 giờ");
+    expect(dueIn("2026-10-15T08:00:00Z", now)).toBe("quá hạn 4 ngày");
   });
 });
 
